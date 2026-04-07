@@ -1,0 +1,86 @@
+<h2>How should annotation state live?</h2>
+<p class="subtitle">Three architectural approaches for managing annotation lifecycle across screen iterations</p>
+
+<div class="options">
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Client-Side State (helper.js owns everything)</h3>
+      <p>All annotation state lives in the browser — positions, text, lifecycle status. Stored in <code>localStorage</code> keyed by session ID. The events file only gets written when you return to the terminal (batch send). Claude pushes new HTML, helper.js re-renders persisted annotations on top.</p>
+      <div class="pros-cons">
+        <div class="pros">
+          <h4>Pros</h4>
+          <ul>
+            <li>Zero server changes — all logic in helper.js</li>
+            <li>Annotations survive page reloads (localStorage)</li>
+            <li>Clean separation: browser owns UI state, events file is just the export format</li>
+            <li>Fast — no round-trip for every note</li>
+          </ul>
+        </div>
+        <div class="cons">
+          <h4>Cons</h4>
+          <ul>
+            <li>Re-attaching annotations after Claude pushes new HTML requires matching elements across versions (selectors may shift)</li>
+            <li>localStorage is per-origin, so all sessions on localhost share it (need session-keying)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Server-Side State (server.cjs manages annotations)</h3>
+      <p>Annotations are sent to the server via WebSocket immediately. Server writes them to a persistent <code>state/annotations.json</code> file. When Claude pushes a new screen, the server includes existing annotations in the page response. Events file is written from the server's annotation store.</p>
+      <div class="pros-cons">
+        <div class="pros">
+          <h4>Pros</h4>
+          <ul>
+            <li>Single source of truth on disk — survives browser crashes, tab closes</li>
+            <li>Server can manage lifecycle transitions (new → addressed) on screen push</li>
+            <li>Multiple browser tabs would see the same annotations</li>
+          </ul>
+        </div>
+        <div class="cons">
+          <h4>Cons</h4>
+          <ul>
+            <li>More server complexity — annotation CRUD, state management, embedding in responses</li>
+            <li>WebSocket traffic for every annotation edit (contrary to batch model)</li>
+            <li>Server becomes stateful beyond just file-watching</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>Hybrid — Client owns UI, server owns persistence</h3>
+      <p>Annotations are created and edited client-side (no WebSocket chatter). On "batch send" — when user is done annotating — client writes all annotations to the server via one WebSocket message. Server persists to <code>state/annotations.json</code> and writes the events file for Claude. On new screen push, server sends previous annotations back so client can re-render them.</p>
+      <div class="pros-cons">
+        <div class="pros">
+          <h4>Pros</h4>
+          <ul>
+            <li>Fast editing (client-side), durable storage (server-side)</li>
+            <li>Batch send matches the desired workflow</li>
+            <li>Server stays simple — just persist and replay, no CRUD logic</li>
+          </ul>
+        </div>
+        <div class="cons">
+          <h4>Cons</h4>
+          <ul>
+            <li>Two places that know about annotation shape (client + server)</li>
+            <li>If browser closes before batch send, unsent annotations are lost</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="margin-top: 2rem;">
+  <p class="label">Recommendation</p>
+  <p><strong>Option A (client-side)</strong> is the simplest starting point for a POC. All the annotation logic lives in one file (helper.js), the server barely changes, and localStorage gives you persistence across reloads. The "annotations lost if browser closes" risk from Option C also applies here, but for a design tool where you're actively looking at the browser, it's acceptable. We can evolve toward the hybrid model later if durability matters.</p>
+</div>

@@ -539,6 +539,31 @@
       });
     });
 
+    // Add consolidated theme state if any theme changes were made
+    if (themeState && themeState.system) {
+      const data = window.THEME_DATA;
+      const palette = data ? data.palettes.find(p => p.key === themeState.system) : null;
+      if (palette) {
+        const allTokens = {};
+        const cc = document.getElementById('claude-content');
+        if (cc) {
+          Object.keys(palette.tokens).forEach(key => {
+            const val = cc.style.getPropertyValue(key);
+            if (val) allTokens[key] = val.trim();
+          });
+        }
+        payload.push({
+          type: 'theme',
+          system: themeState.system,
+          colorVariant: themeState.colorVariant || 'default',
+          accentColor: themeState.accentColor || null,
+          fineTune: themeState.fineTune || {},
+          tokenChanges: allTokens,
+          timestamp: Date.now()
+        });
+      }
+    }
+
     sendEvent({ type: 'annotations', items: payload });
 
     const totalCount = annotations.length + tuneChanges.length;

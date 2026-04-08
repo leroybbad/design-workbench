@@ -1017,7 +1017,7 @@
     .theme-save-btn:hover { opacity: 0.9; }
     .theme-system-grid {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
       gap: 0.5rem;
     }
     .theme-system-card {
@@ -1035,7 +1035,6 @@
     }
     .theme-system-card:hover { border-color: #5a5a5e; }
     .theme-system-card.active { border-color: var(--accent); }
-    .theme-system-card .theme-dots { flex-shrink: 0; }
     .theme-system-card-name {
       font-size: 0.72rem;
       font-weight: 600;

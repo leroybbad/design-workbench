@@ -1568,32 +1568,18 @@
       });
     }
 
-    // 2-column card grid — no tier labels, no descriptions
+    // Full-width card grid — name only, no color dots
     const grid = document.createElement('div');
     grid.className = 'theme-system-grid';
-
-    const DOT_TOKENS = ['--color-primary', '--color-bg', '--color-surface', '--color-text', '--color-border'];
 
     td.palettes.forEach(palette => {
       const card = document.createElement('button');
       card.className = 'theme-system-card' + (themeState.system === palette.key ? ' active' : '');
 
-      // 5 color dots
-      const dotsEl = document.createElement('div');
-      dotsEl.className = 'theme-dots';
-      DOT_TOKENS.forEach(prop => {
-        const dot = document.createElement('div');
-        dot.className = 'theme-dot';
-        const val = palette.tokens && palette.tokens[prop];
-        dot.style.background = val || '#888';
-        dotsEl.appendChild(dot);
-      });
-
       const nameEl = document.createElement('span');
       nameEl.className = 'theme-system-card-name';
       nameEl.textContent = palette.name;
 
-      card.appendChild(dotsEl);
       card.appendChild(nameEl);
 
       card.addEventListener('click', () => {
@@ -1742,7 +1728,7 @@
 
     const variantsRow = document.createElement('div');
     variantsRow.className = 'theme-variants';
-    variantsRow.style.cssText = 'flex-wrap:wrap;';
+    variantsRow.style.cssText = 'flex-wrap:nowrap;overflow-x:auto;';
 
     VARIANT_NAMES.forEach(vKey => {
       // Skip if this variant doesn't exist for this palette and isn't default
@@ -1934,7 +1920,7 @@
 
     const chips = document.createElement('div');
     chips.className = 'theme-font-chips';
-    chips.style.cssText = 'flex-direction:column;gap:0.35rem;';
+    chips.style.cssText = 'flex-wrap:nowrap;gap:0.5rem;';
 
     Object.entries(FONT_LABELS).forEach(([key, label]) => {
       const chip = document.createElement('button');

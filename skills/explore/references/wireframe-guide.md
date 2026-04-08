@@ -278,12 +278,11 @@ is rendered at full size inside a container, then CSS-scaled to ~65%.
   margin-bottom: 0.75rem;
 }
 
-/* Scale the wireframe preview — hugs content, caps at 500px */
+/* Scale the wireframe preview — hugs content naturally */
 .concept-preview-frame {
   overflow: hidden;
   border-radius: 8px;
   border: 1px solid #e5e7eb;
-  max-height: 500px;      /* clips if too tall, hugs if short */
 }
 .concept-preview-inner {
   transform: scale(0.65);
@@ -319,9 +318,9 @@ is rendered at full size inside a container, then CSS-scaled to ~65%.
 - **2-3 items per list/grid/table** — enough to show the pattern. Add "+ N more" indicator.
 - **Names and badges only** — omit descriptions, body text, paragraphs inside items.
 - **One state** — show the default state. Skip stress-test content at this stage.
-- **Scaled preview** — the `.concept-preview-frame` container scales the prototype
-  and hugs its content (max-height: 500px as a safety cap). No fixed height — the
-  frame should fit snugly around the concept, not stretch with empty space.
+- **Scaled preview** — the `.concept-preview-frame` scales the prototype to 65% and
+  hugs its content naturally. No fixed or max height — the frame fits snugly around
+  the concept without clipping or empty space.
 
 **Key rules:**
 - `data-choice` on every `.concept-card`

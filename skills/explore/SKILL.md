@@ -145,7 +145,7 @@ After the user selects 1-3 thumbnails:
 4. **End with a structural verdict** for each concept — rendered as text below the
    prototype, not inside it: what the pattern gets right, where it strains, what it
    implies for next steps
-5. Tell the user to scroll through, explore, and pick a direction
+5. Tell the user: "Scroll through and click your favorite. You can also use Comment (Shift+C) to tag specific elements you like from ANY concept — even ones you don't pick overall. When you Send, I'll combine your pick with your annotations to build the best version."
 
 ## Phase 4: Converge + Pick Palette
 

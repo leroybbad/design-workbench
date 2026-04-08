@@ -192,12 +192,15 @@ holds up.
 
 - **Real chrome** — top bars, panel headers, filter tabs, search inputs, breadcrumbs.
   The structural furniture of the UI should be present and correctly positioned.
-- **Real affordances** — clickable elements, state changes, filtering chips, toggles.
-  UI elements should behave as they would in production.
-- **Abbreviated content** — representative names ("Data Transformer", "Slack Notify"),
-  short descriptions, plausible counts. Not real data, but enough to feel the density.
-- **No visual polish** — correct structure, no decorative refinement. Think engineering
-  sketch, not design comp.
+- **Real affordances** — filter chips, toggles, state indicators. Show them in place
+  but they don't need to be interactive at this stage.
+- **Minimal content** — show **2-3 representative items** per list, grid, or table to
+  establish the pattern. Then add a count indicator ("+ 25 more") rather than rendering
+  every slot. The pattern is clear after 2 items — more is wasted tokens.
+- **No descriptions** — item names and badges only. Omit body text, descriptions,
+  paragraphs inside list items and cards. The structural role of each element is
+  obvious from its position and label.
+- **No visual polish** — correct structure, no decorative refinement.
 
 ### What to build
 
@@ -239,16 +242,23 @@ the prototype, not inside it:
 
 ### Layout
 
-Stack prototypes **vertically, one per concept.** Each gets full page width.
+Stack prototypes **vertically, one per concept.** Each gets full page width but is
+**visually scaled down** so the user can see 2-3 concepts in one scroll. The prototype
+is rendered at full size inside a container, then CSS-scaled to ~65%.
 
 ```css
-.concept-stack { display: flex; flex-direction: column; gap: 2rem; }
+.concept-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  padding: 2rem;
+}
 
 .concept-card {
   background: #fff;
   border: 2px solid #e5e7eb;
   border-radius: 12px;
-  padding: 1.5rem;
+  padding: 1.25rem;
   cursor: pointer;
   transition: border-color 0.2s, box-shadow 0.2s;
 }
@@ -259,13 +269,26 @@ Stack prototypes **vertically, one per concept.** Each gets full page width.
 .concept-card h2 {
   font-size: 1.125rem;
   font-weight: 600;
-  margin-bottom: 0.375rem;
+  margin-bottom: 0.25rem;
 }
 .concept-desc {
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   color: #6b7280;
-  line-height: 1.5;
-  margin-bottom: 1.25rem;
+  line-height: 1.4;
+  margin-bottom: 0.75rem;
+}
+
+/* Scale the wireframe preview down so full layouts fit in ~400px height */
+.concept-preview-frame {
+  overflow: hidden;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  height: 420px;          /* fixed viewport */
+}
+.concept-preview-inner {
+  transform: scale(0.65);
+  transform-origin: top left;
+  width: 154%;            /* 1 / 0.65 to fill container width */
 }
 ```
 
@@ -280,20 +303,30 @@ Stack prototypes **vertically, one per concept.** Each gets full page width.
 <div class="concept-stack">
   <div class="concept-card" data-choice="a">
     <h2>A — [Concept Name]</h2>
-    <p class="concept-desc">[1-2 sentence description of the pattern]</p>
-    <div class="wireframe-preview">
-      <!-- Full structural prototype using wf-* classes -->
+    <p class="concept-desc">[1-sentence description]</p>
+    <div class="concept-preview-frame">
+      <div class="concept-preview-inner">
+        <!-- Structural prototype at full size — the frame scales it down -->
+      </div>
     </div>
   </div>
 </div>
 ```
 
+### Keeping it compact
+
+**The goal: all concepts visible in 1-2 scrolls.** To achieve this:
+- **2-3 items per list/grid/table** — enough to show the pattern. Add "+ N more" indicator.
+- **Names and badges only** — omit descriptions, body text, paragraphs inside items.
+- **One state** — show the default state. Skip stress-test content at this stage.
+- **Scaled preview** — the `.concept-preview-frame` container clips and scales the
+  prototype so each concept fits in ~400px of viewport height.
+
 **Key rules:**
 - `data-choice` on every `.concept-card`
-- Full readable font size, never miniaturized
-- Each prototype tests its core pattern assumption
-- Include at least one stress-test toggle per concept
+- Each prototype shows the core structural pattern with minimal content
 - Always use `.concept-stack` — never a grid at this stage
+- Use the scale-down frame so concepts are comparable at a glance
 
 ---
 

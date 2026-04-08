@@ -15,20 +15,20 @@ When you're done tweaking, hit **Send** (Shift+Cmd+Enter). Claude reads your str
 
 ## Install
 
-In Claude Code, run:
+In Claude Code, run these two commands:
 
 ```
-/install-plugin https://github.com/leroybbad/design-superpowers
+/plugin marketplace add leroybbad/design-superpowers
+/plugin install design-companion@leroybbad-design-superpowers
 ```
 
-Or add to your Claude Code settings manually:
+Then reload plugins without restarting:
 
-```json
-{
-  "enabledPlugins": {
-    "design-companion@leroybbad": true
-  }
-}
+```
+/reload-plugins
+```
+
+That's it. The skill, server, and all tools ship with the plugin — nothing to build.
 ```
 
 ## How It Works

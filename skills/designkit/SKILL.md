@@ -59,6 +59,26 @@ Write HTML files to `screen_dir`. The server serves the newest file by modificat
 
 3. **Semantic class names.** Classes describe what the element IS (`.metric-card`) not what it looks like (`.p-4.bg-white`). This makes annotation selectors meaningful.
 
+### Anti-Slop Rules
+
+These are the most common tells of AI-generated UI. Avoid all of them:
+
+4. **No emoji icons.** Never use 📊 📋 🔍 or any emoji as UI icons. Use Lucide icons instead. Include this in the `<head>`:
+   ```html
+   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lucide-static@latest/font/lucide.min.css">
+   ```
+   Then use: `<i class="lucide-chart-bar"></i>`, `<i class="lucide-search"></i>`, etc.
+
+5. **Tight page headers.** Don't waste 1/3 of the screen on a page title with massive padding. The page heading, action buttons, and any breadcrumbs should sit in a compact row with minimal vertical padding. `padding: 0.75rem 0` max on the header row.
+
+6. **No orphaned whitespace.** Every section should feel intentionally spaced. If there's a gap between a heading and content, or between the nav and the page body, it should be a deliberate rhythm (e.g. `--space-md` everywhere), not random large gaps.
+
+7. **Body text at 16px (1rem).** Use `--font-base: 1rem` for body/table content. Reserve `--font-sm: 0.875rem` for secondary labels and metadata. Never set `--font-base` below 0.875rem.
+
+8. **Consistent text hierarchy.** Navigation text, body text, and metadata should each have a clearly distinct size. Don't put tiny 11px text next to 16px text — it looks accidental. Use the token scale: `--font-xs` for labels, `--font-sm` for secondary, `--font-base` for body, `--font-lg` for headings.
+
+9. **Dense layouts earn their density.** If you're building a table or dashboard, make it genuinely information-dense — not just a few items with lots of padding. Either fill the space with useful content or tighten the layout to fit its content.
+
 **Token block template** — include at the top of every prototype's `<style>`:
 
 ```css
@@ -84,11 +104,11 @@ Write HTML files to `screen_dir`. The server serves the newest file by modificat
   --space-xl: 2rem;
 
   /* Typography */
-  --font-xs: 0.65rem;
-  --font-sm: 0.8rem;
+  --font-xs: 0.75rem;
+  --font-sm: 0.875rem;
   --font-base: 1rem;
-  --font-lg: 1.4rem;
-  --font-xl: 1.6rem;
+  --font-lg: 1.25rem;
+  --font-xl: 1.5rem;
 
   /* Shape */
   --radius-sm: 6px;

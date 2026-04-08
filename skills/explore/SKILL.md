@@ -25,13 +25,14 @@ AI slop by anchoring every design decision to the user's actual intent.
 ## Hard Gate
 
 <HARD-GATE>
-Do NOT generate a prototype, write production HTML, or invoke the designkit skill until:
+Do NOT generate a final prototype, write production HTML, or invoke the designkit skill until:
 1. A problem statement exists (who, what, why)
 2. An interaction model is identified (pattern, navigation, density)
-3. Some aesthetic signal is captured (palette, vibe, or codebase tokens)
+3. A concept direction is chosen (from Crazy 8s → deep dive → convergence)
+4. A palette/look-and-feel is selected (after convergence, not before)
 
-You MAY show visual content in the browser during exploration (palette cards, concept
-wireframes). These are exploration artifacts, not prototypes.
+You MAY show visual content in the browser during exploration (concept thumbnails,
+deep dive wireframes). These are exploration artifacts, not prototypes.
 </HARD-GATE>
 
 ## Checklist
@@ -39,13 +40,13 @@ wireframes). These are exploration artifacts, not prototypes.
 You MUST create a task for each item and complete them in order:
 
 1. **Read the room** — assess what's known, scan codebase for existing tokens
-2. **Discover** — adaptive questions (problem, interaction model, look & feel)
-3. **Show palette options** in browser (if no codebase tokens detected)
-4. **Ask tight vs. wide** — 3 focused concepts or wider range?
-5. **Generate concept wireframes** in browser
-6. **Converge** on direction with the user
+2. **Discover** — adaptive questions (problem, interaction model)
+3. **Crazy 8s** — generate 6-8 abstract structural thumbnails in a grid
+4. **Deep dive** — render selected concepts at full detail
+5. **Converge** — user picks a direction
+6. **Pick palette** — show palette options (or confirm codebase tokens) AFTER convergence
 7. **Write design brief** to `docs/designkit/briefs/YYYY-MM-DD-<topic>.md`
-8. **Generate first prototype** at higher fidelity with chosen palette
+8. **Generate first prototype** at full fidelity with chosen palette
 9. **Hand off** — offer refinement via designkit or implementation path
 
 ## Phase 1: Read the Room
@@ -95,29 +96,15 @@ Ask only what you don't already know:
 - **Data density:** Sparse & focused / Medium / Dense & information-rich
 - **Responsive:** Desktop-first / Mobile-first / Both equally
 
-### Thread C — Look & Feel
-
-If codebase tokens were detected in Phase 1:
-> "I found [system/tokens] in your project. Should I use these as the starting
-> point, or do you want to explore other directions?"
-
-If no codebase tokens, or the user wants to explore:
-1. Start the Design Companion server (see Server section below)
-2. Copy the pre-built palette selector to the screen directory:
-   ```bash
-   cp skills/designkit/scripts/palette-selector.html "$SCREEN_DIR/palette-selector.html"
-   ```
-   This is a static template with all 10 palettes as differentiated live-rendered cards.
-   Each card has `data-choice` attributes so clicks are captured via WebSocket.
-3. Tell the user the URL and wait for their selection
-4. Read `$STATE_DIR/events` for their click — the choice value maps to a palette name
-5. Read `references/palettes.md` to get the full token set for the chosen palette
-
 **Ordering rule:**
-- Vague idea → Thread A first, then B, then C
-- Scoped feature in existing product → Light A, B, then C (detect from codebase)
-- "Build something that feels like X" → C is mostly answered, quick A, then B
-- Use judgment. Get aesthetic signal before showing any wireframes.
+- Vague idea → Thread A first, then B
+- Scoped feature in existing product → Light A, then B
+- Use judgment. Skip questions the user already answered.
+
+**Do NOT ask about look & feel or palettes during discovery.** Palette selection
+happens after the user has chosen a concept direction (Phase 4). Concepts should
+be design-system-agnostic — neutral, clean styling so the user evaluates structure
+and layout without being distracted by color or personality.
 
 ## Phase 3: Explore Concepts (Crazy 8s)
 
@@ -151,13 +138,35 @@ After the user selects 1-3 thumbnails:
    - Be clickable via `data-choice` attributes
 4. Tell the user to scroll through and pick a direction
 
-## Phase 4: Converge
+## Phase 4: Converge + Pick Palette
+
+### Converge on direction
 
 - User picks a direction (or mixes elements from multiple concepts)
 - Confirm your understanding: "So the direction is [concept A's layout] with
-  [concept C's navigation approach], using the [palette] feel — does that capture it?"
+  [concept C's navigation approach] — does that capture it?"
 - If they want adjustments, refine and re-confirm
-- One round of refinement questions if needed, then move to output
+
+### Pick palette (NOW — after convergence)
+
+Once the structural direction is locked, give it a visual personality:
+
+If codebase tokens were detected in Phase 1:
+> "I found [system/tokens] in your project. Should I use these as the base,
+> or do you want to explore other directions?"
+
+If no codebase tokens, or the user wants to explore:
+1. Start the Design Companion server if not already running (see Server section)
+2. Copy the pre-built palette selector to the screen directory:
+   ```bash
+   cp skills/designkit/scripts/palette-selector.html "$SCREEN_DIR/palette-selector.html"
+   ```
+3. Tell the user: "Now let's give it personality — pick the palette that feels right"
+4. Read `$STATE_DIR/events` for their click — the choice value maps to a palette name
+5. Read `references/palettes.md` to get the full token set for the chosen palette
+
+This is the moment where "Apple HIG" vs "Corporate Dense" vs "Neon AI" actually
+matters — because it immediately transforms the chosen concept into the first prototype.
 
 ## Phase 5: Output
 
@@ -216,8 +225,7 @@ companion frame template automatically.
 for their feedback (clicks, comments, tune changes) as JSONL.
 
 **When to start the server:**
-- At the beginning of Thread C (look & feel) if palette cards need to be shown
-- Before Phase 3 if not already running
+- Before Phase 3 (Crazy 8s) — first time visual content is shown
 - Check `$STATE_DIR/server-info` to see if a server is already running
 
 ## Key Behavioral Rules
@@ -225,7 +233,7 @@ for their feedback (clicks, comments, tune changes) as JSONL.
 - **One question per message.** Never combine multiple questions.
 - **Multiple choice preferred.** Easier to answer than open-ended.
 - **Never re-ask.** Skip questions the user already answered.
-- **Aesthetic before visuals.** Always get some palette signal before showing wireframes.
+- **Structure before style.** Explore layout patterns first (neutral styling), pick palette after convergence.
 - **Real content.** Never use lorem ipsum, "[Title]", or placeholder text.
 - **High quality concepts.** Wireframes should look like real UI with muted colors — not gray boxes, not rough sketches.
 - **Document everything.** The design brief is the anchor against future AI slop.

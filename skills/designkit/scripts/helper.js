@@ -1681,7 +1681,7 @@
   };
 
   // Expose API for explicit use
-  window.brainstorm = {
+  window.designkit = {
     send: sendEvent,
     choice: (value, metadata = {}) => sendEvent({ type: 'choice', value, ...metadata })
   };

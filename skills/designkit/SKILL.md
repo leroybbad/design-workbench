@@ -193,7 +193,7 @@ The file contains JSONL — one JSON object per line. Two types:
 skills/designkit/scripts/stop-server.sh $SESSION_DIR
 ```
 
-Mockup files persist in `.superpowers/brainstorm/` under the project directory for later reference.
+Mockup files persist in `.designkit/sessions/` under the project directory for later reference.
 
 ## Key Principles
 

@@ -25,11 +25,13 @@ echo "Syncing from designkit-dev → designkit..."
 rsync -av --delete \
   --exclude '.git/' \
   --exclude '.superpowers/' \
+  --exclude '.designkit/' \
   --exclude 'superpowers-main/' \
   --exclude 'docs/' \
   --exclude 'release.sh' \
   --exclude 'node_modules/' \
   --exclude '.DS_Store' \
+  --exclude '.playwright-mcp/' \
   "$DEV_REPO/" "$PUBLIC_REPO/"
 
 echo ""

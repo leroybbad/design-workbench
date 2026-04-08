@@ -42,7 +42,11 @@
     localStorage.setItem(SESSION_KEY, JSON.stringify(annotations));
     updateBadge();
     const sendBtn = document.getElementById('send-annotations');
-    if (sendBtn) sendBtn.style.display = (annotations.length > 0 || tuneChanges.length > 0) ? 'flex' : 'none';
+    if (sendBtn) {
+      const hasChanges = annotations.length > 0 || tuneChanges.length > 0 || (themeState && themeState.system);
+      sendBtn.disabled = !hasChanges;
+      sendBtn.style.opacity = hasChanges ? '1' : '0.4';
+    }
   }
 
   function generateId() {
@@ -2132,13 +2136,14 @@
         const sendBtn = document.createElement('button');
         sendBtn.id = 'send-annotations';
         sendBtn.className = 'comment-toggle';
-        sendBtn.title = 'Send comments to Claude';
-        sendBtn.style.display = 'none';
+        sendBtn.title = 'Send to Claude (⇧⌘↵)';
+        sendBtn.disabled = true;
+        sendBtn.style.opacity = '0.4';
         sendBtn.innerHTML = '<span>Send</span> <svg class="comment-icon" viewBox="0 0 16 16" fill="none">' +
           '<line x1="2" y1="8" x2="13" y2="8" stroke="currentColor" stroke-width="1.25" stroke-linecap="round"/>' +
           '<polyline points="9,4 13,8 9,12" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" fill="none"/>' +
           '</svg>';
-        sendBtn.addEventListener('click', (e) => { e.stopPropagation(); sendAnnotations(); });
+        sendBtn.addEventListener('click', (e) => { e.stopPropagation(); if (!sendBtn.disabled) sendAnnotations(); });
         headerRight.appendChild(sendBtn);
       }
     }

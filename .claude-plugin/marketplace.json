@@ -8,7 +8,7 @@
     {
       "name": "designkit",
       "description": "Explore design directions with guided brainstorming, then refine with Comment, Inspect, Tune, and Shadow tools",
-      "version": "0.2.7",
+      "version": "0.2.8",
       "source": "./",
       "author": {
         "name": "Lee McEwen"

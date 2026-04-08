@@ -18,8 +18,8 @@ When you're done tweaking, hit **Send** (Shift+Cmd+Enter). Claude reads your str
 In Claude Code, run these two commands:
 
 ```
-/plugin marketplace add leroybbad/design-superpowers
-/plugin install design-companion@leroybbad-design-superpowers
+/plugin marketplace add leroybbad/designkit
+/plugin install designkit@designkit
 ```
 
 Then reload plugins without restarting:

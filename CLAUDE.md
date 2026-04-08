@@ -2,9 +2,9 @@
 
 ## If You Are Claude
 
-This repo is a Claude Code plugin. The `skills/design-companion/` directory contains the skill and all supporting scripts. **Do not modify the scripts unless explicitly asked** — they are the shipped tool, not generated artifacts.
+This repo is a Claude Code plugin. The `skills/designkit/` directory contains the skill and all supporting scripts. **Do not modify the scripts unless explicitly asked** — they are the shipped tool, not generated artifacts.
 
-When the design-companion skill is activated, follow the instructions in `skills/design-companion/SKILL.md` exactly.
+When the designkit skill is activated, follow the instructions in `skills/designkit/SKILL.md` exactly.
 
 ## Prototype Authoring Standards
 
@@ -21,7 +21,7 @@ The Design Companion's own UI uses `#dc-` prefixed IDs and `.annotation-` prefix
 
 ## Contributing
 
-- The core files are `helper.js`, `frame-template.html`, and `server.cjs` in `skills/design-companion/scripts/`
+- The core files are `helper.js`, `frame-template.html`, and `server.cjs` in `skills/designkit/scripts/`
 - `helper.js` is the largest file (~1400 lines) — all client-side interaction logic
 - `frame-template.html` is the CSS design system for the companion chrome
 - `server.cjs` is a zero-dependency Node.js HTTP + WebSocket server

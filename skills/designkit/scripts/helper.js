@@ -2243,6 +2243,11 @@
           if (commentMode) setCommentMode(false);
           if (inspectMode) setInspectMode(false);
           setTuneMode(!tuneMode);
+        } else if (action === 'theme-mode') {
+          if (commentMode) setCommentMode(false);
+          if (inspectMode) setInspectMode(false);
+          if (tuneMode) setTuneMode(false);
+          setThemeMode(!themeMode);
         } else if (action === 'send-comments') {
           sendAnnotations();
         } else if (action === 'toggle-comments') {

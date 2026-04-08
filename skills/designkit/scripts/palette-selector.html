@@ -1,0 +1,693 @@
+<style>
+  /* ── Layout ─────────────────────────────────────────────── */
+  .ps-page {
+    font-family: system-ui, -apple-system, sans-serif;
+    max-width: 960px;
+    margin: 0 auto;
+  }
+
+  .ps-heading {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #111;
+    margin: 0 0 0.375rem;
+    line-height: 1.2;
+  }
+
+  .ps-subtitle {
+    font-size: 0.9375rem;
+    color: #555;
+    margin: 0 0 2rem;
+  }
+
+  .ps-tier {
+    margin-bottom: 2.5rem;
+  }
+
+  .ps-tier-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #888;
+    margin: 0 0 0.875rem;
+  }
+
+  .ps-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+  }
+
+  /* ── Palette Card ────────────────────────────────────────── */
+  .ps-card {
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    background: #fff;
+    cursor: pointer;
+    transition: border-color 0.15s, box-shadow 0.15s, transform 0.12s;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .ps-card:hover {
+    border-color: #aaa;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.10);
+    transform: translateY(-2px);
+  }
+
+  .ps-card.selected {
+    border-color: #0066ff;
+    box-shadow: 0 0 0 3px rgba(0,102,255,0.15), 0 4px 16px rgba(0,0,0,0.10);
+  }
+
+  .ps-card-meta {
+    padding: 0.75rem 0.875rem 0.875rem;
+    flex: 1;
+  }
+
+  .ps-card-name {
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: #111;
+    margin: 0 0 0.25rem;
+  }
+
+  .ps-card-desc {
+    font-size: 0.75rem;
+    color: #555;
+    margin: 0 0 0.375rem;
+    line-height: 1.45;
+  }
+
+  .ps-card-best {
+    font-size: 0.6875rem;
+    color: #888;
+    font-style: italic;
+    margin: 0;
+  }
+
+  /* ── Mini Sample Shared Base ─────────────────────────────── */
+  .sample {
+    padding: var(--s-pad, 0.75rem);
+    background: var(--s-bg, #f5f5f5);
+    font-family: var(--s-font, system-ui, sans-serif);
+    font-size: var(--s-base, 0.75rem);
+    color: var(--s-text, #111);
+    min-height: 90px;
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-gap, 0.5rem);
+    border-bottom: 1px solid var(--s-border, #ddd);
+  }
+
+  .sample-header {
+    font-size: var(--s-font-sm, 0.6875rem);
+    font-weight: var(--s-weight-bold, 700);
+    color: var(--s-text-secondary, #444);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    background: var(--s-surface, #eee);
+    margin: calc(var(--s-pad, 0.75rem) * -1) calc(var(--s-pad, 0.75rem) * -1) 0;
+    padding: calc(var(--s-pad, 0.75rem) * 0.5) var(--s-pad, 0.75rem);
+    border-bottom: 1px solid var(--s-border, #ddd);
+  }
+
+  .sample-body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-gap, 0.4rem);
+  }
+
+  .sample-stat {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 0.25rem;
+  }
+
+  .sample-label {
+    font-size: var(--s-font-xs, 0.625rem);
+    color: var(--s-text-secondary, #666);
+    font-weight: var(--s-weight-normal, 400);
+  }
+
+  .sample-value {
+    font-size: var(--s-font-sm, 0.6875rem);
+    font-weight: var(--s-weight-bold, 700);
+    color: var(--s-text, #111);
+  }
+
+  .sample-btn {
+    margin-top: calc(var(--s-gap, 0.4rem) * 0.5);
+    padding: var(--s-btn-pad-v, 3px) var(--s-btn-pad-h, 8px);
+    background: var(--s-primary, #333);
+    color: var(--s-on-primary, #fff);
+    border: none;
+    border-radius: var(--s-radius, 4px);
+    font-family: var(--s-font, inherit);
+    font-size: var(--s-font-xs, 0.625rem);
+    font-weight: var(--s-weight-medium, 500);
+    cursor: pointer;
+    align-self: flex-start;
+    white-space: nowrap;
+    box-shadow: var(--s-shadow, none);
+    letter-spacing: var(--s-btn-tracking, 0);
+    text-transform: var(--s-btn-transform, none);
+  }
+
+  /* ── Material Design ─────────────────────────────────────── */
+  .sample-material {
+    --s-bg:             #FFFBFE;
+    --s-surface:        #E7E0EC;
+    --s-border:         #CAC4D0;
+    --s-text:           #1C1B1F;
+    --s-text-secondary: #49454F;
+    --s-primary:        #6750A4;
+    --s-on-primary:     #FFFFFF;
+    --s-font:           'Roboto', sans-serif;
+    --s-base:           0.8125rem;
+    --s-font-xs:        0.6875rem;
+    --s-font-sm:        0.75rem;
+    --s-weight-normal:  400;
+    --s-weight-medium:  500;
+    --s-weight-bold:    700;
+    --s-radius:         12px;
+    --s-shadow:         0 1px 2px rgba(0,0,0,0.12), 0 2px 6px rgba(0,0,0,0.10);
+    --s-pad:            0.75rem;
+    --s-gap:            0.5rem;
+    --s-btn-pad-v:      5px;
+    --s-btn-pad-h:      14px;
+  }
+
+  /* ── Apple HIG ───────────────────────────────────────────── */
+  .sample-apple {
+    --s-bg:             #F2F2F7;
+    --s-surface:        #E5E5EA;
+    --s-border:         #C6C6C8;
+    --s-text:           #000000;
+    --s-text-secondary: #3C3C43;
+    --s-primary:        #007AFF;
+    --s-on-primary:     #FFFFFF;
+    --s-font:           -apple-system, 'SF Pro Text', 'Helvetica Neue', sans-serif;
+    --s-base:           0.875rem;
+    --s-font-xs:        0.6875rem;
+    --s-font-sm:        0.8125rem;
+    --s-weight-normal:  400;
+    --s-weight-medium:  500;
+    --s-weight-bold:    600;
+    --s-radius:         10px;
+    --s-shadow:         0 4px 12px rgba(0,0,0,0.10), 0 2px 4px rgba(0,0,0,0.06);
+    --s-pad:            0.875rem;
+    --s-gap:            0.625rem;
+    --s-btn-pad-v:      5px;
+    --s-btn-pad-h:      12px;
+  }
+
+  /* ── Tailwind / Shadcn ───────────────────────────────────── */
+  .sample-tailwind {
+    --s-bg:             #FAFAFA;
+    --s-surface:        #F4F4F5;
+    --s-border:         #E4E4E7;
+    --s-text:           #09090B;
+    --s-text-secondary: #3F3F46;
+    --s-primary:        #18181B;
+    --s-on-primary:     #FAFAFA;
+    --s-font:           'Inter', 'Geist', system-ui, sans-serif;
+    --s-base:           0.8125rem;
+    --s-font-xs:        0.6875rem;
+    --s-font-sm:        0.8125rem;
+    --s-weight-normal:  400;
+    --s-weight-medium:  500;
+    --s-weight-bold:    600;
+    --s-radius:         6px;
+    --s-shadow:         0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+    --s-pad:            0.75rem;
+    --s-gap:            0.4rem;
+    --s-btn-pad-v:      4px;
+    --s-btn-pad-h:      10px;
+    --s-btn-tracking:   0.01em;
+  }
+
+  /* ── Ant Design ──────────────────────────────────────────── */
+  .sample-ant {
+    --s-bg:             #F5F5F5;
+    --s-surface:        #FAFAFA;
+    --s-border:         #D9D9D9;
+    --s-text:           rgba(0,0,0,0.85);
+    --s-text-secondary: rgba(0,0,0,0.65);
+    --s-primary:        #1677FF;
+    --s-on-primary:     #FFFFFF;
+    --s-font:           -apple-system, 'PingFang SC', 'Segoe UI', sans-serif;
+    --s-base:           0.8125rem;
+    --s-font-xs:        0.625rem;
+    --s-font-sm:        0.75rem;
+    --s-weight-normal:  400;
+    --s-weight-medium:  500;
+    --s-weight-bold:    600;
+    --s-radius:         6px;
+    --s-shadow:         0 3px 6px rgba(0,0,0,0.04), 0 6px 16px rgba(0,0,0,0.04);
+    --s-pad:            0.5rem;
+    --s-gap:            0.3rem;
+    --s-btn-pad-v:      3px;
+    --s-btn-pad-h:      8px;
+    --s-btn-tracking:   0;
+  }
+
+  /* ── Corporate Dense ─────────────────────────────────────── */
+  .sample-corporate-dense {
+    --s-bg:             #F4F5F7;
+    --s-surface:        #EBECF0;
+    --s-border:         #C1C7D0;
+    --s-text:           #172B4D;
+    --s-text-secondary: #42526E;
+    --s-primary:        #0052CC;
+    --s-on-primary:     #FFFFFF;
+    --s-font:           -apple-system, 'Segoe UI', sans-serif;
+    --s-base:           0.75rem;
+    --s-font-xs:        0.625rem;
+    --s-font-sm:        0.6875rem;
+    --s-weight-normal:  400;
+    --s-weight-medium:  500;
+    --s-weight-bold:    600;
+    --s-radius:         3px;
+    --s-shadow:         0 1px 3px rgba(9,30,66,0.13), 0 0 1px rgba(9,30,66,0.08);
+    --s-pad:            0.375rem;
+    --s-gap:            0.2rem;
+    --s-btn-pad-v:      2px;
+    --s-btn-pad-h:      7px;
+    --s-btn-tracking:   0;
+  }
+
+  /* ── Clean & Spacious ────────────────────────────────────── */
+  .sample-clean-spacious {
+    --s-bg:             #F6F9FC;
+    --s-surface:        #F0F4F8;
+    --s-border:         #E0E6EC;
+    --s-text:           #0A2540;
+    --s-text-secondary: #425466;
+    --s-primary:        #635BFF;
+    --s-on-primary:     #FFFFFF;
+    --s-font:           'Inter', system-ui, sans-serif;
+    --s-base:           0.875rem;
+    --s-font-xs:        0.6875rem;
+    --s-font-sm:        0.8125rem;
+    --s-weight-normal:  400;
+    --s-weight-medium:  500;
+    --s-weight-bold:    700;
+    --s-radius:         6px;
+    --s-shadow:         0 4px 14px rgba(10,37,64,0.10), 0 2px 4px rgba(10,37,64,0.06);
+    --s-pad:            1rem;
+    --s-gap:            0.75rem;
+    --s-btn-pad-v:      6px;
+    --s-btn-pad-h:      14px;
+  }
+
+  /* ── Neon AI ─────────────────────────────────────────────── */
+  .sample-neon-ai {
+    --s-bg:             #0A0A0F;
+    --s-surface:        #1C1C28;
+    --s-border:         #2A2A3C;
+    --s-text:           #E8E8F0;
+    --s-text-secondary: #9898B0;
+    --s-primary:        #00E5FF;
+    --s-on-primary:     #0A0A0F;
+    --s-font:           'JetBrains Mono', 'Fira Code', monospace;
+    --s-base:           0.8125rem;
+    --s-font-xs:        0.6875rem;
+    --s-font-sm:        0.75rem;
+    --s-weight-normal:  400;
+    --s-weight-medium:  500;
+    --s-weight-bold:    700;
+    --s-radius:         8px;
+    --s-shadow:         0 0 16px rgba(0,229,255,0.20), 0 4px 12px rgba(0,0,0,0.40);
+    --s-pad:            0.75rem;
+    --s-gap:            0.5rem;
+    --s-btn-pad-v:      4px;
+    --s-btn-pad-h:      10px;
+    --s-btn-tracking:   0.05em;
+    --s-btn-transform:  uppercase;
+  }
+
+  .sample-neon-ai .sample-header {
+    color: #00E5FF;
+    background: #13131A;
+    letter-spacing: 0.12em;
+  }
+
+  .sample-neon-ai .sample-value {
+    color: #00E5FF;
+  }
+
+  /* ── Editorial ───────────────────────────────────────────── */
+  .sample-editorial {
+    --s-bg:             #FAFAF8;
+    --s-surface:        #F2F2EE;
+    --s-border:         #D8D8D0;
+    --s-text:           #1A1A1A;
+    --s-text-secondary: #4A4A45;
+    --s-primary:        #1A1A1A;
+    --s-on-primary:     #FFFFFF;
+    --s-font:           Georgia, 'Times New Roman', serif;
+    --s-base:           0.9375rem;
+    --s-font-xs:        0.75rem;
+    --s-font-sm:        0.875rem;
+    --s-weight-normal:  400;
+    --s-weight-medium:  500;
+    --s-weight-bold:    700;
+    --s-radius:         2px;
+    --s-shadow:         0 3px 8px rgba(26,26,26,0.10), 0 1px 3px rgba(26,26,26,0.06);
+    --s-pad:            0.875rem;
+    --s-gap:            0.625rem;
+    --s-btn-pad-v:      5px;
+    --s-btn-pad-h:      12px;
+  }
+
+  .sample-editorial .sample-header {
+    font-style: italic;
+    text-transform: none;
+    letter-spacing: 0;
+    font-size: 0.8125rem;
+  }
+
+  /* ── Playful ─────────────────────────────────────────────── */
+  .sample-playful {
+    --s-bg:             #FDFCFF;
+    --s-surface:        #F0EEFF;
+    --s-border:         #D8D2F8;
+    --s-text:           #2D2B55;
+    --s-text-secondary: #5A5580;
+    --s-primary:        #6C5CE7;
+    --s-on-primary:     #FFFFFF;
+    --s-font:           'Nunito', 'DM Sans', system-ui, sans-serif;
+    --s-base:           0.9375rem;
+    --s-font-xs:        0.75rem;
+    --s-font-sm:        0.875rem;
+    --s-weight-normal:  400;
+    --s-weight-medium:  600;
+    --s-weight-bold:    800;
+    --s-radius:         16px;
+    --s-shadow:         0 4px 16px rgba(108,92,231,0.15), 0 2px 6px rgba(108,92,231,0.08);
+    --s-pad:            0.875rem;
+    --s-gap:            0.625rem;
+    --s-btn-pad-v:      6px;
+    --s-btn-pad-h:      14px;
+  }
+
+  .sample-playful .sample-header {
+    border-radius: 12px 12px 0 0;
+    background: #6C5CE7;
+    color: #FFFFFF;
+    letter-spacing: 0.04em;
+  }
+
+  /* ── Minimal Mono ────────────────────────────────────────── */
+  .sample-minimal-mono {
+    --s-bg:             #FFFFFF;
+    --s-surface:        #F2F2F2;
+    --s-border:         #DEDEDE;
+    --s-text:           #111111;
+    --s-text-secondary: #444444;
+    --s-primary:        #111111;
+    --s-on-primary:     #FFFFFF;
+    --s-font:           'DM Mono', 'Fira Mono', 'Courier New', monospace;
+    --s-base:           0.8125rem;
+    --s-font-xs:        0.6875rem;
+    --s-font-sm:        0.75rem;
+    --s-weight-normal:  400;
+    --s-weight-medium:  500;
+    --s-weight-bold:    700;
+    --s-radius:         0px;
+    --s-shadow:         none;
+    --s-pad:            0.75rem;
+    --s-gap:            0.4rem;
+    --s-btn-pad-v:      4px;
+    --s-btn-pad-h:      10px;
+    --s-btn-tracking:   0.02em;
+  }
+
+  .sample-minimal-mono .sample-btn {
+    border: 1px solid #111;
+    background: transparent;
+    color: #111;
+  }
+
+  .sample-minimal-mono .sample-header {
+    border-bottom: 2px solid #111;
+    background: #FAFAFA;
+    letter-spacing: 0.1em;
+    color: #111;
+  }
+</style>
+
+<div class="ps-page">
+  <h1 class="ps-heading">Pick a visual direction</h1>
+  <p class="ps-subtitle">Click the palette that feels right. Don't overthink it — we can refine later.</p>
+
+  <!-- Tier 1 -->
+  <div class="ps-tier">
+    <p class="ps-tier-label">Adoptable Systems — familiar, production-ready foundations</p>
+    <div class="ps-grid">
+
+      <!-- Material Design -->
+      <div class="ps-card" data-choice="material">
+        <div class="sample sample-material">
+          <div class="sample-header">Dashboard</div>
+          <div class="sample-body">
+            <div class="sample-stat">
+              <span class="sample-label">Revenue</span>
+              <span class="sample-value">$48.2K</span>
+            </div>
+            <div class="sample-stat">
+              <span class="sample-label">Users</span>
+              <span class="sample-value">1,842</span>
+            </div>
+            <button class="sample-btn">View Report</button>
+          </div>
+        </div>
+        <div class="ps-card-meta">
+          <h3 class="ps-card-name">Material Design</h3>
+          <p class="ps-card-desc">Bold type, expressive purple, elevation surfaces. Google's cross-platform system.</p>
+          <p class="ps-card-best">Best for: Android, cross-platform apps, data-rich UIs</p>
+        </div>
+      </div>
+
+      <!-- Apple HIG -->
+      <div class="ps-card" data-choice="apple">
+        <div class="sample sample-apple">
+          <div class="sample-header">Dashboard</div>
+          <div class="sample-body">
+            <div class="sample-stat">
+              <span class="sample-label">Revenue</span>
+              <span class="sample-value">$48.2K</span>
+            </div>
+            <div class="sample-stat">
+              <span class="sample-label">Users</span>
+              <span class="sample-value">1,842</span>
+            </div>
+            <button class="sample-btn">View Report</button>
+          </div>
+        </div>
+        <div class="ps-card-meta">
+          <h3 class="ps-card-name">Apple HIG</h3>
+          <p class="ps-card-desc">Generous whitespace, SF Pro–inspired type, trusted blue. Consumer-first clarity.</p>
+          <p class="ps-card-best">Best for: Consumer apps, Apple platforms, productivity</p>
+        </div>
+      </div>
+
+      <!-- Tailwind / Shadcn -->
+      <div class="ps-card" data-choice="tailwind">
+        <div class="sample sample-tailwind">
+          <div class="sample-header">Dashboard</div>
+          <div class="sample-body">
+            <div class="sample-stat">
+              <span class="sample-label">Revenue</span>
+              <span class="sample-value">$48.2K</span>
+            </div>
+            <div class="sample-stat">
+              <span class="sample-label">Users</span>
+              <span class="sample-value">1,842</span>
+            </div>
+            <button class="sample-btn">View Report</button>
+          </div>
+        </div>
+        <div class="ps-card-meta">
+          <h3 class="ps-card-name">Tailwind / Shadcn</h3>
+          <p class="ps-card-desc">Near-black primary, clean Inter type, confident SaaS aesthetic. Utility-first feel.</p>
+          <p class="ps-card-best">Best for: Web apps, SaaS, developer tools, dashboards</p>
+        </div>
+      </div>
+
+      <!-- Ant Design -->
+      <div class="ps-card" data-choice="ant">
+        <div class="sample sample-ant">
+          <div class="sample-header">Dashboard</div>
+          <div class="sample-body">
+            <div class="sample-stat">
+              <span class="sample-label">Revenue</span>
+              <span class="sample-value">$48.2K</span>
+            </div>
+            <div class="sample-stat">
+              <span class="sample-label">Users</span>
+              <span class="sample-value">1,842</span>
+            </div>
+            <button class="sample-btn">View Report</button>
+          </div>
+        </div>
+        <div class="ps-card-meta">
+          <h3 class="ps-card-name">Ant Design</h3>
+          <p class="ps-card-desc">Structured, dense, enterprise-grade. Clear blue signals action in data-heavy contexts.</p>
+          <p class="ps-card-best">Best for: Admin dashboards, enterprise, back-office apps</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Tier 2 -->
+  <div class="ps-tier">
+    <p class="ps-tier-label">Personality Archetypes — mood and character, not a specific system</p>
+    <div class="ps-grid">
+
+      <!-- Corporate Dense -->
+      <div class="ps-card" data-choice="corporate-dense">
+        <div class="sample sample-corporate-dense">
+          <div class="sample-header">Dashboard</div>
+          <div class="sample-body">
+            <div class="sample-stat">
+              <span class="sample-label">Revenue</span>
+              <span class="sample-value">$48.2K</span>
+            </div>
+            <div class="sample-stat">
+              <span class="sample-label">Users</span>
+              <span class="sample-value">1,842</span>
+            </div>
+            <button class="sample-btn">View Report</button>
+          </div>
+        </div>
+        <div class="ps-card-meta">
+          <h3 class="ps-card-name">Corporate Dense</h3>
+          <p class="ps-card-desc">Maximum information density. Every pixel earns its place. Think Jira, Confluence.</p>
+          <p class="ps-card-best">Best for: Ticketing, project management, internal ops</p>
+        </div>
+      </div>
+
+      <!-- Clean & Spacious -->
+      <div class="ps-card" data-choice="clean-spacious">
+        <div class="sample sample-clean-spacious">
+          <div class="sample-header">Dashboard</div>
+          <div class="sample-body">
+            <div class="sample-stat">
+              <span class="sample-label">Revenue</span>
+              <span class="sample-value">$48.2K</span>
+            </div>
+            <div class="sample-stat">
+              <span class="sample-label">Users</span>
+              <span class="sample-value">1,842</span>
+            </div>
+            <button class="sample-btn">View Report</button>
+          </div>
+        </div>
+        <div class="ps-card-meta">
+          <h3 class="ps-card-name">Clean &amp; Spacious</h3>
+          <p class="ps-card-desc">Generous breathing room, indigo accent, premium positioning. Stripe-inspired confidence.</p>
+          <p class="ps-card-best">Best for: Fintech, payment products, premium SaaS</p>
+        </div>
+      </div>
+
+      <!-- Neon AI -->
+      <div class="ps-card" data-choice="neon-ai">
+        <div class="sample sample-neon-ai">
+          <div class="sample-header">Dashboard</div>
+          <div class="sample-body">
+            <div class="sample-stat">
+              <span class="sample-label">Revenue</span>
+              <span class="sample-value">$48.2K</span>
+            </div>
+            <div class="sample-stat">
+              <span class="sample-label">Users</span>
+              <span class="sample-value">1,842</span>
+            </div>
+            <button class="sample-btn">View Report</button>
+          </div>
+        </div>
+        <div class="ps-card-meta">
+          <h3 class="ps-card-name">Neon AI</h3>
+          <p class="ps-card-desc">Dark-first, cyan glow, monospace type. Built for the future. Technical and luminous.</p>
+          <p class="ps-card-best">Best for: AI tools, dev tools, terminal-adjacent UIs</p>
+        </div>
+      </div>
+
+      <!-- Editorial -->
+      <div class="ps-card" data-choice="editorial">
+        <div class="sample sample-editorial">
+          <div class="sample-header">Dashboard</div>
+          <div class="sample-body">
+            <div class="sample-stat">
+              <span class="sample-label">Revenue</span>
+              <span class="sample-value">$48.2K</span>
+            </div>
+            <div class="sample-stat">
+              <span class="sample-label">Users</span>
+              <span class="sample-value">1,842</span>
+            </div>
+            <button class="sample-btn">View Report</button>
+          </div>
+        </div>
+        <div class="ps-card-meta">
+          <h3 class="ps-card-name">Editorial</h3>
+          <p class="ps-card-desc">Serif headings, reading-optimized rhythm, warm neutrals. Ideas are the product.</p>
+          <p class="ps-card-best">Best for: Publishing, blogs, docs, long-form reading</p>
+        </div>
+      </div>
+
+      <!-- Playful -->
+      <div class="ps-card" data-choice="playful">
+        <div class="sample sample-playful">
+          <div class="sample-header">Dashboard</div>
+          <div class="sample-body">
+            <div class="sample-stat">
+              <span class="sample-label">Revenue</span>
+              <span class="sample-value">$48.2K</span>
+            </div>
+            <div class="sample-stat">
+              <span class="sample-label">Users</span>
+              <span class="sample-value">1,842</span>
+            </div>
+            <button class="sample-btn">View Report</button>
+          </div>
+        </div>
+        <div class="ps-card-meta">
+          <h3 class="ps-card-name">Playful</h3>
+          <p class="ps-card-desc">Very rounded, vibrant purple, oversized type. Every interaction feels inviting.</p>
+          <p class="ps-card-best">Best for: Consumer apps, education, games, community</p>
+        </div>
+      </div>
+
+      <!-- Minimal Mono -->
+      <div class="ps-card" data-choice="minimal-mono">
+        <div class="sample sample-minimal-mono">
+          <div class="sample-header">Dashboard</div>
+          <div class="sample-body">
+            <div class="sample-stat">
+              <span class="sample-label">Revenue</span>
+              <span class="sample-value">$48.2K</span>
+            </div>
+            <div class="sample-stat">
+              <span class="sample-label">Users</span>
+              <span class="sample-value">1,842</span>
+            </div>
+            <button class="sample-btn">View Report</button>
+          </div>
+        </div>
+        <div class="ps-card-meta">
+          <h3 class="ps-card-name">Minimal Mono</h3>
+          <p class="ps-card-desc">Near-zero color, monospace type, border-based depth. Structure over decoration.</p>
+          <p class="ps-card-best">Best for: Legal, financial, writing tools, high-stakes dashboards</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>

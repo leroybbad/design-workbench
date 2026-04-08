@@ -98,19 +98,49 @@ h1 { color: #333; } p { color: #666; }</style>
 <body><h1>Brainstorm Companion</h1>
 <p>Waiting for the agent to push a screen...</p></body></html>`;
 
-const frameTemplate = fs.readFileSync(path.join(__dirname, 'frame-template.html'), 'utf-8');
-const helperScript = fs.readFileSync(path.join(__dirname, 'helper.js'), 'utf-8');
-const helperInjection = '<script>\n' + helperScript + '\n</script>';
+function getFrameTemplate() {
+  return fs.readFileSync(path.join(__dirname, 'frame-template.html'), 'utf-8');
+}
+
+function getHelperInjection() {
+  const helperScript = fs.readFileSync(path.join(__dirname, 'helper.js'), 'utf-8');
+  return '<script>\n' + helperScript + '\n</script>';
+}
 
 // ========== Helper Functions ==========
 
-function isFullDocument(html) {
+function extractContent(html) {
+  // Extract <style> blocks and <body> content from full documents
+  // so they can be wrapped in the frame template
   const trimmed = html.trimStart().toLowerCase();
-  return trimmed.startsWith('<!doctype') || trimmed.startsWith('<html');
+  const isFullDoc = trimmed.startsWith('<!doctype') || trimmed.startsWith('<html');
+  if (!isFullDoc) return html;
+
+  let styles = '';
+  let body = html;
+
+  // Extract all <style> blocks, scoping :root to #claude-content
+  // so prototype tokens don't leak into the frame template chrome
+  const styleRegex = /<style[^>]*>([\s\S]*?)<\/style>/gi;
+  let match;
+  while ((match = styleRegex.exec(html)) !== null) {
+    let css = match[1];
+    css = css.replace(/:root\b/g, '#claude-content');
+    css = css.replace(/(?<![.\-\w])body(?=[^{]*\{)/g, '#claude-content');
+    styles += '<style>' + css + '</style>\n';
+  }
+
+  // Extract body content
+  const bodyMatch = html.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
+  if (bodyMatch) {
+    body = bodyMatch[1];
+  }
+
+  return styles + body;
 }
 
 function wrapInFrame(content) {
-  return frameTemplate.replace('<!-- CONTENT -->', content);
+  return getFrameTemplate().replace('<!-- CONTENT -->', content);
 }
 
 function getNewestScreen() {
@@ -131,13 +161,13 @@ function handleRequest(req, res) {
   if (req.method === 'GET' && req.url === '/') {
     const screenFile = getNewestScreen();
     let html = screenFile
-      ? (raw => isFullDocument(raw) ? raw : wrapInFrame(raw))(fs.readFileSync(screenFile, 'utf-8'))
+      ? wrapInFrame(extractContent(fs.readFileSync(screenFile, 'utf-8')))
       : WAITING_PAGE;
 
     if (html.includes('</body>')) {
-      html = html.replace('</body>', helperInjection + '\n</body>');
+      html = html.replace('</body>', getHelperInjection() + '\n</body>');
     } else {
-      html += helperInjection;
+      html += getHelperInjection();
     }
 
     res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });

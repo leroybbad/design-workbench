@@ -1662,8 +1662,417 @@
     });
   }
 
-  function rebuildColorsTab(panel) { /* Task 6 */ }
-  function rebuildFineTuneTab(panel) { /* Task 7 */ }
+  function rebuildColorsTab(panel) {
+    const colorsPanel = panel._tabPanels['Colors'];
+    if (!colorsPanel) return;
+
+    const td = window.THEME_DATA;
+    if (!td || !td.palettes) return;
+    if (!themeState.system) {
+      colorsPanel.innerHTML = '<div style="padding:16px;color:var(--dc-text-secondary,#888);font-size:13px;">Save a design system first to unlock color overrides.</div>';
+      return;
+    }
+
+    const palette = td.palettes.find(p => p.key === themeState.system);
+    if (!palette) return;
+
+    const cc = document.getElementById('claude-content');
+
+    // Track working color variant and accent
+    let activeVariant = themeState.colorVariant || 'default';
+    let activeAccent = themeState.accentColor || palette.tokens['--color-primary'] || '#0066ff';
+
+    const VARIANT_NAMES = ['default', 'dark', 'warm', 'cool'];
+    const VARIANT_LABELS = { default: 'Default', dark: 'Dark', warm: 'Warm', cool: 'Cool' };
+    // Five color dots to show per variant
+    const DOT_TOKENS = ['--color-bg', '--color-surface', '--color-primary', '--color-text', '--color-border'];
+
+    function getVariantTokens(variantKey) {
+      const base = palette.tokens || {};
+      const overrides = (palette.variants && palette.variants[variantKey]) || {};
+      return Object.assign({}, base, overrides);
+    }
+
+    function applyVariant(variantKey) {
+      if (!cc) return;
+      const vTokens = getVariantTokens(variantKey);
+      // Only swap --color-* tokens
+      Object.entries(vTokens).forEach(([k, v]) => {
+        if (k.startsWith('--color-')) cc.style.setProperty(k, v);
+      });
+    }
+
+    function applyAccent(hex) {
+      if (!cc) return;
+      cc.style.setProperty('--color-primary', hex);
+      cc.style.setProperty('--color-primary-hover', lightenColor(hex, -15));
+      const lum = themeRelativeLuminance(hex);
+      cc.style.setProperty('--color-on-primary', lum > 0.35 ? '#000000' : '#FFFFFF');
+    }
+
+    // Build container
+    const wrap = document.createElement('div');
+    wrap.style.cssText = 'padding:12px 16px;';
+
+    // Section: Color Variant
+    const variantLabel = document.createElement('div');
+    variantLabel.className = 'theme-finetune-label';
+    variantLabel.textContent = 'COLOR MODE';
+    wrap.appendChild(variantLabel);
+
+    const variantsRow = document.createElement('div');
+    variantsRow.className = 'theme-variants';
+
+    VARIANT_NAMES.forEach(vKey => {
+      const vTokens = getVariantTokens(vKey);
+      const card = document.createElement('div');
+      card.className = 'theme-variant' + (activeVariant === vKey ? ' active' : '');
+      card.title = VARIANT_LABELS[vKey];
+
+      const dots = document.createElement('div');
+      dots.className = 'theme-dots';
+      DOT_TOKENS.forEach(tok => {
+        const dot = document.createElement('div');
+        dot.className = 'theme-dot';
+        dot.style.background = vTokens[tok] || '#888';
+        dots.appendChild(dot);
+      });
+
+      const lbl = document.createElement('div');
+      lbl.className = 'theme-variant-label';
+      lbl.textContent = VARIANT_LABELS[vKey];
+
+      card.appendChild(dots);
+      card.appendChild(lbl);
+
+      card.addEventListener('click', () => {
+        activeVariant = vKey;
+        variantsRow.querySelectorAll('.theme-variant').forEach(c => c.classList.remove('active'));
+        card.classList.add('active');
+        applyVariant(vKey);
+      });
+
+      variantsRow.appendChild(card);
+    });
+    wrap.appendChild(variantsRow);
+
+    // Section: Accent Color
+    const accentRow = document.createElement('div');
+    accentRow.className = 'theme-accent-row';
+
+    const accentLabel = document.createElement('div');
+    accentLabel.className = 'theme-accent-label';
+    accentLabel.textContent = 'Accent color';
+
+    const accentInput = document.createElement('input');
+    accentInput.type = 'color';
+    accentInput.className = 'theme-accent-input';
+    accentInput.value = activeAccent.length === 7 ? activeAccent : '#0066ff';
+
+    const accentHex = document.createElement('div');
+    accentHex.className = 'theme-accent-hex';
+    accentHex.textContent = accentInput.value.toUpperCase();
+
+    accentInput.addEventListener('input', () => {
+      activeAccent = accentInput.value;
+      accentHex.textContent = activeAccent.toUpperCase();
+      applyAccent(activeAccent);
+    });
+
+    accentRow.appendChild(accentLabel);
+    accentRow.appendChild(accentInput);
+    accentRow.appendChild(accentHex);
+    wrap.appendChild(accentRow);
+
+    // Save bar
+    const saveBar = document.createElement('div');
+    saveBar.className = 'theme-save-bar';
+    const saveBtn = document.createElement('button');
+    saveBtn.className = 'theme-save-btn';
+    saveBtn.textContent = 'Save Colors';
+
+    saveBtn.addEventListener('click', () => {
+      themeState.colorVariant = activeVariant;
+      themeState.accentColor = activeAccent;
+      saveThemeState();
+
+      // Build tokenChanges for sidebar
+      const tokenChanges = {};
+      const vTokens = getVariantTokens(activeVariant);
+      Object.entries(vTokens).forEach(([k, v]) => {
+        if (k.startsWith('--color-')) tokenChanges[k] = v;
+      });
+      // Accent overrides
+      tokenChanges['--color-primary'] = activeAccent;
+      tokenChanges['--color-primary-hover'] = lightenColor(activeAccent, -15);
+      const lum = themeRelativeLuminance(activeAccent);
+      tokenChanges['--color-on-primary'] = lum > 0.35 ? '#000000' : '#FFFFFF';
+
+      tuneChanges = tuneChanges.filter(c => c.selector !== '#claude-content' || !c._themeColors);
+      tuneChanges.push({
+        selector: '#claude-content',
+        tag: 'div',
+        text: 'Color variant: ' + VARIANT_LABELS[activeVariant] + (activeAccent ? ' / accent ' + activeAccent.toUpperCase() : ''),
+        changes: {},
+        tokenChanges: tokenChanges,
+        timestamp: Date.now(),
+        _themeColors: true
+      });
+
+      saveAnnotations();
+      renderSidebar();
+      showToast('Colors saved.');
+    });
+
+    saveBar.appendChild(saveBtn);
+    wrap.appendChild(saveBar);
+
+    colorsPanel.innerHTML = '';
+    colorsPanel.appendChild(wrap);
+  }
+
+  function rebuildFineTuneTab(panel) {
+    const ftPanel = panel._tabPanels['Fine-tune'];
+    if (!ftPanel) return;
+
+    const td = window.THEME_DATA;
+    if (!td || !td.palettes) return;
+    if (!themeState.system) {
+      ftPanel.innerHTML = '<div style="padding:16px;color:var(--dc-text-secondary,#888);font-size:13px;">Save a design system first to unlock fine-tuning.</div>';
+      return;
+    }
+
+    const palette = td.palettes.find(p => p.key === themeState.system);
+    if (!palette) return;
+
+    const cc = document.getElementById('claude-content');
+    const ft = themeState.fineTune || {};
+
+    // Working state
+    let activeFont = ft.fontFamily || 'system';
+    let spacingMult = ft.spacingMultiplier !== undefined ? ft.spacingMultiplier : 1;
+    let radiusMult = ft.radiusMultiplier !== undefined ? ft.radiusMultiplier : 1;
+
+    const FONT_LABELS = { system: 'System UI', inter: 'Inter', serif: 'Serif', mono: 'Mono' };
+    const SPACE_TOKENS = ['--space-xs', '--space-sm', '--space-md', '--space-lg', '--space-xl'];
+    const RADIUS_TOKENS = ['--radius-sm', '--radius-md', '--radius-lg'];
+
+    function parseRem(val) {
+      if (!val) return 0;
+      const s = val.trim();
+      if (s.endsWith('rem')) return parseFloat(s);
+      if (s.endsWith('px')) return parseFloat(s) / 16;
+      return parseFloat(s);
+    }
+    function parsePx(val) {
+      if (!val) return 0;
+      const s = val.trim();
+      if (s.endsWith('px')) return parseFloat(s);
+      if (s.endsWith('rem')) return parseFloat(s) * 16;
+      return parseFloat(s);
+    }
+
+    function applyFont(key) {
+      if (!cc || !td.fontFamilies) return;
+      const val = td.fontFamilies[key];
+      if (val) cc.style.setProperty('--font-family', val);
+    }
+
+    function applySpacing(mult) {
+      if (!cc || !palette.tokens) return;
+      SPACE_TOKENS.forEach(tok => {
+        const base = palette.tokens[tok];
+        if (base) {
+          const remVal = parseRem(base);
+          cc.style.setProperty(tok, (remVal * mult).toFixed(4) + 'rem');
+        }
+      });
+    }
+
+    function applyRadius(mult) {
+      if (!cc || !palette.tokens) return;
+      RADIUS_TOKENS.forEach(tok => {
+        const base = palette.tokens[tok];
+        if (base) {
+          const pxVal = parsePx(base);
+          cc.style.setProperty(tok, (pxVal * mult).toFixed(1) + 'px');
+        }
+      });
+      // --radius-full always stays 9999px
+      cc.style.setProperty('--radius-full', '9999px');
+    }
+
+    const wrap = document.createElement('div');
+    wrap.style.cssText = 'padding:12px 16px;';
+
+    // ── Font Family ──
+    const fontSection = document.createElement('div');
+    fontSection.className = 'theme-finetune-section';
+
+    const fontLabel = document.createElement('div');
+    fontLabel.className = 'theme-finetune-label';
+    fontLabel.textContent = 'FONT FAMILY';
+    fontSection.appendChild(fontLabel);
+
+    const chips = document.createElement('div');
+    chips.className = 'theme-font-chips';
+
+    Object.entries(FONT_LABELS).forEach(([key, label]) => {
+      const chip = document.createElement('button');
+      chip.className = 'theme-font-chip' + (activeFont === key ? ' active' : '');
+      chip.textContent = label;
+      chip.addEventListener('click', () => {
+        activeFont = key;
+        chips.querySelectorAll('.theme-font-chip').forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+        applyFont(key);
+      });
+      chips.appendChild(chip);
+    });
+
+    fontSection.appendChild(chips);
+    wrap.appendChild(fontSection);
+
+    // ── Spacing Density ──
+    const spacingSection = document.createElement('div');
+    spacingSection.className = 'theme-finetune-section';
+
+    const spacingLabel = document.createElement('div');
+    spacingLabel.className = 'theme-finetune-label';
+    spacingLabel.textContent = 'SPACING DENSITY';
+    spacingSection.appendChild(spacingLabel);
+
+    const spacingRow = document.createElement('div');
+    spacingRow.className = 'theme-slider-row';
+
+    const spacingSliderLabel = document.createElement('div');
+    spacingSliderLabel.className = 'theme-slider-label';
+    spacingSliderLabel.textContent = 'Density';
+
+    const spacingSlider = document.createElement('input');
+    spacingSlider.type = 'range';
+    spacingSlider.className = 'theme-slider';
+    spacingSlider.min = '0.6';
+    spacingSlider.max = '1.5';
+    spacingSlider.step = '0.05';
+    spacingSlider.value = String(spacingMult);
+
+    const spacingValue = document.createElement('div');
+    spacingValue.className = 'theme-slider-value';
+    spacingValue.textContent = parseFloat(spacingMult).toFixed(2) + 'x';
+
+    spacingSlider.addEventListener('input', () => {
+      spacingMult = parseFloat(spacingSlider.value);
+      spacingValue.textContent = spacingMult.toFixed(2) + 'x';
+      applySpacing(spacingMult);
+    });
+
+    spacingRow.appendChild(spacingSliderLabel);
+    spacingRow.appendChild(spacingSlider);
+    spacingRow.appendChild(spacingValue);
+    spacingSection.appendChild(spacingRow);
+    wrap.appendChild(spacingSection);
+
+    // ── Border Radius ──
+    const radiusSection = document.createElement('div');
+    radiusSection.className = 'theme-finetune-section';
+
+    const radiusLabel = document.createElement('div');
+    radiusLabel.className = 'theme-finetune-label';
+    radiusLabel.textContent = 'BORDER RADIUS';
+    radiusSection.appendChild(radiusLabel);
+
+    const radiusRow = document.createElement('div');
+    radiusRow.className = 'theme-slider-row';
+
+    const radiusSliderLabel = document.createElement('div');
+    radiusSliderLabel.className = 'theme-slider-label';
+    radiusSliderLabel.textContent = 'Radius';
+
+    const radiusSlider = document.createElement('input');
+    radiusSlider.type = 'range';
+    radiusSlider.className = 'theme-slider';
+    radiusSlider.min = '0';
+    radiusSlider.max = '2';
+    radiusSlider.step = '0.1';
+    radiusSlider.value = String(radiusMult);
+
+    const radiusValue = document.createElement('div');
+    radiusValue.className = 'theme-slider-value';
+    radiusValue.textContent = parseFloat(radiusMult).toFixed(1) + 'x';
+
+    radiusSlider.addEventListener('input', () => {
+      radiusMult = parseFloat(radiusSlider.value);
+      radiusValue.textContent = radiusMult.toFixed(1) + 'x';
+      applyRadius(radiusMult);
+    });
+
+    radiusRow.appendChild(radiusSliderLabel);
+    radiusRow.appendChild(radiusSlider);
+    radiusRow.appendChild(radiusValue);
+    radiusSection.appendChild(radiusRow);
+    wrap.appendChild(radiusSection);
+
+    // ── Save Bar ──
+    const saveBar = document.createElement('div');
+    saveBar.className = 'theme-save-bar';
+    const saveBtn = document.createElement('button');
+    saveBtn.className = 'theme-save-btn';
+    saveBtn.textContent = 'Save Fine-tune';
+
+    saveBtn.addEventListener('click', () => {
+      themeState.fineTune = {
+        fontFamily: activeFont,
+        spacingMultiplier: spacingMult,
+        radiusMultiplier: radiusMult
+      };
+      saveThemeState();
+
+      // Build tokenChanges for sidebar
+      const tokenChanges = {};
+      if (td.fontFamilies && td.fontFamilies[activeFont]) {
+        tokenChanges['--font-family'] = td.fontFamilies[activeFont];
+      }
+      if (palette.tokens) {
+        SPACE_TOKENS.forEach(tok => {
+          const base = palette.tokens[tok];
+          if (base) {
+            const remVal = parseRem(base);
+            tokenChanges[tok] = (remVal * spacingMult).toFixed(4) + 'rem';
+          }
+        });
+        RADIUS_TOKENS.forEach(tok => {
+          const base = palette.tokens[tok];
+          if (base) {
+            const pxVal = parsePx(base);
+            tokenChanges[tok] = (pxVal * radiusMult).toFixed(1) + 'px';
+          }
+        });
+        tokenChanges['--radius-full'] = '9999px';
+      }
+
+      tuneChanges = tuneChanges.filter(c => c.selector !== '#claude-content' || !c._themeFineTune);
+      tuneChanges.push({
+        selector: '#claude-content',
+        tag: 'div',
+        text: 'Fine-tune: ' + FONT_LABELS[activeFont] + ' / spacing ' + spacingMult.toFixed(2) + 'x / radius ' + radiusMult.toFixed(1) + 'x',
+        changes: {},
+        tokenChanges: tokenChanges,
+        timestamp: Date.now(),
+        _themeFineTune: true
+      });
+
+      saveAnnotations();
+      renderSidebar();
+      showToast('Fine-tune settings saved.');
+    });
+
+    saveBar.appendChild(saveBtn);
+    wrap.appendChild(saveBar);
+
+    ftPanel.innerHTML = '';
+    ftPanel.appendChild(wrap);
+  }
 
   // Add toolbar and header buttons on load
   document.addEventListener('DOMContentLoaded', () => {

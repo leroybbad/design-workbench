@@ -278,11 +278,12 @@ is rendered at full size inside a container, then CSS-scaled to ~65%.
   margin-bottom: 0.75rem;
 }
 
-/* Scale the wireframe preview — hugs content naturally */
+/* Scale the wireframe preview — constrained width, hugs content */
 .concept-preview-frame {
   overflow: hidden;
   border-radius: 8px;
   border: 1px solid #e5e7eb;
+  max-width: 900px;
 }
 .concept-preview-inner {
   transform: scale(0.65);

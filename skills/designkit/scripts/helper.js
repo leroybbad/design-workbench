@@ -1728,7 +1728,7 @@
 
     const variantsRow = document.createElement('div');
     variantsRow.className = 'theme-variants';
-    variantsRow.style.cssText = 'flex-wrap:nowrap;overflow-x:auto;';
+    variantsRow.style.cssText = 'flex-wrap:wrap;';
 
     VARIANT_NAMES.forEach(vKey => {
       // Skip if this variant doesn't exist for this palette and isn't default

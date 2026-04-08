@@ -751,6 +751,254 @@
       color: #8e8e93;
     }
 
+    /* ===== THEME SELECTOR PANEL ===== */
+    .theme-panel {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: #1a1a1e;
+      border-top: 1px solid #3a3a3e;
+      z-index: 2000;
+      padding: 0.75rem 1.5rem;
+      box-shadow: 0 -4px 20px rgba(0,0,0,0.3);
+      max-height: 50vh;
+      overflow-y: auto;
+    }
+    .theme-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.75rem;
+    }
+    .theme-title {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #e5e5e7;
+    }
+    .theme-close {
+      background: none;
+      border: none;
+      color: #8e8e93;
+      font-size: 1.2rem;
+      cursor: pointer;
+      padding: 0.2rem;
+      line-height: 1;
+    }
+    .theme-tabs {
+      display: flex;
+      gap: 0;
+      border-bottom: 1px solid #3a3a3e;
+      margin-bottom: 0.75rem;
+    }
+    .theme-tab {
+      padding: 0.35rem 0.75rem;
+      font-size: 0.7rem;
+      color: #8e8e93;
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      cursor: pointer;
+      font-family: inherit;
+      transition: color 0.15s, border-color 0.15s;
+      position: relative;
+    }
+    .theme-tab:hover { color: #d1d1d6; }
+    .theme-tab.active {
+      color: #e5e5e7;
+      border-bottom-color: var(--accent);
+    }
+    .theme-tab .unsaved-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+      position: absolute;
+      top: 2px;
+      right: 2px;
+      display: none;
+    }
+    .theme-tab .unsaved-dot.visible { display: block; }
+    .theme-system-list {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .theme-tier-label {
+      font-size: 0.6rem;
+      color: #636366;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 0.5rem 0.5rem 0.25rem;
+    }
+    .theme-system-row {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.5rem;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.1s;
+    }
+    .theme-system-row:hover { background: #2a2a2e; }
+    .theme-system-row.active {
+      background: #2a2a2e;
+      outline: 2px solid var(--accent);
+      outline-offset: -2px;
+    }
+    .theme-dots {
+      display: flex;
+      gap: 4px;
+    }
+    .theme-dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    .theme-system-name {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #e5e5e7;
+    }
+    .theme-tier-divider {
+      border: none;
+      border-top: 1px solid #2a2a2e;
+      margin: 0.25rem 0;
+    }
+    .theme-variants {
+      display: flex;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+    }
+    .theme-variant {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.35rem;
+      cursor: pointer;
+      padding: 0.5rem;
+      border-radius: 8px;
+      border: 2px solid transparent;
+      transition: border-color 0.15s;
+    }
+    .theme-variant:hover { border-color: #3a3a3e; }
+    .theme-variant.active { border-color: var(--accent); }
+    .theme-variant-label {
+      font-size: 0.65rem;
+      color: #8e8e93;
+    }
+    .theme-accent-row {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding-top: 0.75rem;
+      border-top: 1px solid #3a3a3e;
+    }
+    .theme-accent-label {
+      font-size: 0.7rem;
+      color: #8e8e93;
+    }
+    .theme-accent-input {
+      width: 32px;
+      height: 32px;
+      border: 1px solid #3a3a3e;
+      border-radius: 6px;
+      padding: 0;
+      cursor: pointer;
+      background: none;
+    }
+    .theme-accent-hex {
+      font-size: 0.7rem;
+      font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+      color: #e5e5e7;
+    }
+    .theme-finetune-section {
+      margin-bottom: 1rem;
+    }
+    .theme-finetune-label {
+      font-size: 0.7rem;
+      color: #8e8e93;
+      margin-bottom: 0.5rem;
+    }
+    .theme-font-chips {
+      display: flex;
+      gap: 0.5rem;
+    }
+    .theme-font-chip {
+      padding: 0.3rem 0.75rem;
+      border-radius: 6px;
+      border: 1px solid #3a3a3e;
+      background: none;
+      color: #aeaeb2;
+      font-size: 0.7rem;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.15s;
+    }
+    .theme-font-chip:hover { background: #2a2a2e; color: #d1d1d6; }
+    .theme-font-chip.active {
+      background: var(--accent);
+      color: white;
+      border-color: var(--accent);
+    }
+    .theme-slider-row {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .theme-slider-label {
+      font-size: 0.65rem;
+      color: #636366;
+      min-width: 55px;
+    }
+    .theme-slider {
+      flex: 1;
+      height: 4px;
+      -webkit-appearance: none;
+      appearance: none;
+      background: #3a3a3e;
+      border-radius: 2px;
+      outline: none;
+    }
+    .theme-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: var(--accent);
+      cursor: pointer;
+    }
+    .theme-slider-value {
+      font-size: 0.7rem;
+      font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+      color: #e5e5e7;
+      min-width: 35px;
+      text-align: right;
+    }
+    .theme-save-bar {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 0.5rem;
+      margin-top: 0.75rem;
+      padding-top: 0.75rem;
+      border-top: 1px solid #3a3a3e;
+    }
+    .theme-save-btn {
+      background: var(--accent);
+      color: white;
+      border: none;
+      padding: 0.4rem 1rem;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      cursor: pointer;
+      font-family: inherit;
+      font-weight: 500;
+    }
+    .theme-save-btn:hover { opacity: 0.9; }
+
     /* ===== TYPOGRAPHY ===== */
     h2 { font-size: 1.5rem; font-weight: 600; margin-bottom: 0.5rem; }
     h3 { font-size: 1.1rem; font-weight: 600; margin-bottom: 0.25rem; }

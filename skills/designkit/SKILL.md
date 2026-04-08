@@ -49,6 +49,18 @@ Write HTML files to `screen_dir`. The server serves the newest file by modificat
 
 **Full documents** are extracted — their `<style>` and `<body>` content are pulled into the frame. The companion chrome (toolbar, menus) always appears. Use for complete page designs.
 
+### Full-Bleed Mode
+
+By default, `#claude-content` has 2rem padding and inherits the frame background. For full-page layouts that control their own background (dark themes, full-width dashboards), add `data-bleed` to the content's root element:
+
+```html
+<div data-bleed>
+  <!-- your full-page layout here -->
+</div>
+```
+
+This removes the padding and makes the container transparent so the content fills the viewport edge-to-edge. Use for complete app layouts. Skip for concept cards, option grids, or wireframe fragments that benefit from the frame's padding.
+
 ### Authoring Standards
 
 **Every prototype MUST follow these rules:**

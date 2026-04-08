@@ -3,6 +3,13 @@
   let ws = null;
   let eventQueue = [];
 
+  // ===== BLEED MODE =====
+  // If the content's first child has data-bleed, promote it to #claude-content
+  const cc = document.getElementById('claude-content');
+  if (cc && cc.firstElementChild && cc.firstElementChild.hasAttribute('data-bleed')) {
+    cc.setAttribute('data-bleed', '');
+  }
+
   // ===== ANNOTATION STATE =====
   const SESSION_KEY = 'annotations-' + window.location.port;
   let commentMode = false;

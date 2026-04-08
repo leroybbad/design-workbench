@@ -86,6 +86,8 @@
 
     .main { flex: 1; overflow-y: auto; }
     #claude-content { padding: 2rem; min-height: 100%; }
+    #claude-content[data-bleed] { padding: 0; background: transparent; }
+    #claude-content[data-bleed] > *:first-child { min-height: 100vh; }
 
     .indicator-bar { display: none; }
 

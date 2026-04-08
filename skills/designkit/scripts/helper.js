@@ -46,6 +46,9 @@
       const hasChanges = annotations.length > 0 || tuneChanges.length > 0 || (themeState && themeState.system);
       sendBtn.disabled = !hasChanges;
       sendBtn.style.opacity = hasChanges ? '1' : '0.4';
+      sendBtn.style.background = hasChanges ? 'var(--accent, #0a84ff)' : 'none';
+      sendBtn.style.color = hasChanges ? '#fff' : '';
+      sendBtn.style.borderColor = hasChanges ? 'var(--accent, #0a84ff)' : '';
     }
   }
 

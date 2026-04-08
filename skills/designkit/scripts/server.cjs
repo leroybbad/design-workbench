@@ -107,6 +107,11 @@ function getHelperInjection() {
   return '<script>\n' + helperScript + '\n</script>';
 }
 
+function getThemeDataInjection() {
+  const themeData = fs.readFileSync(path.join(__dirname, 'theme-data.js'), 'utf-8');
+  return '<script>\n' + themeData + '\n</script>';
+}
+
 // ========== Helper Functions ==========
 
 function extractContent(html) {
@@ -165,9 +170,9 @@ function handleRequest(req, res) {
       : WAITING_PAGE;
 
     if (html.includes('</body>')) {
-      html = html.replace('</body>', getHelperInjection() + '\n</body>');
+      html = html.replace('</body>', getThemeDataInjection() + '\n' + getHelperInjection() + '\n</body>');
     } else {
-      html += getHelperInjection();
+      html += getThemeDataInjection() + '\n' + getHelperInjection();
     }
 
     res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });

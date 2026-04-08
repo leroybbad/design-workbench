@@ -1480,7 +1480,7 @@
 
     // Colors tab (placeholder)
     const colorsTab = document.createElement('div');
-    colorsTab.className = 'tune-controls';
+    colorsTab.className = 'theme-tab-content';
     colorsTab.style.display = 'none';
     colorsTab.innerHTML = '<div style="padding:16px;color:var(--dc-text-secondary,#888);font-size:13px;">Save a design system first to unlock color overrides.</div>';
     tabPanels['Colors'] = colorsTab;
@@ -1488,7 +1488,7 @@
 
     // Fine-tune tab (placeholder)
     const fineTuneTab = document.createElement('div');
-    fineTuneTab.className = 'tune-controls';
+    fineTuneTab.className = 'theme-tab-content';
     fineTuneTab.style.display = 'none';
     fineTuneTab.innerHTML = '<div style="padding:16px;color:var(--dc-text-secondary,#888);font-size:13px;">Save a design system first to unlock fine-tuning.</div>';
     tabPanels['Fine-tune'] = fineTuneTab;
@@ -1540,7 +1540,7 @@
 
   function buildSystemTab(panel) {
     const container = document.createElement('div');
-    container.className = 'tune-controls';
+    container.className = 'theme-tab-content';
 
     const td = window.THEME_DATA;
     if (!td || !td.palettes) {
@@ -1579,8 +1579,14 @@
       const nameEl = document.createElement('span');
       nameEl.className = 'theme-system-card-name';
       nameEl.textContent = palette.name;
-
       card.appendChild(nameEl);
+
+      if (palette.desc) {
+        const descEl = document.createElement('span');
+        descEl.className = 'theme-system-card-desc';
+        descEl.textContent = palette.desc;
+        card.appendChild(descEl);
+      }
 
       card.addEventListener('click', () => {
         // Clear previous preview

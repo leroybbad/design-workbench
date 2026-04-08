@@ -16,6 +16,7 @@ window.THEME_DATA = {
     {
       key: 'material',
       name: 'Material Design',
+      desc: 'Bold type hierarchy, surface elevation, rounded corners',
       tier: 1,
       tokens: {
         '--color-primary':          '#6750A4',
@@ -110,6 +111,7 @@ window.THEME_DATA = {
     {
       key: 'apple',
       name: 'Apple HIG',
+      desc: 'Generous whitespace, subtle depth, consumer-grade polish',
       tier: 1,
       tokens: {
         '--color-primary':          '#007AFF',
@@ -204,6 +206,7 @@ window.THEME_DATA = {
     {
       key: 'tailwind',
       name: 'Tailwind / Shadcn',
+      desc: 'Clean, utility-driven, modern SaaS default',
       tier: 1,
       tokens: {
         '--color-primary':          '#18181B',
@@ -299,6 +302,7 @@ window.THEME_DATA = {
     {
       key: 'ant',
       name: 'Ant Design',
+      desc: 'Structured, data-heavy, enterprise-grade tables and forms',
       tier: 1,
       tokens: {
         '--color-primary':          '#1677FF',
@@ -395,6 +399,7 @@ window.THEME_DATA = {
     {
       key: 'corporate-dense',
       name: 'Corporate Dense',
+      desc: 'Compact spacing, small type, high density dashboards',
       tier: 2,
       tokens: {
         '--color-primary':          '#0052CC',
@@ -489,6 +494,7 @@ window.THEME_DATA = {
     {
       key: 'clean-spacious',
       name: 'Clean & Spacious',
+      desc: 'Generous whitespace, restrained palette, premium SaaS feel',
       tier: 2,
       tokens: {
         '--color-primary':          '#635BFF',
@@ -584,6 +590,7 @@ window.THEME_DATA = {
     {
       key: 'neon-ai',
       name: 'Neon AI',
+      desc: 'Dark background, vibrant accents, glow effects, dev-tool feel',
       tier: 2,
       tokens: {
         '--color-primary':          '#00E5FF',
@@ -673,6 +680,7 @@ window.THEME_DATA = {
     {
       key: 'editorial',
       name: 'Editorial',
+      desc: 'Serif headings, reading-optimized, strong type hierarchy',
       tier: 2,
       tokens: {
         '--color-primary':          '#1A1A1A',
@@ -768,6 +776,7 @@ window.THEME_DATA = {
     {
       key: 'playful',
       name: 'Playful',
+      desc: 'Rounded shapes, saturated colors, bouncy consumer feel',
       tier: 2,
       tokens: {
         '--color-primary':          '#6C5CE7',
@@ -862,6 +871,7 @@ window.THEME_DATA = {
     {
       key: 'minimal-mono',
       name: 'Minimal Mono',
+      desc: 'Near-zero color, type weight for hierarchy, ultra-clean',
       tier: 2,
       tokens: {
         '--color-primary':          '#111111',

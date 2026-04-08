@@ -103,12 +103,15 @@ If codebase tokens were detected in Phase 1:
 
 If no codebase tokens, or the user wants to explore:
 1. Start the Design Companion server (see Server section below)
-2. Read `references/palettes.md` for the available palettes
-3. Generate a palette selection screen showing all options as cards
-4. Show Tier 1 (adoptable systems) at top, Tier 2 (personality archetypes) below
-5. Each card: name, one-line description, live-rendered sample using that palette's tokens
-6. Use `data-choice` attributes so clicks are captured
-7. Tell the user the URL and wait for their selection
+2. Copy the pre-built palette selector to the screen directory:
+   ```bash
+   cp skills/designkit/scripts/palette-selector.html "$SCREEN_DIR/palette-selector.html"
+   ```
+   This is a static template with all 10 palettes as differentiated live-rendered cards.
+   Each card has `data-choice` attributes so clicks are captured via WebSocket.
+3. Tell the user the URL and wait for their selection
+4. Read `$STATE_DIR/events` for their click — the choice value maps to a palette name
+5. Read `references/palettes.md` to get the full token set for the chosen palette
 
 **Ordering rule:**
 - Vague idea → Thread A first, then B, then C

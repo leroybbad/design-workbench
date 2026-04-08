@@ -119,28 +119,37 @@ If no codebase tokens, or the user wants to explore:
 - "Build something that feels like X" → C is mostly answered, quick A, then B
 - Use judgment. Get aesthetic signal before showing any wireframes.
 
-## Phase 3: Explore Concepts
+## Phase 3: Explore Concepts (Crazy 8s)
 
-Once you have enough context (problem + interaction model + aesthetic signal):
+Once you have enough context (problem + interaction model):
 
-1. **Ask:** "Want 3 focused concepts or a wider range to react to?"
-2. Read `references/wireframe-guide.md` for the CSS class kit and authoring rules
-3. Generate concept wireframes as a single HTML file with concepts **stacked vertically** (never in a side-by-side grid — they get squished and unreadable)
-4. Each concept should:
-   - Have a clear name and 1-2 sentence description
-   - Show a distinct layout/approach to the stated problem
-   - Be a high-quality UI concept — looks like a real interface, not a rough sketch
-   - Use the chosen palette's tokens in muted form
+1. Read `references/wireframe-guide.md` — specifically the **Stage 1: Crazy 8s** section
+2. Generate **6-8 abstract structural thumbnails** in a grid layout
+3. Each thumbnail should:
+   - Be numbered (01-08) with a short bold title
+   - Show an **abstract layout diagram** using simple shapes — NOT real UI text or data
+   - Have a one-line description of the structural approach
+   - Represent a **fundamentally different pattern** (not variations of the same idea)
+   - Be clickable via `data-choice` attributes
+4. Tell the user the URL: "8 structural patterns to compare — click any to explore deeper"
+5. Wait for their selection (1-3 picks)
+
+**If the user asks to "push wider":** Generate another batch of thumbnails exploring
+more unconventional patterns.
+
+## Phase 3b: Deep Dive
+
+After the user selects 1-3 thumbnails:
+
+1. Read `references/wireframe-guide.md` — specifically the **Stage 2: Deep Dive** section
+2. Render the selected concepts at full detail, **stacked vertically** (never in a grid)
+3. Each deep dive should:
+   - Be a high-quality UI concept — looks like a real interface with muted palette
    - Use real, plausible content labels — never lorem ipsum
    - Show enough content (4-6 data rows, 3-4 nav items, real metrics)
    - Use readable font sizes — never shrink below the palette's base font size
    - Be clickable via `data-choice` attributes
-5. Tell the user the URL and what to look at
-6. Wait for their reaction
-
-**If the user asks to "push wider":** Generate 3-5 more concepts that are intentionally
-more divergent — different navigation models, unconventional layouts, alternative
-information hierarchies. Label these as "wider exploration."
+4. Tell the user to scroll through and pick a direction
 
 ## Phase 4: Converge
 

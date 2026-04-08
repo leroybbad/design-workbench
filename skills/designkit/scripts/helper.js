@@ -1428,7 +1428,10 @@
     const panel = document.createElement('div');
     panel.className = 'tune-panel theme-panel';
 
-    // Header
+    // Fixed header (title + close + tabs)
+    const panelHeader = document.createElement('div');
+    panelHeader.className = 'theme-panel-header';
+
     const header = document.createElement('div');
     header.className = 'tune-header';
     header.innerHTML = '<span class="tune-tag">Theme Selector</span>';
@@ -1437,13 +1440,14 @@
     closeBtn.textContent = '\u00d7';
     closeBtn.addEventListener('click', () => { setThemeMode(false); });
     header.appendChild(closeBtn);
-    panel.appendChild(header);
+    panelHeader.appendChild(header);
 
     // Tab bar
     const tabBar = document.createElement('div');
     tabBar.className = 'tune-tabs';
     const tabNames = ['System', 'Colors', 'Fine-tune'];
     const tabPanels = {};
+    let activeTabName = 'System';
 
     tabNames.forEach((name, i) => {
       const tab = document.createElement('button');
@@ -1452,20 +1456,27 @@
       tab.addEventListener('click', () => {
         tabBar.querySelectorAll('.tune-tab').forEach(t => t.classList.remove('active'));
         tab.classList.add('active');
+        activeTabName = name;
         Object.values(tabPanels).forEach(p => p.style.display = 'none');
         tabPanels[name].style.display = '';
         if (name === 'Colors') rebuildColorsTab(panel);
         if (name === 'Fine-tune') rebuildFineTuneTab(panel);
+        updateFooterBtn();
       });
       tabBar.appendChild(tab);
     });
-    panel.appendChild(tabBar);
+    panelHeader.appendChild(tabBar);
+    panel.appendChild(panelHeader);
+
+    // Scrollable body
+    const panelBody = document.createElement('div');
+    panelBody.className = 'theme-panel-body';
 
     // System tab
     const systemTab = buildSystemTab(panel);
     systemTab.style.display = '';
     tabPanels['System'] = systemTab;
-    panel.appendChild(systemTab);
+    panelBody.appendChild(systemTab);
 
     // Colors tab (placeholder)
     const colorsTab = document.createElement('div');
@@ -1473,7 +1484,7 @@
     colorsTab.style.display = 'none';
     colorsTab.innerHTML = '<div style="padding:16px;color:var(--dc-text-secondary,#888);font-size:13px;">Save a design system first to unlock color overrides.</div>';
     tabPanels['Colors'] = colorsTab;
-    panel.appendChild(colorsTab);
+    panelBody.appendChild(colorsTab);
 
     // Fine-tune tab (placeholder)
     const fineTuneTab = document.createElement('div');
@@ -1481,9 +1492,49 @@
     fineTuneTab.style.display = 'none';
     fineTuneTab.innerHTML = '<div style="padding:16px;color:var(--dc-text-secondary,#888);font-size:13px;">Save a design system first to unlock fine-tuning.</div>';
     tabPanels['Fine-tune'] = fineTuneTab;
-    panel.appendChild(fineTuneTab);
+    panelBody.appendChild(fineTuneTab);
+
+    panel.appendChild(panelBody);
+
+    // Fixed footer with shared save button
+    const panelFooter = document.createElement('div');
+    panelFooter.className = 'theme-panel-footer';
+
+    const resetBtn = document.createElement('button');
+    resetBtn.className = 'tune-reset';
+    resetBtn.textContent = 'Reset';
+    resetBtn.style.display = 'none'; // shown for System tab
+
+    const saveBtn = document.createElement('button');
+    saveBtn.className = 'theme-save-btn';
+    saveBtn.textContent = 'Save System';
+
+    panelFooter.appendChild(resetBtn);
+    panelFooter.appendChild(saveBtn);
+    panel.appendChild(panelFooter);
 
     panel._tabPanels = tabPanels;
+    panel._footerSaveBtn = saveBtn;
+    panel._footerResetBtn = resetBtn;
+
+    function updateFooterBtn() {
+      const labels = { 'System': 'Save System', 'Colors': 'Save Colors', 'Fine-tune': 'Save Fine-tune' };
+      saveBtn.textContent = labels[activeTabName] || 'Save';
+      resetBtn.style.display = activeTabName === 'System' ? '' : 'none';
+      // Wire up action after tab content is built
+      saveBtn.onclick = () => {
+        const tabEl = tabPanels[activeTabName];
+        if (tabEl && tabEl._saveAction) tabEl._saveAction();
+      };
+    }
+    updateFooterBtn();
+
+    // Wire reset for system tab
+    resetBtn.onclick = () => {
+      const tabEl = tabPanels['System'];
+      if (tabEl && tabEl._resetAction) tabEl._resetAction();
+    };
+
     return panel;
   }
 
@@ -1498,11 +1549,6 @@
     }
 
     let previewKey = themeState.system || null;
-
-    // Palette list
-    const list = document.createElement('div');
-    list.className = 'theme-palette-list';
-    list.style.cssText = 'overflow-y:auto;flex:1;padding:8px 0;';
 
     function applyPaletteTokens(palette) {
       const cc = document.getElementById('claude-content');
@@ -1522,53 +1568,35 @@
       });
     }
 
+    // 2-column card grid — no tier labels, no descriptions
+    const grid = document.createElement('div');
+    grid.className = 'theme-system-grid';
+
+    const DOT_TOKENS = ['--color-primary', '--color-bg', '--color-surface', '--color-text', '--color-border'];
+
     td.palettes.forEach(palette => {
-      const row = document.createElement('div');
-      row.className = 'theme-palette-row';
-      row.style.cssText = 'display:flex;align-items:center;gap:10px;padding:8px 12px;cursor:pointer;border-radius:6px;transition:background 0.1s;';
-      if (previewKey === palette.key) row.style.background = 'rgba(0,0,0,0.06)';
+      const card = document.createElement('button');
+      card.className = 'theme-system-card' + (themeState.system === palette.key ? ' active' : '');
 
-      // 5 color dots from palette tokens
-      const dots = document.createElement('div');
-      dots.style.cssText = 'display:flex;gap:4px;flex-shrink:0;';
-      const colorProps = ['--color-primary','--color-secondary','--color-background','--color-surface','--color-text'];
-      colorProps.forEach(prop => {
+      // 5 color dots
+      const dotsEl = document.createElement('div');
+      dotsEl.className = 'theme-dots';
+      DOT_TOKENS.forEach(prop => {
         const dot = document.createElement('div');
-        dot.style.cssText = 'width:14px;height:14px;border-radius:50%;border:1px solid rgba(0,0,0,0.12);flex-shrink:0;';
+        dot.className = 'theme-dot';
         const val = palette.tokens && palette.tokens[prop];
-        dot.style.background = val || '#ccc';
-        dots.appendChild(dot);
+        dot.style.background = val || '#888';
+        dotsEl.appendChild(dot);
       });
 
-      // Name + tier
-      const nameWrap = document.createElement('div');
-      nameWrap.style.cssText = 'flex:1;min-width:0;';
-      const nameEl = document.createElement('div');
-      nameEl.style.cssText = 'font-size:13px;font-weight:500;color:var(--dc-text,#111);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
+      const nameEl = document.createElement('span');
+      nameEl.className = 'theme-system-card-name';
       nameEl.textContent = palette.name;
-      const tierEl = document.createElement('div');
-      tierEl.style.cssText = 'font-size:11px;color:var(--dc-text-secondary,#888);margin-top:1px;';
-      tierEl.textContent = 'Tier ' + palette.tier;
-      nameWrap.appendChild(nameEl);
-      nameWrap.appendChild(tierEl);
 
-      // Active indicator
-      const check = document.createElement('div');
-      check.style.cssText = 'width:16px;height:16px;flex-shrink:0;';
-      if (themeState.system === palette.key) {
-        check.innerHTML = '<svg viewBox="0 0 16 16" fill="none"><path d="M3 8l3.5 3.5L13 5" stroke="#0066ff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-      }
+      card.appendChild(dotsEl);
+      card.appendChild(nameEl);
 
-      row.appendChild(dots);
-      row.appendChild(nameWrap);
-      row.appendChild(check);
-
-      row.addEventListener('mouseenter', () => { row.style.background = 'rgba(0,0,0,0.05)'; });
-      row.addEventListener('mouseleave', () => {
-        row.style.background = previewKey === palette.key ? 'rgba(0,0,0,0.06)' : '';
-      });
-
-      row.addEventListener('click', () => {
+      card.addEventListener('click', () => {
         // Clear previous preview
         if (previewKey && previewKey !== palette.key) {
           const prev = td.palettes.find(p => p.key === previewKey);
@@ -1576,54 +1604,22 @@
         }
         previewKey = palette.key;
         applyPaletteTokens(palette);
-        // Update row highlights
-        list.querySelectorAll('.theme-palette-row').forEach(r => {
-          r.style.background = '';
-        });
-        row.style.background = 'rgba(0,0,0,0.06)';
-        saveBtn.disabled = false;
-        saveBtn.style.opacity = '1';
+        // Update active state
+        grid.querySelectorAll('.theme-system-card').forEach(c => c.classList.remove('active'));
+        card.classList.add('active');
       });
 
-      list.appendChild(row);
+      grid.appendChild(card);
     });
 
-    container.appendChild(list);
+    container.appendChild(grid);
 
-    // Apply bar
-    const applyBar = document.createElement('div');
-    applyBar.className = 'tune-apply-bar';
-    applyBar.style.cssText = 'display:flex;gap:8px;align-items:center;justify-content:flex-end;';
-
-    const resetBtn = document.createElement('button');
-    resetBtn.className = 'tune-reset';
-    resetBtn.textContent = 'Reset';
-    resetBtn.addEventListener('click', () => {
-      // Remove all applied tokens from all palettes
-      td.palettes.forEach(p => clearPaletteTokens(p));
-      themeState.system = null;
-      saveThemeState();
-      previewKey = null;
-      list.querySelectorAll('.theme-palette-row').forEach(r => { r.style.background = ''; });
-      list.querySelectorAll('.theme-palette-row > div:last-child').forEach(c => { c.innerHTML = ''; });
-      saveBtn.disabled = true;
-      saveBtn.style.opacity = '0.5';
-      showToast('Design system reset.');
-    });
-
-    const saveBtn = document.createElement('button');
-    saveBtn.className = 'tune-apply';
-    saveBtn.textContent = 'Save System';
-    const hasExisting = !!themeState.system;
-    saveBtn.disabled = !hasExisting && !previewKey;
-    if (!hasExisting && !previewKey) saveBtn.style.opacity = '0.5';
-
-    saveBtn.addEventListener('click', () => {
+    // Expose save/reset actions for shared footer buttons
+    container._saveAction = () => {
       if (!previewKey) return;
       const palette = td.palettes.find(p => p.key === previewKey);
       if (!palette) return;
 
-      const oldSystem = themeState.system;
       themeState.system = previewKey;
       saveThemeState();
 
@@ -1651,25 +1647,19 @@
         _themeSystem: true
       });
 
-      // Update check marks
-      list.querySelectorAll('.theme-palette-row').forEach((r, i) => {
-        const p = td.palettes[i];
-        const check = r.querySelector('div:last-child');
-        if (check) {
-          check.innerHTML = p.key === previewKey
-            ? '<svg viewBox="0 0 16 16" fill="none"><path d="M3 8l3.5 3.5L13 5" stroke="#0066ff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>'
-            : '';
-        }
-      });
-
       saveAnnotations();
       renderSidebar();
       showToast('Design system set to ' + palette.name + '.');
-    });
+    };
 
-    applyBar.appendChild(resetBtn);
-    applyBar.appendChild(saveBtn);
-    container.appendChild(applyBar);
+    container._resetAction = () => {
+      td.palettes.forEach(p => clearPaletteTokens(p));
+      themeState.system = null;
+      saveThemeState();
+      previewKey = null;
+      grid.querySelectorAll('.theme-system-card').forEach(c => c.classList.remove('active'));
+      showToast('Design system reset.');
+    };
 
     return container;
   }
@@ -1707,8 +1697,8 @@
     let activeVariant = themeState.colorVariant || 'default';
     let activeAccent = themeState.accentColor || palette.tokens['--color-primary'] || '#0066ff';
 
-    const VARIANT_NAMES = ['default', 'dark', 'warm', 'cool'];
-    const VARIANT_LABELS = { default: 'Default', dark: 'Dark', warm: 'Warm', cool: 'Cool' };
+    const VARIANT_NAMES = ['default', 'dark', 'warm', 'cool', 'anthro', 'vibrant'];
+    const VARIANT_LABELS = { default: 'Default', dark: 'Dark', warm: 'Warm', cool: 'Cool', anthro: 'Anthro', vibrant: 'Vibrant' };
     // Five color dots to show per variant
     const DOT_TOKENS = ['--color-bg', '--color-surface', '--color-primary', '--color-text', '--color-border'];
 
@@ -1720,9 +1710,14 @@
 
     function applyVariant(variantKey) {
       if (!cc) return;
-      const vTokens = getVariantTokens(variantKey);
-      // Only swap --color-* tokens
-      Object.entries(vTokens).forEach(([k, v]) => {
+      // Step 1: Reset ALL --color-* tokens to base palette values first
+      const base = palette.tokens || {};
+      Object.entries(base).forEach(([k, v]) => {
+        if (k.startsWith('--color-')) cc.style.setProperty(k, v);
+      });
+      // Step 2: Apply variant overrides on top
+      const overrides = (palette.variants && palette.variants[variantKey]) || {};
+      Object.entries(overrides).forEach(([k, v]) => {
         if (k.startsWith('--color-')) cc.style.setProperty(k, v);
       });
     }
@@ -1747,8 +1742,11 @@
 
     const variantsRow = document.createElement('div');
     variantsRow.className = 'theme-variants';
+    variantsRow.style.cssText = 'flex-wrap:wrap;';
 
     VARIANT_NAMES.forEach(vKey => {
+      // Skip if this variant doesn't exist for this palette and isn't default
+      if (vKey !== 'default' && !(palette.variants && palette.variants[vKey])) return;
       const vTokens = getVariantTokens(vKey);
       const card = document.createElement('div');
       card.className = 'theme-variant' + (activeVariant === vKey ? ' active' : '');
@@ -1809,14 +1807,11 @@
     accentRow.appendChild(accentHex);
     wrap.appendChild(accentRow);
 
-    // Save bar
-    const saveBar = document.createElement('div');
-    saveBar.className = 'theme-save-bar';
-    const saveBtn = document.createElement('button');
-    saveBtn.className = 'theme-save-btn';
-    saveBtn.textContent = 'Save Colors';
+    colorsPanel.innerHTML = '';
+    colorsPanel.appendChild(wrap);
 
-    saveBtn.addEventListener('click', () => {
+    // Expose save action for shared footer button
+    colorsPanel._saveAction = () => {
       themeState.colorVariant = activeVariant;
       themeState.accentColor = activeAccent;
       saveThemeState();
@@ -1847,13 +1842,7 @@
       saveAnnotations();
       renderSidebar();
       showToast('Colors saved.');
-    });
-
-    saveBar.appendChild(saveBtn);
-    wrap.appendChild(saveBar);
-
-    colorsPanel.innerHTML = '';
-    colorsPanel.appendChild(wrap);
+    };
   }
 
   function rebuildFineTuneTab(panel) {
@@ -1930,7 +1919,11 @@
     const wrap = document.createElement('div');
     wrap.style.cssText = 'padding:12px 16px;';
 
-    // ── Font Family ──
+    // Horizontal 3-column layout: Font | Spacing | Radius
+    const columns = document.createElement('div');
+    columns.className = 'theme-finetune-columns';
+
+    // ── Column 1: Font Family ──
     const fontSection = document.createElement('div');
     fontSection.className = 'theme-finetune-section';
 
@@ -1941,6 +1934,7 @@
 
     const chips = document.createElement('div');
     chips.className = 'theme-font-chips';
+    chips.style.cssText = 'flex-direction:column;gap:0.35rem;';
 
     Object.entries(FONT_LABELS).forEach(([key, label]) => {
       const chip = document.createElement('button');
@@ -1956,9 +1950,9 @@
     });
 
     fontSection.appendChild(chips);
-    wrap.appendChild(fontSection);
+    columns.appendChild(fontSection);
 
-    // ── Spacing Density ──
+    // ── Column 2: Spacing Density ──
     const spacingSection = document.createElement('div');
     spacingSection.className = 'theme-finetune-section';
 
@@ -1967,13 +1961,6 @@
     spacingLabel.textContent = 'SPACING DENSITY';
     spacingSection.appendChild(spacingLabel);
 
-    const spacingRow = document.createElement('div');
-    spacingRow.className = 'theme-slider-row';
-
-    const spacingSliderLabel = document.createElement('div');
-    spacingSliderLabel.className = 'theme-slider-label';
-    spacingSliderLabel.textContent = 'Density';
-
     const spacingSlider = document.createElement('input');
     spacingSlider.type = 'range';
     spacingSlider.className = 'theme-slider';
@@ -1981,6 +1968,7 @@
     spacingSlider.max = '1.5';
     spacingSlider.step = '0.05';
     spacingSlider.value = String(spacingMult);
+    spacingSlider.style.cssText = 'width:100%;margin:0.5rem 0;';
 
     const spacingValue = document.createElement('div');
     spacingValue.className = 'theme-slider-value';
@@ -1992,13 +1980,11 @@
       applySpacing(spacingMult);
     });
 
-    spacingRow.appendChild(spacingSliderLabel);
-    spacingRow.appendChild(spacingSlider);
-    spacingRow.appendChild(spacingValue);
-    spacingSection.appendChild(spacingRow);
-    wrap.appendChild(spacingSection);
+    spacingSection.appendChild(spacingSlider);
+    spacingSection.appendChild(spacingValue);
+    columns.appendChild(spacingSection);
 
-    // ── Border Radius ──
+    // ── Column 3: Border Radius ──
     const radiusSection = document.createElement('div');
     radiusSection.className = 'theme-finetune-section';
 
@@ -2007,13 +1993,6 @@
     radiusLabel.textContent = 'BORDER RADIUS';
     radiusSection.appendChild(radiusLabel);
 
-    const radiusRow = document.createElement('div');
-    radiusRow.className = 'theme-slider-row';
-
-    const radiusSliderLabel = document.createElement('div');
-    radiusSliderLabel.className = 'theme-slider-label';
-    radiusSliderLabel.textContent = 'Radius';
-
     const radiusSlider = document.createElement('input');
     radiusSlider.type = 'range';
     radiusSlider.className = 'theme-slider';
@@ -2021,6 +2000,7 @@
     radiusSlider.max = '2';
     radiusSlider.step = '0.1';
     radiusSlider.value = String(radiusMult);
+    radiusSlider.style.cssText = 'width:100%;margin:0.5rem 0;';
 
     const radiusValue = document.createElement('div');
     radiusValue.className = 'theme-slider-value';
@@ -2032,20 +2012,17 @@
       applyRadius(radiusMult);
     });
 
-    radiusRow.appendChild(radiusSliderLabel);
-    radiusRow.appendChild(radiusSlider);
-    radiusRow.appendChild(radiusValue);
-    radiusSection.appendChild(radiusRow);
-    wrap.appendChild(radiusSection);
+    radiusSection.appendChild(radiusSlider);
+    radiusSection.appendChild(radiusValue);
+    columns.appendChild(radiusSection);
 
-    // ── Save Bar ──
-    const saveBar = document.createElement('div');
-    saveBar.className = 'theme-save-bar';
-    const saveBtn = document.createElement('button');
-    saveBtn.className = 'theme-save-btn';
-    saveBtn.textContent = 'Save Fine-tune';
+    wrap.appendChild(columns);
 
-    saveBtn.addEventListener('click', () => {
+    ftPanel.innerHTML = '';
+    ftPanel.appendChild(wrap);
+
+    // Expose save action for shared footer button
+    ftPanel._saveAction = () => {
       themeState.fineTune = {
         fontFamily: activeFont,
         spacingMultiplier: spacingMult,
@@ -2090,13 +2067,7 @@
       saveAnnotations();
       renderSidebar();
       showToast('Fine-tune settings saved.');
-    });
-
-    saveBar.appendChild(saveBtn);
-    wrap.appendChild(saveBar);
-
-    ftPanel.innerHTML = '';
-    ftPanel.appendChild(wrap);
+    };
   }
 
   // Add toolbar and header buttons on load

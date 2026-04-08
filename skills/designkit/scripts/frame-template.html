@@ -760,10 +760,27 @@
       background: #1a1a1e;
       border-top: 1px solid #3a3a3e;
       z-index: 2000;
-      padding: 0.75rem 1.5rem;
       box-shadow: 0 -4px 20px rgba(0,0,0,0.3);
       max-height: 50vh;
+      display: flex;
+      flex-direction: column;
+    }
+    .theme-panel-header {
+      flex-shrink: 0;
+      padding: 0.75rem 1.5rem 0;
+    }
+    .theme-panel-body {
+      flex: 1;
       overflow-y: auto;
+      padding: 0.75rem 1.5rem;
+    }
+    .theme-panel-footer {
+      flex-shrink: 0;
+      padding: 0.5rem 1.5rem;
+      border-top: 1px solid #3a3a3e;
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.5rem;
     }
     .theme-header {
       display: flex;
@@ -998,6 +1015,41 @@
       font-weight: 500;
     }
     .theme-save-btn:hover { opacity: 0.9; }
+    .theme-system-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.5rem;
+    }
+    .theme-system-card {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 0.75rem;
+      border-radius: 6px;
+      border: 1.5px solid #3a3a3e;
+      cursor: pointer;
+      transition: border-color 0.15s;
+      background: none;
+      text-align: left;
+      font-family: inherit;
+    }
+    .theme-system-card:hover { border-color: #5a5a5e; }
+    .theme-system-card.active { border-color: var(--accent); }
+    .theme-system-card .theme-dots { flex-shrink: 0; }
+    .theme-system-card-name {
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: #e5e5e7;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .theme-finetune-columns {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 1rem;
+      align-items: start;
+    }
 
     /* ===== TYPOGRAPHY ===== */
     h2 { font-size: 1.5rem; font-weight: 600; margin-bottom: 0.5rem; }

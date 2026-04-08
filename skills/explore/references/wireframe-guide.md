@@ -1,17 +1,24 @@
-# Wireframe Guide — Lo-Fi with Warmth
+# Wireframe Guide — Concept UI Quality
 
-This is a reference file for the Design Explore skill. It defines the CSS class kit and authoring conventions used when generating lo-fi wireframe concepts during exploration.
+This is a reference file for the Design Explore skill. It defines the CSS class kit and
+authoring conventions used when generating concept wireframes during exploration.
 
-**"Lo-fi with warmth"** means wireframes that are clearly rough and low-fidelity — not pixel-perfect — but still feel inviting and coherent. They use muted versions of the chosen palette, real labels, soft shapes, and visible structure. The goal is to communicate layout and hierarchy quickly, not to simulate a finished product.
+**Concept wireframes must look good.** These are high-quality thumbnail UI concepts — not
+rough sketches, not gray boxes, not low-fidelity throwaway work. Each concept should look
+like a real interface rendered with slightly muted colors. The user should be able to
+immediately feel the layout, hierarchy, and personality of each approach.
+
+Think of it as: **the app at 90% polish with desaturated colors.** Not a wireframe. Not a
+mockup. A concept that communicates "this is what it would feel like to use."
 
 ---
 
 ## Principles
 
-1. **Soft corners** — Apply `border-radius` everywhere. Sharp corners feel like a finished UI; rounded corners signal "this is a sketch."
-2. **Hint of palette** — Use the chosen palette's colors, but muted (reduced saturation and opacity). The palette should be recognizable, not vibrant.
+1. **High quality rendering** — Concepts should look like real UI, not sketches. Readable text, proper spacing, complete layouts. The only thing muted is the color palette.
+2. **Palette personality** — Use the chosen palette's colors in muted form. The palette should be recognizable and give each concept a feel, not just be gray.
 3. **Real labels** — Use actual text plausible for the problem domain. Never lorem ipsum. Labels communicate intent.
-4. **Simple iconography** — Use emoji or single-stroke SVG only. No icon libraries, no complex graphics.
+4. **Enough content** — Show 4-6 rows in tables, 3-4 nav items, multiple metrics. Sparse content looks broken.
 5. **Visible structure** — Use subtle borders and fills to make regions legible. Structure should be obvious at a glance.
 6. **No images** — Use placeholder regions with a soft dashed outline and a centered label instead of any `<img>` tags.
 
@@ -258,113 +265,113 @@ All values use token variables — never hardcoded sizes or colors.
 
 ---
 
-## Concept Card Layout
+## Concept Layout
 
-Use the frame template's existing `.cards` and `.card` classes to present multiple concepts side by side for comparison. Each card gets a `data-choice` attribute so the Explore skill can reference it by letter.
+**Stack concepts vertically, not in a grid.** Each concept gets the full page width so
+wireframe previews are legible and detailed. Users scroll through concepts like pages
+in a lookbook — each one gets room to breathe.
 
-The miniature wireframe preview inside each card should use the `.wf-*` classes at a reduced `font-size` (e.g. `0.75rem`) to keep it compact.
+**Do NOT use the `.cards` grid for concepts.** Side-by-side cards squish complex
+wireframes into unreadable thumbnails. Use a simple vertical stack instead.
+
+### Wireframe preview sizing
+
+- Use the palette's base font size (typically `--font-base`) for the wireframe —
+  **not** a reduced size like `0.75rem`. The previews should be readable, not tiny.
+- Set `min-height: 400px` on `.wf-app` so layouts have room to show real content.
+- The wireframe should feel like looking at the actual app at ~80% scale, not a
+  postage stamp.
+
+### Fidelity level
+
+These are **not** gray boxes. Each wireframe should:
+- Show 4-6 realistic data rows in tables/lists (not 2-3)
+- Include secondary UI elements (search bars, filters, status badges)
+- Use the muted palette colors to hint at hierarchy
+- Feel like a working interface rendered in pencil, not a diagram of one
+
+### HTML structure
 
 ```html
-<div class="cards">
+<style>
+  .concept-stack { display: flex; flex-direction: column; gap: 2rem; }
+  .concept-card {
+    background: #fff;
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 1.5rem;
+    cursor: pointer;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .concept-card:hover {
+    border-color: var(--color-primary);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  }
+  .concept-card h2 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin-bottom: 0.375rem;
+  }
+  .concept-desc {
+    font-size: 0.875rem;
+    color: #6b7280;
+    line-height: 1.5;
+    margin-bottom: 1.25rem;
+  }
+</style>
 
-  <div class="card" data-choice="a">
-    <h3>Concept A — Dashboard Hub</h3>
-    <p>Centralized overview with metric cards and a sidebar nav for quick switching between views.</p>
-    <div style="font-size: 0.75rem; margin-top: 1rem;">
-      <div class="wf-app">
-        <div class="wf-topbar">📊 ProjectPulse &nbsp;·&nbsp; Q2 Sprint Tracker</div>
+<h1>Tool Management — 3 Concepts</h1>
+<p class="page-subtitle">Scroll through each concept. Click the one that resonates —
+you can mix elements from multiple.</p>
+
+<div class="concept-stack">
+
+  <div class="concept-card" data-choice="a">
+    <h2>A — Sidebar + Detail Panel</h2>
+    <p class="concept-desc">Categories on the left, tool list in the middle,
+    configuration detail on the right. Familiar, scannable, scales with many tools.</p>
+    <div class="wireframe-preview">
+      <div class="wf-app" style="min-height: 400px;">
+        <div class="wf-topbar">🔧 Tool Manager · 12 tools active</div>
         <div class="wf-sidebar">
-          <div class="wf-nav-item active">Overview</div>
-          <div class="wf-nav-item">Sprints</div>
-          <div class="wf-nav-item">Team</div>
-          <div class="wf-nav-item">Reports</div>
+          <div class="wf-nav-item active">All Tools</div>
+          <div class="wf-nav-item">Data Processing</div>
+          <div class="wf-nav-item">Communication</div>
+          <div class="wf-nav-item">Reporting</div>
         </div>
         <div class="wf-main">
-          <div class="wf-metrics">
-            <div class="wf-metric">
-              <div class="label">Velocity</div>
-              <div class="value">42 pts</div>
-            </div>
-            <div class="wf-metric">
-              <div class="label">Open issues</div>
-              <div class="value">17</div>
-            </div>
-            <div class="wf-metric">
-              <div class="label">On track</div>
-              <div class="value">83%</div>
-            </div>
-          </div>
-          <div class="wf-chart" style="margin-top: 1rem;">📈 Burndown chart</div>
+          <div class="wf-heading">All Tools</div>
+          <!-- Full-size wireframe content here -->
         </div>
       </div>
     </div>
   </div>
 
-  <div class="card" data-choice="b">
-    <h3>Concept B — Timeline Feed</h3>
-    <p>Chronological activity feed with inline status updates, no sidebar — optimized for async teams.</p>
-    <div style="font-size: 0.75rem; margin-top: 1rem;">
-      <div class="wf-app" style="grid-template-columns: 1fr; grid-template-rows: auto 1fr;">
-        <div class="wf-topbar">📋 ProjectPulse &nbsp;·&nbsp; Activity Feed</div>
+  <div class="concept-card" data-choice="b">
+    <h2>B — Card Grid with Filters</h2>
+    <p class="concept-desc">Tools as visual cards grouped by category.
+    Filter chips across the top. Click a card to configure inline.</p>
+    <div class="wireframe-preview">
+      <div class="wf-app" style="grid-template-columns: 1fr; min-height: 400px;">
+        <div class="wf-topbar">🔧 Tool Manager · 12 tools active</div>
         <div class="wf-main">
-          <div class="wf-heading">Recent activity</div>
-          <div class="wf-table">
-            <div class="wf-table-header">
-              <span style="flex:2">Task</span>
-              <span style="flex:1">Assignee</span>
-              <span style="flex:1">Status</span>
-            </div>
-            <div class="wf-table-row">
-              <span style="flex:2">API integration complete</span>
-              <span style="flex:1">Maya</span>
-              <span style="flex:1">Done ✅</span>
-            </div>
-            <div class="wf-table-row">
-              <span style="flex:2">Write release notes</span>
-              <span style="flex:1">Sam</span>
-              <span style="flex:1">In progress</span>
-            </div>
-            <div class="wf-table-row">
-              <span style="flex:2">QA sign-off</span>
-              <span style="flex:1">Jordan</span>
-              <span style="flex:1">Blocked 🔴</span>
-            </div>
-          </div>
+          <div class="wf-heading">Tools</div>
+          <!-- Full-size wireframe content here -->
         </div>
       </div>
     </div>
   </div>
 
-  <div class="card" data-choice="c">
-    <h3>Concept C — Split View</h3>
-    <p>Left panel shows the sprint board; right panel shows detail for the selected item. Good for focused review sessions.</p>
-    <div style="font-size: 0.75rem; margin-top: 1rem;">
-      <div class="wf-app">
-        <div class="wf-topbar">🗂 ProjectPulse &nbsp;·&nbsp; Sprint Board</div>
-        <div class="wf-sidebar">
-          <div class="wf-nav-item active">Sprint 4</div>
-          <div class="wf-nav-item">Sprint 3</div>
-          <div class="wf-nav-item">Backlog</div>
-        </div>
+  <div class="concept-card" data-choice="c">
+    <h2>C — Flat List with Expandable Rows</h2>
+    <p class="concept-desc">Simple list of tools with expand-in-place detail.
+    No panels, no modals — everything inline.</p>
+    <div class="wireframe-preview">
+      <div class="wf-app" style="grid-template-columns: 1fr; min-height: 400px;">
+        <div class="wf-topbar">🔧 Tool Manager · 12 tools active</div>
         <div class="wf-main">
-          <div class="wf-split">
-            <div>
-              <div class="wf-heading">Board</div>
-              <div class="wf-table">
-                <div class="wf-table-row">📌 API integration</div>
-                <div class="wf-table-row">📝 Release notes</div>
-                <div class="wf-table-row">🔍 QA sign-off</div>
-              </div>
-            </div>
-            <div>
-              <div class="wf-heading">Detail — QA sign-off</div>
-              <div class="wf-placeholder">Attachment preview</div>
-              <div style="margin-top: 0.5rem;">
-                <div class="wf-input" style="margin-bottom: 0.5rem;" readonly placeholder="Add a comment…"></div>
-                <div class="wf-button">Post comment</div>
-              </div>
-            </div>
-          </div>
+          <div class="wf-heading">Tools</div>
+          <!-- Full-size wireframe content here -->
         </div>
       </div>
     </div>
@@ -372,3 +379,9 @@ The miniature wireframe preview inside each card should use the `.wf-*` classes 
 
 </div>
 ```
+
+**Key rules:**
+- `data-choice` on every `.concept-card` — this is how clicks get sent to Claude
+- Wireframe previews at full readable font size, not miniaturized
+- Each concept must show a meaningfully different layout approach
+- The `.concept-stack` class ensures vertical flow — never switch to a grid

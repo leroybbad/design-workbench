@@ -125,13 +125,15 @@ Once you have enough context (problem + interaction model + aesthetic signal):
 
 1. **Ask:** "Want 3 focused concepts or a wider range to react to?"
 2. Read `references/wireframe-guide.md` for the CSS class kit and authoring rules
-3. Generate concept wireframes — one HTML file per concept, or a single file with a card grid showing all concepts
+3. Generate concept wireframes as a single HTML file with concepts **stacked vertically** (never in a side-by-side grid — they get squished and unreadable)
 4. Each concept should:
    - Have a clear name and 1-2 sentence description
    - Show a distinct layout/approach to the stated problem
-   - Use the lo-fi-with-warmth style (wireframe guide)
+   - Be a high-quality UI concept — looks like a real interface, not a rough sketch
    - Use the chosen palette's tokens in muted form
    - Use real, plausible content labels — never lorem ipsum
+   - Show enough content (4-6 data rows, 3-4 nav items, real metrics)
+   - Use readable font sizes — never shrink below the palette's base font size
    - Be clickable via `data-choice` attributes
 5. Tell the user the URL and what to look at
 6. Wait for their reaction
@@ -216,5 +218,5 @@ for their feedback (clicks, comments, tune changes) as JSONL.
 - **Never re-ask.** Skip questions the user already answered.
 - **Aesthetic before visuals.** Always get some palette signal before showing wireframes.
 - **Real content.** Never use lorem ipsum, "[Title]", or placeholder text.
-- **Lo-fi with warmth.** Concept wireframes are soft, warm, directional — not gray boxes.
+- **High quality concepts.** Wireframes should look like real UI with muted colors — not gray boxes, not rough sketches.
 - **Document everything.** The design brief is the anchor against future AI slop.

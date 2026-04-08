@@ -106,37 +106,46 @@ happens after the user has chosen a concept direction (Phase 4). Concepts should
 be design-system-agnostic — neutral, clean styling so the user evaluates structure
 and layout without being distracted by color or personality.
 
-## Phase 3: Explore Concepts (Crazy 8s)
+## Phase 3: Schematic Thumbnails (Diverge)
 
 Once you have enough context (problem + interaction model):
 
-1. Read `references/wireframe-guide.md` — specifically the **Stage 1: Crazy 8s** section
-2. Generate **6-8 abstract structural thumbnails** in a grid layout
-3. Each thumbnail should:
-   - Be numbered (01-08) with a short bold title
-   - Show an **abstract layout diagram** using simple shapes — NOT real UI text or data
-   - Have a one-line description of the structural approach
-   - Represent a **fundamentally different pattern** (not variations of the same idea)
-   - Be clickable via `data-choice` attributes
-4. Tell the user the URL: "8 structural patterns to compare — click any to explore deeper"
-5. Wait for their selection (1-3 picks)
+1. Read `references/wireframe-guide.md` — specifically **Level 1: Schematic Thumbnails**
+2. **Before generating anything:** assign semantic meaning to 2-3 colors (e.g. purple =
+   AI/active, teal = success, blue = contextual). Hold this constant across ALL thumbnails.
+3. Generate **6-8 abstract structural thumbnails** in a grid layout
+4. Each thumbnail:
+   - Numbered (01-08) with a short bold title
+   - Uses only **rectangles, lines, and circles** — NO real text, NO real icons
+   - The arrangement of primitives IS the concept, not a representation of it
+   - One-line description below
+   - Represents a **fundamentally different structural pattern**
+   - Clickable via `data-choice` attributes
+5. All thumbnails must fit in one view without scrolling
+6. Tell the user: "8 structural patterns — click any to pressure-test"
+7. Wait for selection (1-3 picks)
 
-**If the user asks to "push wider":** Generate another batch of thumbnails exploring
-more unconventional patterns.
+**If the user asks to "push wider":** Generate another batch exploring more
+unconventional patterns. Maintain the same color system.
 
-## Phase 3b: Deep Dive
+## Phase 3b: Structural Prototype (Pressure-Test)
 
 After the user selects 1-3 thumbnails:
 
-1. Read `references/wireframe-guide.md` — specifically the **Stage 2: Deep Dive** section
-2. Render the selected concepts at full detail, **stacked vertically** (never in a grid)
-3. Each deep dive should:
-   - Be a high-quality UI concept — looks like a real interface with muted palette
-   - Use real, plausible content labels — never lorem ipsum
-   - Show enough content (4-6 data rows, 3-4 nav items, real metrics)
-   - Use readable font sizes — never shrink below the palette's base font size
+1. Read `references/wireframe-guide.md` — specifically **Level 2: Structural Prototype**
+2. Render selected concepts **stacked vertically** (never in a grid)
+3. Each prototype should:
+   - Have **real chrome** (top bars, panels, tabs, search) correctly positioned
+   - Have **real affordances** (filter chips, toggles, state indicators)
+   - Use **abbreviated content** (representative names, short descriptions, plausible counts)
+   - Build only the interactions that **test the core pattern assumption**
+   - Include at least one **stress-test** that forces the pattern into a harder state
+   - Use the same semantic color system from the thumbnails
    - Be clickable via `data-choice` attributes
-4. Tell the user to scroll through and pick a direction
+4. **End with a structural verdict** for each concept — rendered as text below the
+   prototype, not inside it: what the pattern gets right, where it strains, what it
+   implies for next steps
+5. Tell the user to scroll through, explore, and pick a direction
 
 ## Phase 4: Converge + Pick Palette
 
@@ -234,6 +243,8 @@ for their feedback (clicks, comments, tune changes) as JSONL.
 - **Multiple choice preferred.** Easier to answer than open-ended.
 - **Never re-ask.** Skip questions the user already answered.
 - **Structure before style.** Explore layout patterns first (neutral styling), pick palette after convergence.
-- **Real content.** Never use lorem ipsum, "[Title]", or placeholder text.
-- **High quality concepts.** Wireframes should look like real UI with muted colors — not gray boxes, not rough sketches.
+- **Semantic color, not decorative.** Assign 2-3 colors structural meaning before generating thumbnails. Hold constant across the session.
+- **Two fidelity levels, never averaged.** Level 1 = abstract primitives for divergence. Level 2 = structural prototypes for pressure-testing. Don't mix them.
+- **Stress-test every pattern.** Level 2 prototypes must include at least one toggle or scenario that forces the pattern into a harder state.
+- **End with verdicts.** Every Level 2 concept gets explicit analysis: what works, where it strains, what's next.
 - **Document everything.** The design brief is the anchor against future AI slop.

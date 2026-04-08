@@ -1,36 +1,62 @@
-# Wireframe Guide — Two-Stage Concept Exploration
+# Wireframe Guide — Two-Level UX Exploration
 
-This is a reference file for the Design Explore skill. It defines two levels of concept
-rendering used during exploration, plus the CSS class kit for detailed wireframes.
+This is a reference file for the Design Explore skill. It defines two distinct fidelity
+levels used during concept exploration. They should **never be mixed or averaged** — the
+power comes from using each at the right moment.
 
-Concept exploration works in two stages, like a designer at a whiteboard:
-
-1. **Crazy 8s grid** — Abstract structural thumbnails in a grid. Show the *pattern*, not
-   the content. Compact, scannable, 6-8 options. The user picks 1-2 to explore deeper.
-2. **Deep dive** — Full-width detailed renders of the chosen concepts. Real content,
-   readable font sizes, enough detail to evaluate the approach seriously.
+1. **Schematic thumbnails (diverge)** — Generate and compare many structural patterns
+   simultaneously without committing to any. Quantity, speed, no commitment.
+2. **Structural prototypes (pressure-test)** — Take one concept and reveal its mechanics.
+   Not to make it pretty, but to make the pattern actually work at a level where you can
+   feel whether it holds up.
 
 ---
 
-## Stage 1: Crazy 8s — Structural Thumbnails
+## Level 1: Schematic Thumbnails (Diverge)
 
-Show 6-8 concepts as a grid of abstract structural diagrams. Each thumbnail communicates
-a **layout pattern** using simple shapes — rectangles, lines, blocks — not real UI text
-or data. Think of these as the tiny sketches a designer draws on sticky notes.
+**Purpose:** Generate 6-8 structurally distinct layout patterns that the user can scan
+and compare in a single view.
 
-### Principles
+### Fidelity rules
 
-1. **Abstract, not literal** — Use colored blocks, lines, and shapes to represent layout
-   zones (sidebar, content area, cards, tables). Do NOT render actual text or data.
-2. **Structurally distinct** — Each thumbnail must show a fundamentally different approach.
-   Not 8 variations of "sidebar + content" — show sidebar, tabs, command palette, canvas,
-   split pane, card grid, timeline, etc.
-3. **Numbered and named** — Each concept gets a number badge and a short bold title
-   (e.g. "01 Marketplace grid", "02 Command palette").
-4. **One-line description** — Below the thumbnail, a single sentence describing the
-   structural idea. Not a paragraph.
-5. **Grid layout works here** — Unlike detailed wireframes, abstract thumbnails are
-   compact enough for a 2x4 or 2x3 grid. Use it.
+- **No real text.** No real icons. No real content.
+- Every element is a **rectangle, line, or circle** of a specific size, weight, and color.
+- The arrangement of those primitives IS the concept — not a representation of it.
+- A sidebar is a narrow rectangle on the left. A card grid is a 2×3 grid of equal
+  rectangles. A search bar is a single full-width thin rectangle. Nothing else is needed.
+
+### Color discipline
+
+**This is critical.** Color at this level is **semantic, not decorative.**
+
+Before generating any thumbnails, assign semantic meaning to 2-3 colors:
+- e.g. Purple = AI-type or active/selected state
+- e.g. Teal = enabled/success
+- e.g. Blue = contextual info
+
+**Hold that meaning constant across ALL thumbnails in the set.** The viewer should be
+able to scan across thumbnails and compare structural patterns — not decode a new
+visual system per thumbnail.
+
+### Size and density
+
+Thumbnails should be small enough that **all 6-8 fit in one view without scrolling.**
+Each thumbnail canvas is roughly 150-200px wide. This constraint is intentional — it
+forces each thumbnail to communicate only the dominant structural pattern and nothing else.
+
+### Interactivity
+
+None. Each thumbnail is static. The only interaction is clicking to select it for
+deeper exploration.
+
+### Structural diversity
+
+Each thumbnail must represent a fundamentally different approach:
+- Sidebar + content, card grid, command palette, canvas, split pane,
+  timeline, table registry, category hub, etc.
+- NOT 8 variations of "sidebar + content area"
+- Resist the urge to make any thumbnail more detailed than the others — that
+  signals preference before analysis
 
 ### CSS for the thumbnail grid
 
@@ -99,15 +125,15 @@ or data. Think of these as the tiny sketches a designer draws on sticky notes.
 ### Building abstract thumbnails
 
 Inside each `.crazy8-thumb`, use simple divs with inline styles to represent layout zones.
-Use muted colors from the palette (or neutral grays if no palette is chosen yet).
+Use the 2-3 semantic colors you assigned, plus neutral grays for structure.
 
 **Shapes vocabulary:**
-- **Rectangles** — represent content areas, cards, panels
-- **Thin horizontal lines** — represent text rows, list items, table rows
-- **Small squares/circles** — represent icons, avatars, status indicators
-- **Colored blocks** — represent primary actions, active states, headers
+- **Rectangles** — content areas, cards, panels
+- **Thin horizontal lines** — text rows, list items, table rows
+- **Small squares/circles** — icons, avatars, status indicators
+- **Colored blocks** — primary actions, active states, headers (using semantic colors)
 
-Example of an abstract sidebar + content thumbnail:
+Example of a sidebar + card grid thumbnail:
 
 ```html
 <div class="crazy8-thumb">
@@ -145,38 +171,75 @@ Example of an abstract sidebar + content thumbnail:
       <span class="crazy8-title">Marketplace grid</span>
     </div>
     <div class="crazy8-thumb">
-      <!-- Abstract shapes here -->
+      <!-- Abstract shapes only -->
     </div>
     <p class="crazy8-desc">Filter sidebar + search + card grid. Browse-first.</p>
   </div>
-
   <!-- Repeat for 02-08 -->
 </div>
 ```
 
 ---
 
-## Stage 2: Deep Dive — Full-Width Detailed Concepts
+## Level 2: Structural Prototype (Pressure-Test)
 
-After the user selects 1-3 thumbnails from the Crazy 8s grid, render those concepts
-at full detail. Stack them vertically — each one gets the full page width.
+**Purpose:** Take one selected concept and reveal its mechanics — the interaction model,
+the state transitions, the failure modes. Not to make it pretty, not to fill in real
+content, but to make the pattern actually work at a level where you can feel whether it
+holds up.
 
-### Principles
+### Fidelity rules
 
-1. **High quality rendering** — These should look like real UI with muted palette colors.
-   Readable text, proper spacing, complete layouts.
-2. **Real labels** — Use actual text plausible for the problem domain. Never lorem ipsum.
-3. **Enough content** — Show 4-6 rows in tables, 3-4 nav items, multiple metrics.
-4. **Visible structure** — Subtle borders and fills to make regions legible at a glance.
-5. **No images** — Placeholder regions with a soft dashed outline and centered label.
+- **Real chrome** — top bars, panel headers, filter tabs, search inputs, breadcrumbs.
+  The structural furniture of the UI should be present and correctly positioned.
+- **Real affordances** — clickable elements, state changes, filtering chips, toggles.
+  UI elements should behave as they would in production.
+- **Abbreviated content** — representative names ("Data Transformer", "Slack Notify"),
+  short descriptions, plausible counts. Not real data, but enough to feel the density.
+- **No visual polish** — correct structure, no decorative refinement. Think engineering
+  sketch, not design comp.
 
-### Sizing
+### What to build
 
-- Use the palette's base font size — never shrink below it.
-- Set `min-height: 400px` on `.wf-app` so layouts have room.
-- The wireframe should feel like the actual app at ~90% polish, not a miniature.
+Only the interactions that **test the core pattern assumption.** Ask: what would either
+validate or break this pattern?
 
-### CSS for the vertical stack
+- For a pipeline canvas: slot selection, tool insertion, connection flow
+- For a three-panel layout: category filtering, item selection, detail rendering
+- For a command palette: search, filtering, result types, keyboard hints
+
+**Do NOT build:** hover states, animations, icon sets, loading states. Just the
+structural interactions.
+
+### Stress-test toggle
+
+Always include at least one **stress test** — something that forces the pattern into
+a harder state:
+- More items (10 tools → 50 tools)
+- A different role (admin vs. viewer)
+- A different entry point (deep link vs. browse)
+- A complex edge case (nested workflows, conflicting states)
+
+Make the failure visible. Label it explicitly. This is where patterns either hold or
+reveal their limits.
+
+### Color continuity
+
+Use the same semantic color system established in the Level 1 thumbnails, now applied
+with actual CSS. The viewer should feel continuity between the schematic they chose
+and the prototype they're now exploring.
+
+### Structural verdict
+
+**End every Level 2 exploration with explicit analysis** — rendered as prose outside
+the prototype, not inside it:
+- What the pattern gets right
+- Where it strains or breaks
+- What it implies about where to go next
+
+### Layout
+
+Stack prototypes **vertically, one per concept.** Each gets full page width.
 
 ```css
 .concept-stack { display: flex; flex-direction: column; gap: 2rem; }
@@ -190,7 +253,7 @@ at full detail. Stack them vertically — each one gets the full page width.
   transition: border-color 0.2s, box-shadow 0.2s;
 }
 .concept-card:hover {
-  border-color: var(--color-primary);
+  border-color: var(--color-primary, #8b7ec8);
   box-shadow: 0 4px 20px rgba(0,0,0,0.08);
 }
 .concept-card h2 {
@@ -217,29 +280,27 @@ at full detail. Stack them vertically — each one gets the full page width.
 <div class="concept-stack">
   <div class="concept-card" data-choice="a">
     <h2>A — [Concept Name]</h2>
-    <p class="concept-desc">[1-2 sentence description]</p>
+    <p class="concept-desc">[1-2 sentence description of the pattern]</p>
     <div class="wireframe-preview">
-      <div class="wf-app" style="min-height: 400px;">
-        <!-- Full detailed wireframe using wf-* classes -->
-      </div>
+      <!-- Full structural prototype using wf-* classes -->
     </div>
   </div>
-  <!-- More concepts -->
 </div>
 ```
 
-**Key rules for deep dives:**
+**Key rules:**
 - `data-choice` on every `.concept-card`
 - Full readable font size, never miniaturized
-- Each concept must show a meaningfully different layout approach
-- Always use `.concept-stack` for vertical flow — never a grid at this stage
+- Each prototype tests its core pattern assumption
+- Include at least one stress-test toggle per concept
+- Always use `.concept-stack` — never a grid at this stage
 
 ---
 
-## Muting a Palette
+## Palette Muting (for Level 2 only)
 
-When generating wireframes with a chosen palette, apply a muting layer scoped to
-`#claude-content` so tokens are desaturated without altering them globally.
+When a palette has been chosen (after convergence), apply a muting layer for Level 2
+prototypes so tokens are desaturated. Level 1 thumbnails don't use palette tokens.
 
 ```css
 #claude-content {
@@ -252,13 +313,13 @@ When generating wireframes with a chosen palette, apply a muting layer scoped to
 }
 ```
 
-> **Note:** For the Crazy 8s stage, palette muting is optional — abstract thumbnails
-> can use neutral grays since they're showing structure, not style. Apply palette
-> muting when generating Stage 2 deep dives.
+> **Note:** Since palette selection now happens after convergence, Level 2 prototypes
+> during exploration use neutral styling. Palette muting only applies if the user has
+> already chosen a palette in a previous session or from codebase detection.
 
 ---
 
-## CSS Class Kit (for Stage 2 wireframes)
+## CSS Class Kit (for Level 2 prototypes)
 
 These classes layer on top of the frame template's existing classes. All values use
 token variables — never hardcoded sizes or colors.
@@ -453,9 +514,10 @@ token variables — never hardcoded sizes or colors.
 
 ## Authoring Rules
 
-1. **Include CSS in a `<style>` block** — no external stylesheets.
-2. **Stage 1 thumbnails** use the `.crazy8-*` classes and abstract shapes. No real text in thumbnails.
-3. **Stage 2 deep dives** use palette tokens + muting layer + `.wf-*` classes. Real text, real content.
-4. **Semantic classes** — `.wf-metric`, `.wf-sidebar`, not utility stacks.
-5. **Real text for deep dives** — plausible for the problem domain.
-6. **No JavaScript** — static HTML + CSS only.
+1. **Level 1 thumbnails** use `.crazy8-*` classes and abstract shapes only. No text in thumbnails. Assign semantic colors before generating.
+2. **Level 2 prototypes** use `.wf-*` classes with real chrome and abbreviated content. Build only interactions that test the core pattern.
+3. **Include a stress-test** in every Level 2 prototype — force the pattern into a harder state.
+4. **End Level 2 with a verdict** — what the pattern gets right, where it strains, what's next.
+5. **Semantic classes** — `.wf-metric`, `.wf-sidebar`, not utility stacks.
+6. **No JavaScript** — static HTML + CSS only. Interaction is implied by structure.
+7. **Color continuity** — the semantic color system from Level 1 carries into Level 2.

@@ -2387,7 +2387,7 @@
       id: target.id || null
     });
 
-    showToast('Selection captured. Use Comment (⇧C) to tag what you like, then Send (⇧⌘↵) when ready.');
+    showToast('Interest captured. Use Comment (⇧C) to tag what you like, then Send (⇧⌘↵) when ready.');
 
     // Update indicator bar (defer so toggleSelect runs first)
     setTimeout(() => {

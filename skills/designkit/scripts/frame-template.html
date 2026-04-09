@@ -653,6 +653,69 @@
       min-width: 50px;
       text-align: right;
     }
+    .tune-number-input {
+      width: 64px;
+      padding: 4px 6px;
+      background: #2a2a2e;
+      border: 1px solid #3a3a3e;
+      border-radius: 4px;
+      color: #e5e5e7;
+      font-size: 0.75rem;
+      font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+      text-align: right;
+      outline: none;
+      -moz-appearance: textfield;
+    }
+    .tune-number-input::-webkit-inner-spin-button,
+    .tune-number-input::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+    .tune-number-input:focus {
+      border-color: var(--accent);
+    }
+
+    .tune-spacing-group {
+      margin-bottom: 0.75rem;
+    }
+    .tune-spacing-header {
+      font-size: 0.7rem;
+      color: #8e8e93;
+      margin-bottom: 0.375rem;
+    }
+    .tune-spacing-inputs {
+      display: flex;
+      align-items: center;
+      gap: 0.375rem;
+    }
+    .tune-spacing-field {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+    }
+    .tune-spacing-input {
+      width: 52px;
+    }
+    .tune-spacing-side-label {
+      font-size: 0.6rem;
+      color: #636366;
+    }
+    .tune-spacing-expand {
+      background: none;
+      border: 1px solid #3a3a3e;
+      border-radius: 4px;
+      padding: 4px 6px;
+      cursor: pointer;
+      font-size: 0.75rem;
+      color: #636366;
+      margin-left: 0.25rem;
+      line-height: 1;
+    }
+    .tune-spacing-expand:hover {
+      border-color: #5a5a5e;
+      color: #8e8e93;
+    }
     .tune-color {
       width: 28px;
       height: 28px;

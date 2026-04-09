@@ -32,6 +32,7 @@ rsync -av --delete \
   --exclude 'node_modules/' \
   --exclude '.DS_Store' \
   --exclude '.playwright-mcp/' \
+  --exclude 'benchmark/' \
   "$DEV_REPO/" "$PUBLIC_REPO/"
 
 echo ""

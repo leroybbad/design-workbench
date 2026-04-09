@@ -151,10 +151,14 @@ After the user selects 1-3 thumbnails:
 
 ### Converge on direction
 
-- User picks a direction (or mixes elements from multiple concepts)
+- Read the user's choice and any annotations they sent from the viewer
 - Confirm your understanding: "So the direction is [concept A's layout] with
-  [concept C's navigation approach] — does that capture it?"
-- If they want adjustments, refine and re-confirm
+  [these elements from concept B] — does that capture it?"
+- Then offer another round: "If you'd like to see another round of concepts —
+  maybe exploring a different angle or combining ideas differently — just tell me
+  what you liked and I can generate 2-3 more. Otherwise we'll move to the prototype."
+- If they want more concepts, go back to Phase 3b with their feedback
+- If they're happy, move to palette selection
 
 ### Pick palette (NOW — after convergence)
 

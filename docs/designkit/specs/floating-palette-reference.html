@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lucide-static@latest/font/lucide.min.css">
+  <style>
+    :root {
+      --color-primary: #18181B;
+      --color-bg: #ffffff;
+      --color-surface: #ffffff;
+      --color-surface-variant: #F4F4F5;
+      --color-border: #E4E4E7;
+      --color-text: #09090B;
+      --color-text-secondary: #52525B;
+      --color-text-tertiary: #A1A1AA;
+      --color-success: #16A34A;
+      --color-ai: #6c5ce7;
+      --color-ai-bg: #f0eeff;
+      --font-family: 'Inter', system-ui, sans-serif;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: var(--font-family); background: var(--color-bg); color: var(--color-text); font-size: 1rem; line-height: 1.5; }
+
+    /* ===== PROTOTYPE CONTENT ===== */
+    .app { min-height: 100vh; }
+    .topnav { display: flex; align-items: center; padding: 0 1.5rem; height: 48px; border-bottom: 1px solid var(--color-border); }
+    .topnav-brand { font-weight: 600; margin-right: 1.5rem; }
+    .topnav-links { display: flex; gap: 1rem; list-style: none; height: 100%; }
+    .topnav-links a { display: flex; align-items: center; font-size: 0.875rem; color: var(--color-text-secondary); text-decoration: none; height: 100%; border-bottom: 2px solid transparent; }
+    .topnav-links a.active { color: var(--color-text); font-weight: 500; border-bottom-color: var(--color-text); }
+    .topnav-right { margin-left: auto; }
+    .avatar { width: 28px; height: 28px; border-radius: 50%; background: var(--color-surface-variant); display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 500; color: var(--color-text-secondary); }
+    .page { padding: 1rem 1.5rem; max-width: 1200px; margin: 0 auto; }
+    .page-header { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem; }
+    .page-title { font-size: 1.25rem; font-weight: 600; }
+    .page-count { font-size: 0.875rem; color: var(--color-text-tertiary); }
+    .page-actions { margin-left: auto; display: flex; gap: 0.5rem; }
+    .btn { display: inline-flex; align-items: center; gap: 0.25rem; padding: 6px 0.75rem; border-radius: 6px; font-size: 0.875rem; font-weight: 500; border: 1px solid var(--color-border); background: var(--color-surface); color: var(--color-text); cursor: pointer; font-family: inherit; }
+    .btn-primary { background: var(--color-primary); color: #fff; border-color: var(--color-primary); }
+    .btn-sm { padding: 4px 0.5rem; font-size: 0.75rem; }
+    .controls { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem; }
+    .search-input { width: 280px; padding: 6px 0.75rem; border: 1px solid var(--color-border); border-radius: 6px; font-size: 0.875rem; font-family: inherit; }
+    .chip { padding: 4px 0.5rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 500; border: 1px solid var(--color-border); color: var(--color-text-secondary); background: var(--color-surface); cursor: pointer; font-family: inherit; }
+    .chip.active { background: var(--color-primary); color: #fff; border-color: var(--color-primary); }
+    .tool-table { width: 100%; border: 1px solid var(--color-border); border-radius: 8px; overflow: hidden; border-collapse: separate; border-spacing: 0; }
+    .tool-table thead th { text-align: left; padding: 0.5rem 0.75rem; font-size: 0.75rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.04em; color: var(--color-text-tertiary); background: var(--color-surface-variant); border-bottom: 1px solid var(--color-border); }
+    .tool-table tbody td { padding: 0.5rem 0.75rem; font-size: 1rem; border-bottom: 1px solid var(--color-border); vertical-align: middle; }
+    .tool-table tbody tr:last-child td { border-bottom: none; }
+    .tool-table tbody tr:hover { background: var(--color-surface-variant); }
+    .tool-cell { display: flex; align-items: center; gap: 0.5rem; }
+    .tool-icon { width: 32px; height: 32px; border-radius: 6px; background: var(--color-surface-variant); display: flex; align-items: center; justify-content: center; color: var(--color-text-secondary); flex-shrink: 0; }
+    .tool-icon-ai { background: var(--color-ai-bg); color: var(--color-ai); }
+    .tool-name { font-weight: 500; }
+    .tool-desc { font-size: 0.875rem; color: var(--color-text-tertiary); }
+    .tag { display: inline-block; padding: 2px 8px; border-radius: 9999px; font-size: 0.75rem; font-weight: 500; }
+    .tag-ai { background: var(--color-ai-bg); color: var(--color-ai); }
+    .tag-std { background: var(--color-surface-variant); color: var(--color-text-secondary); }
+    .status { display: flex; align-items: center; gap: 0.25rem; font-size: 0.875rem; }
+    .status-dot { width: 6px; height: 6px; border-radius: 50%; }
+    .status-active { background: var(--color-success); }
+    .status-inactive { background: var(--color-text-tertiary); }
+
+    /* ===== FLOATING TOOLBAR ===== */
+    .dk-toolbar {
+      position: fixed;
+      top: 80px;
+      left: 16px;
+      z-index: 10000;
+      display: flex;
+      flex-direction: column;
+      background: #1a1a1e;
+      border-radius: 14px;
+      padding: 6px;
+      gap: 2px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.28), 0 0 0 1px rgba(255,255,255,0.06);
+      user-select: none;
+      cursor: grab;
+    }
+    .dk-toolbar.dragging { cursor: grabbing; }
+    .dk-toolbar.dragging .dk-tool { pointer-events: none; }
+
+    .dk-brand {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 4px 0 2px;
+      line-height: 1;
+    }
+    .dk-brand-d {
+      font-size: 0.8125rem;
+      font-weight: 800;
+      color: #e5e5e7;
+      letter-spacing: -0.02em;
+    }
+    .dk-brand-k {
+      font-size: 0.5625rem;
+      font-weight: 600;
+      color: #636366;
+      letter-spacing: 0.02em;
+      margin-top: -2px;
+    }
+
+    .dk-tool {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      border: none;
+      background: none;
+      color: #8e8e93;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: background 0.12s, color 0.12s;
+      position: relative;
+    }
+    .dk-tool:hover { background: #2a2a2e; color: #d1d1d6; }
+    .dk-tool.active { background: #0a84ff; color: #fff; }
+    .dk-tool i { font-size: 16px; }
+
+    .dk-divider { width: 22px; height: 1px; background: #2a2a2e; margin: 3px auto; }
+
+    .dk-send {
+      width: 36px; height: 36px; border-radius: 8px; border: none;
+      background: none; color: #3a3a3e;
+      display: flex; align-items: center; justify-content: center;
+      cursor: default; font-size: 1rem; transition: all 0.15s;
+    }
+    .dk-send.ready { background: #0a84ff; color: #fff; cursor: pointer; }
+    .dk-send.ready:hover { background: #3898ff; }
+
+    .dk-badge {
+      position: absolute; top: 4px; right: 4px;
+      width: 7px; height: 7px; background: #0a84ff;
+      border-radius: 50%; display: none;
+    }
+    .dk-badge.on { display: block; }
+
+    /* ===== FLOATING PANEL (shared) ===== */
+    .dk-panel {
+      position: fixed;
+      z-index: 9999;
+      background: #1a1a1e;
+      border-radius: 14px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.28), 0 0 0 1px rgba(255,255,255,0.06);
+      width: 300px;
+      max-height: 70vh;
+      display: none;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .dk-panel.open { display: flex; }
+
+    .dk-panel-header {
+      display: flex; align-items: center; gap: 8px;
+      padding: 10px 14px;
+      border-bottom: 1px solid #2a2a2e;
+      flex-shrink: 0;
+      cursor: grab;
+    }
+    .dk-panel-header.dragging { cursor: grabbing; }
+    .dk-panel-icon { color: #0a84ff; font-size: 14px; }
+    .dk-panel-title { font-size: 0.8125rem; font-weight: 600; color: #e5e5e7; flex: 1; }
+    .dk-panel-close {
+      background: none; border: none; color: #636366;
+      font-size: 1.125rem; cursor: pointer; line-height: 1;
+      width: 24px; height: 24px; border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .dk-panel-close:hover { background: #2a2a2e; color: #8e8e93; }
+
+    .dk-panel-tabs {
+      display: flex; border-bottom: 1px solid #2a2a2e;
+      padding: 0 14px; flex-shrink: 0;
+    }
+    .dk-panel-tab {
+      padding: 7px 10px; font-size: 0.6875rem; color: #636366;
+      background: none; border: none; border-bottom: 2px solid transparent;
+      cursor: pointer; font-family: inherit; transition: color 0.12s;
+    }
+    .dk-panel-tab:hover { color: #8e8e93; }
+    .dk-panel-tab.active { color: #e5e5e7; border-bottom-color: #0a84ff; }
+
+    .dk-panel-body {
+      flex: 1; overflow-y: auto; padding: 12px 14px;
+    }
+
+    /* Panel content */
+    .fp-section { margin-bottom: 14px; }
+    .fp-label { font-size: 0.6875rem; color: #636366; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 6px; }
+    .fp-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+    .fp-field { font-size: 0.75rem; color: #8e8e93; min-width: 52px; }
+    .fp-input {
+      width: 56px; padding: 4px 6px; background: #2a2a2e; border: 1px solid #3a3a3e;
+      border-radius: 5px; color: #e5e5e7; font-size: 0.75rem;
+      font-family: 'SF Mono', Monaco, monospace; text-align: right; outline: none;
+      -moz-appearance: textfield;
+    }
+    .fp-input::-webkit-inner-spin-button, .fp-input::-webkit-outer-spin-button { -webkit-appearance: none; }
+    .fp-input:focus { border-color: #0a84ff; }
+    .fp-unit { font-size: 0.625rem; color: #4a4a4e; }
+
+    /* Spacing group */
+    .fp-spacing { display: flex; align-items: center; gap: 4px; }
+    .fp-spacing-field { display: flex; flex-direction: column; align-items: center; gap: 1px; }
+    .fp-spacing-input { width: 44px; text-align: center; }
+    .fp-spacing-label { font-size: 0.5625rem; color: #4a4a4e; }
+    .fp-expand {
+      background: none; border: 1px solid #3a3a3e; border-radius: 4px;
+      padding: 3px 5px; cursor: pointer; font-size: 0.6875rem; color: #4a4a4e;
+      line-height: 1; margin-left: 4px;
+    }
+    .fp-expand:hover { border-color: #5a5a5e; color: #8e8e93; }
+
+    /* Color picker */
+    .fp-color-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+    .fp-swatch { width: 24px; height: 24px; border-radius: 5px; border: 1px solid #3a3a3e; cursor: pointer; }
+    .fp-hex { font-size: 0.6875rem; color: #8e8e93; font-family: 'SF Mono', Monaco, monospace; }
+
+    /* Theme system cards */
+    .fp-system-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+    .fp-system-card {
+      padding: 8px 10px; border: 1.5px solid #3a3a3e; border-radius: 8px;
+      cursor: pointer; transition: border-color 0.12s;
+    }
+    .fp-system-card:hover { border-color: #5a5a5e; }
+    .fp-system-card.active { border-color: #0a84ff; }
+    .fp-system-name { font-size: 0.75rem; font-weight: 600; color: #e5e5e7; }
+    .fp-system-desc { font-size: 0.625rem; color: #636366; line-height: 1.3; }
+
+    /* Changes list */
+    .fp-change {
+      display: flex; align-items: center; gap: 8px;
+      padding: 8px; background: #2a2a2e; border-radius: 6px; margin-bottom: 4px;
+    }
+    .fp-change-icon { font-size: 0.875rem; }
+    .fp-change-text { font-size: 0.75rem; color: #d1d1d6; flex: 1; }
+    .fp-change-remove { font-size: 0.6875rem; color: #636366; cursor: pointer; background: none; border: none; }
+    .fp-change-remove:hover { color: #ff453a; }
+
+    .fp-save-bar {
+      padding: 8px 14px; border-top: 1px solid #2a2a2e;
+      display: flex; justify-content: flex-end; flex-shrink: 0;
+    }
+    .fp-save-btn {
+      background: #0a84ff; color: #fff; border: none; padding: 6px 16px;
+      border-radius: 6px; font-size: 0.75rem; font-weight: 500;
+      cursor: pointer; font-family: inherit;
+    }
+    .fp-save-btn:hover { background: #3898ff; }
+
+    /* Panel content sections — hidden by default */
+    .dk-panel-content { display: none; }
+    .dk-panel-content.active { display: block; }
+  </style>
+</head>
+<body>
+
+  <!-- ===== PROTOTYPE ===== -->
+  <div class="app">
+    <nav class="topnav">
+      <span class="topnav-brand">Acme</span>
+      <ul class="topnav-links">
+        <li><a href="#">Dashboard</a></li>
+        <li><a href="#" class="active">Tools</a></li>
+        <li><a href="#">Workflows</a></li>
+        <li><a href="#">Settings</a></li>
+      </ul>
+      <div class="topnav-right"><div class="avatar">LM</div></div>
+    </nav>
+    <main class="page">
+      <div class="page-header">
+        <h1 class="page-title">Tools</h1>
+        <span class="page-count">28 tools · 3 workflows</span>
+        <div class="page-actions">
+          <button class="btn"><i class="lucide-download"></i> Export</button>
+          <button class="btn btn-primary"><i class="lucide-plus"></i> Add Tool</button>
+        </div>
+      </div>
+      <div class="controls">
+        <input class="search-input" placeholder="Search tools..." />
+        <button class="chip active">All</button>
+        <button class="chip">Standard</button>
+        <button class="chip">AI-Powered</button>
+        <button class="chip">My Tools</button>
+      </div>
+      <table class="tool-table">
+        <thead><tr><th style="width:35%">Tool</th><th>Type</th><th>Category</th><th>Status</th><th>Users</th><th></th></tr></thead>
+        <tbody>
+          <tr><td><div class="tool-cell"><div class="tool-icon tool-icon-ai"><i class="lucide-bar-chart-3"></i></div><div><div class="tool-name">Data Transformer</div><div class="tool-desc">Clean, map, and reshape datasets</div></div></div></td><td><span class="tag tag-ai">AI</span></td><td>Data</td><td><div class="status"><span class="status-dot status-active"></span> Active</div></td><td>142</td><td style="text-align:right"><button class="btn btn-sm">Open</button></td></tr>
+          <tr><td><div class="tool-cell"><div class="tool-icon"><i class="lucide-git-branch"></i></div><div><div class="tool-name">Task Router</div><div class="tool-desc">Route tasks by rules and capacity</div></div></div></td><td><span class="tag tag-std">Standard</span></td><td>Productivity</td><td><div class="status"><span class="status-dot status-active"></span> Active</div></td><td>89</td><td style="text-align:right"><button class="btn btn-sm">Open</button></td></tr>
+          <tr><td><div class="tool-cell"><div class="tool-icon tool-icon-ai"><i class="lucide-search"></i></div><div><div class="tool-name">Smart Search</div><div class="tool-desc">Semantic search across data sources</div></div></div></td><td><span class="tag tag-ai">AI</span></td><td>Data</td><td><div class="status"><span class="status-dot status-active"></span> Active</div></td><td>214</td><td style="text-align:right"><button class="btn btn-sm">Open</button></td></tr>
+          <tr><td><div class="tool-cell"><div class="tool-icon"><i class="lucide-hard-drive"></i></div><div><div class="tool-name">File Sync</div><div class="tool-desc">Cross-provider file sync</div></div></div></td><td><span class="tag tag-std">Standard</span></td><td>Files</td><td><div class="status"><span class="status-dot status-active"></span> Active</div></td><td>67</td><td style="text-align:right"><button class="btn btn-sm">Open</button></td></tr>
+          <tr><td><div class="tool-cell"><div class="tool-icon tool-icon-ai"><i class="lucide-mail"></i></div><div><div class="tool-name">Email Composer</div><div class="tool-desc">AI-assisted email drafting</div></div></div></td><td><span class="tag tag-ai">AI</span></td><td>Communication</td><td><div class="status"><span class="status-dot status-active"></span> Active</div></td><td>178</td><td style="text-align:right"><button class="btn btn-sm">Open</button></td></tr>
+          <tr><td><div class="tool-cell"><div class="tool-icon"><i class="lucide-calendar"></i></div><div><div class="tool-name">Schedule Builder</div><div class="tool-desc">Recurring schedule management</div></div></div></td><td><span class="tag tag-std">Standard</span></td><td>Productivity</td><td><div class="status"><span class="status-dot status-inactive"></span> Inactive</div></td><td>—</td><td style="text-align:right"><button class="btn btn-sm btn-primary">Adopt</button></td></tr>
+        </tbody>
+      </table>
+    </main>
+  </div>
+
+  <!-- ===== FLOATING TOOLBAR ===== -->
+  <div class="dk-toolbar" id="toolbar">
+    <div class="dk-brand">
+      <span class="dk-brand-d">D</span>
+      <span class="dk-brand-k">K</span>
+    </div>
+    <div class="dk-divider"></div>
+    <button class="dk-tool" data-tool="comment" title="Comment (⌃C)"><i class="lucide-message-square"></i></button>
+    <button class="dk-tool" data-tool="inspect" title="Inspect (⌃I)"><i class="lucide-scan"></i></button>
+    <button class="dk-tool" data-tool="tune" title="Tune (⌃T)"><i class="lucide-sliders-horizontal"></i></button>
+    <button class="dk-tool" data-tool="theme" title="Theme (⌃D)"><i class="lucide-palette"></i></button>
+    <div class="dk-divider"></div>
+    <button class="dk-tool" data-tool="changes" title="Changes (⌃A)">
+      <i class="lucide-layers"></i>
+      <span class="dk-badge" id="badge"></span>
+    </button>
+    <div class="dk-divider"></div>
+    <button class="dk-send" id="send-btn" title="Send to Claude (⇧⌘↵)"><i class="lucide-send"></i></button>
+  </div>
+
+  <!-- ===== SHARED FLOATING PANEL ===== -->
+  <div class="dk-panel" id="panel">
+    <div class="dk-panel-header" id="panel-header">
+      <i class="dk-panel-icon lucide-sliders-horizontal" id="panel-icon"></i>
+      <span class="dk-panel-title" id="panel-title">Tune</span>
+      <button class="dk-panel-close" id="panel-close">×</button>
+    </div>
+
+    <!-- TUNE CONTENT -->
+    <div class="dk-panel-content active" id="content-tune">
+      <div class="dk-panel-tabs">
+        <button class="dk-panel-tab active">Type</button>
+        <button class="dk-panel-tab">Spacing</button>
+        <button class="dk-panel-tab">Colors</button>
+        <button class="dk-panel-tab">Shadow</button>
+        <button class="dk-panel-tab">Border</button>
+      </div>
+      <div class="dk-panel-body">
+        <div class="fp-section">
+          <div class="fp-label">Font</div>
+          <div class="fp-row"><span class="fp-field">Size</span><input class="fp-input" type="number" value="16" step="1"><span class="fp-unit">px</span></div>
+          <div class="fp-row"><span class="fp-field">Weight</span><input class="fp-input" type="number" value="500" step="100"></div>
+          <div class="fp-row"><span class="fp-field">Height</span><input class="fp-input" type="number" value="24" step="1"><span class="fp-unit">px</span></div>
+          <div class="fp-row"><span class="fp-field">Tracking</span><input class="fp-input" type="number" value="0" step="0.1"><span class="fp-unit">px</span></div>
+        </div>
+        <div class="fp-section">
+          <div class="fp-label">Opacity</div>
+          <div class="fp-row">
+            <input style="flex:1; height:4px; -webkit-appearance:none; background:#3a3a3e; border-radius:2px; outline:none;" type="range" min="0" max="1" step="0.05" value="1">
+            <span style="font-size:0.75rem; color:#e5e5e7; font-family:'SF Mono',monospace; min-width:28px; text-align:right;">1.0</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- THEME CONTENT -->
+    <div class="dk-panel-content" id="content-theme">
+      <div class="dk-panel-tabs">
+        <button class="dk-panel-tab active">System</button>
+        <button class="dk-panel-tab">Colors</button>
+        <button class="dk-panel-tab">Fine-tune</button>
+      </div>
+      <div class="dk-panel-body">
+        <div class="fp-system-grid">
+          <div class="fp-system-card"><div class="fp-system-name">Material</div><div class="fp-system-desc">Bold type, elevation</div></div>
+          <div class="fp-system-card active"><div class="fp-system-name">Tailwind</div><div class="fp-system-desc">Clean, utility-driven</div></div>
+          <div class="fp-system-card"><div class="fp-system-name">Apple HIG</div><div class="fp-system-desc">Generous whitespace</div></div>
+          <div class="fp-system-card"><div class="fp-system-name">Ant Design</div><div class="fp-system-desc">Enterprise, data-heavy</div></div>
+          <div class="fp-system-card"><div class="fp-system-name">Corporate Dense</div><div class="fp-system-desc">Compact, dashboard</div></div>
+          <div class="fp-system-card"><div class="fp-system-name">Neon AI</div><div class="fp-system-desc">Dark, vibrant</div></div>
+          <div class="fp-system-card"><div class="fp-system-name">Clean & Spacious</div><div class="fp-system-desc">Premium SaaS</div></div>
+          <div class="fp-system-card"><div class="fp-system-name">Editorial</div><div class="fp-system-desc">Serif, reading-first</div></div>
+          <div class="fp-system-card"><div class="fp-system-name">Playful</div><div class="fp-system-desc">Rounded, saturated</div></div>
+          <div class="fp-system-card"><div class="fp-system-name">Minimal Mono</div><div class="fp-system-desc">Zero color, type-driven</div></div>
+        </div>
+      </div>
+      <div class="fp-save-bar"><button class="fp-save-btn">Save System</button></div>
+    </div>
+
+    <!-- CHANGES CONTENT -->
+    <div class="dk-panel-content" id="content-changes">
+      <div class="dk-panel-body">
+        <div class="fp-change">
+          <span class="fp-change-icon">🎨</span>
+          <span class="fp-change-text">Theme: Tailwind / Default</span>
+          <button class="fp-change-remove">×</button>
+        </div>
+        <div class="fp-change">
+          <span class="fp-change-icon">💬</span>
+          <span class="fp-change-text">Comment on .page-title</span>
+          <button class="fp-change-remove">×</button>
+        </div>
+        <div class="fp-change">
+          <span class="fp-change-icon">🎛</span>
+          <span class="fp-change-text">Tune .tool-name: font-size 18px</span>
+          <button class="fp-change-remove">×</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- COMMENT CONTENT -->
+    <div class="dk-panel-content" id="content-comment">
+      <div class="dk-panel-body">
+        <div style="color:#8e8e93; font-size:0.8125rem; line-height:1.5;">
+          Click any element in the prototype to attach a comment. Your notes are captured with the element's selector so Claude knows exactly what you're referring to.
+        </div>
+      </div>
+    </div>
+
+    <!-- INSPECT CONTENT -->
+    <div class="dk-panel-content" id="content-inspect">
+      <div class="dk-panel-body">
+        <div style="color:#8e8e93; font-size:0.8125rem; line-height:1.5;">
+          Hover over any element to see its computed design properties — spacing, typography, colors, borders.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const toolbar = document.getElementById('toolbar');
+    const panel = document.getElementById('panel');
+    const tools = toolbar.querySelectorAll('.dk-tool');
+    const contents = document.querySelectorAll('.dk-panel-content');
+    const panelTitle = document.getElementById('panel-title');
+    const panelIcon = document.getElementById('panel-icon');
+    const panelClose = document.getElementById('panel-close');
+    const sendBtn = document.getElementById('send-btn');
+    const badge = document.getElementById('badge');
+    let activeTool = null;
+
+    const toolConfig = {
+      comment:  { title: 'Comment', icon: 'lucide-message-square', content: 'content-comment' },
+      inspect:  { title: 'Inspect', icon: 'lucide-scan', content: 'content-inspect' },
+      tune:     { title: 'Tune', icon: 'lucide-sliders-horizontal', content: 'content-tune' },
+      theme:    { title: 'Theme', icon: 'lucide-palette', content: 'content-theme' },
+      changes:  { title: 'Changes (3)', icon: 'lucide-layers', content: 'content-changes' }
+    };
+
+    // Mode-only tools (no panel, just toggle icon blue/gray)
+    const modeOnlyTools = new Set(['comment', 'inspect']);
+
+    // Tools that open the panel
+    const panelTools = new Set(['tune', 'theme', 'changes']);
+
+    // Tool click
+    tools.forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const tool = btn.dataset.tool;
+        const wasActive = btn.classList.contains('active');
+
+        // Deactivate all tools
+        tools.forEach(b => b.classList.remove('active'));
+        contents.forEach(c => c.classList.remove('active'));
+
+        if (wasActive) {
+          panel.classList.remove('open');
+          activeTool = null;
+          return;
+        }
+
+        btn.classList.add('active');
+        activeTool = tool;
+
+        if (modeOnlyTools.has(tool)) {
+          // Mode tools: just toggle the icon, no panel
+          panel.classList.remove('open');
+          // Demo: enable send
+          sendBtn.classList.add('ready');
+          badge.classList.add('on');
+          return;
+        }
+
+        // Panel tools: open the panel with the right content
+        const cfg = toolConfig[tool];
+        panelTitle.textContent = cfg.title;
+        panelIcon.className = 'dk-panel-icon ' + cfg.icon;
+        document.getElementById(cfg.content).classList.add('active');
+
+        // Position panel next to toolbar
+        const tr = toolbar.getBoundingClientRect();
+        const pw = 300;
+        if (tr.right + pw + 16 > window.innerWidth) {
+          panel.style.left = (tr.left - pw - 12) + 'px';
+        } else {
+          panel.style.left = (tr.right + 12) + 'px';
+        }
+        panel.style.top = tr.top + 'px';
+        panel.classList.add('open');
+
+        sendBtn.classList.add('ready');
+        badge.classList.add('on');
+      });
+    });
+
+    // Close panel
+    panelClose.addEventListener('click', () => {
+      panel.classList.remove('open');
+      tools.forEach(b => b.classList.remove('active'));
+      activeTool = null;
+    });
+
+    // Tab switching inside panel
+    document.querySelectorAll('.dk-panel-tabs').forEach(tabBar => {
+      tabBar.querySelectorAll('.dk-panel-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+          tabBar.querySelectorAll('.dk-panel-tab').forEach(t => t.classList.remove('active'));
+          tab.classList.add('active');
+        });
+      });
+    });
+
+    // System card selection
+    document.querySelectorAll('.fp-system-card').forEach(card => {
+      card.addEventListener('click', () => {
+        document.querySelectorAll('.fp-system-card').forEach(c => c.classList.remove('active'));
+        card.classList.add('active');
+      });
+    });
+
+    // ===== DRAG: Toolbar =====
+    // Only drag from non-button areas (brand, dividers, padding)
+    let tbDrag = false, tbSX, tbSY, tbSL, tbST;
+
+    toolbar.addEventListener('mousedown', (e) => {
+      // If clicking a button, let the button's own click handler work
+      if (e.target.closest('.dk-tool') || e.target.closest('.dk-send')) return;
+      // Everything else on the toolbar initiates a drag
+      tbDrag = true;
+      tbSX = e.clientX; tbSY = e.clientY;
+      tbSL = toolbar.offsetLeft; tbST = toolbar.offsetTop;
+      toolbar.classList.add('dragging');
+      e.preventDefault();
+    });
+
+    document.addEventListener('mousemove', (e) => {
+      if (!tbDrag) return;
+      toolbar.style.left = (tbSL + e.clientX - tbSX) + 'px';
+      toolbar.style.top = (tbST + e.clientY - tbSY) + 'px';
+      if (panel.classList.contains('open')) {
+        const tr = toolbar.getBoundingClientRect();
+        const pw = 300;
+        if (tr.right + pw + 16 > window.innerWidth) {
+          panel.style.left = (tr.left - pw - 12) + 'px';
+        } else {
+          panel.style.left = (tr.right + 12) + 'px';
+        }
+        panel.style.top = tr.top + 'px';
+      }
+    });
+
+    document.addEventListener('mouseup', () => {
+      if (tbDrag) { tbDrag = false; toolbar.classList.remove('dragging'); }
+    });
+
+    // ===== DRAG: Panel header =====
+    const panelHeader = document.getElementById('panel-header');
+    let pDrag = false, pSX, pSY, pSL, pST;
+
+    panelHeader.addEventListener('mousedown', (e) => {
+      if (e.target.closest('.dk-panel-close')) return;
+      pDrag = true; pSX = e.clientX; pSY = e.clientY;
+      pSL = panel.offsetLeft; pST = panel.offsetTop;
+      panelHeader.classList.add('dragging');
+      e.preventDefault();
+    });
+
+    document.addEventListener('mousemove', (e) => {
+      if (!pDrag) return;
+      panel.style.left = (pSL + e.clientX - pSX) + 'px';
+      panel.style.top = (pST + e.clientY - pSY) + 'px';
+    });
+
+    document.addEventListener('mouseup', () => {
+      if (pDrag) { pDrag = false; panelHeader.classList.remove('dragging'); }
+    });
+  </script>
+</body>
+</html>

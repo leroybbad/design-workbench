@@ -1320,99 +1320,142 @@
     const container = document.createElement('div');
     container.className = 'tune-spacing-group';
 
-    const headerRow = document.createElement('div');
-    headerRow.className = 'tune-spacing-header';
-    headerRow.textContent = label;
-    container.appendChild(headerRow);
-
     const sides = ['Top', 'Right', 'Bottom', 'Left'];
     const sideLabels = ['T', 'R', 'B', 'L'];
-    let linked = true;
+    const sideVals = sides.map(s => Math.round(parseFloat(cs[prop + s]) || 0));
+    const allSame = sideVals.every(v => v === sideVals[0]);
+    let expanded = !allSame;
     const inputs = [];
 
-    const inputRow = document.createElement('div');
-    inputRow.className = 'tune-spacing-inputs';
+    // Collapsed view: single input (sets all four sides)
+    const collapsedRow = document.createElement('div');
+    collapsedRow.className = 'tune-row';
+
+    const collapsedLabel = document.createElement('label');
+    collapsedLabel.className = 'tune-label';
+    collapsedLabel.textContent = label;
+
+    const collapsedInput = document.createElement('input');
+    collapsedInput.type = 'number';
+    collapsedInput.className = 'tune-number-input';
+    collapsedInput.value = sideVals[0];
+    collapsedInput.step = 1;
+
+    const expandBtn = document.createElement('button');
+    expandBtn.className = 'tune-spacing-expand';
+    expandBtn.title = 'Edit sides independently';
+    expandBtn.textContent = '⊞';
+
+    let beforeEditCollapsed = '';
+    collapsedInput.addEventListener('focus', () => {
+      beforeEditCollapsed = tuneTarget.style[prop] || '';
+    });
+    collapsedInput.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+        e.preventDefault();
+        const inc = e.shiftKey ? 10 : 1;
+        const cur = parseFloat(collapsedInput.value) || 0;
+        const nv = Math.max(0, e.key === 'ArrowUp' ? cur + inc : cur - inc);
+        collapsedInput.value = Math.round(nv);
+        applyAll(nv);
+      }
+    });
+    collapsedInput.addEventListener('change', () => {
+      const nv = parseFloat(collapsedInput.value) || 0;
+      applyAll(nv);
+      undoStack.push({ element: tuneTarget, prop: prop, oldValue: beforeEditCollapsed });
+      redoStack = [];
+    });
+
+    collapsedRow.appendChild(collapsedLabel);
+    collapsedRow.appendChild(collapsedInput);
+    collapsedRow.appendChild(expandBtn);
+    container.appendChild(collapsedRow);
+
+    // Expanded view: four independent inputs
+    const expandedRow = document.createElement('div');
+    expandedRow.className = 'tune-spacing-inputs';
 
     sides.forEach((side, i) => {
-      const cssProp = prop + side; // paddingTop, paddingRight, etc.
-      const currentVal = parseFloat(cs[cssProp]) || 0;
-
+      const cssProp = prop + side;
       const field = document.createElement('div');
       field.className = 'tune-spacing-field';
 
       const input = document.createElement('input');
       input.type = 'number';
       input.className = 'tune-number-input tune-spacing-input';
-      input.value = Math.round(currentVal);
+      input.value = sideVals[i];
       input.step = 1;
-      input.title = side;
 
-      const sideLabel = document.createElement('span');
-      sideLabel.className = 'tune-spacing-side-label';
-      sideLabel.textContent = sideLabels[i];
+      const sl = document.createElement('span');
+      sl.className = 'tune-spacing-side-label';
+      sl.textContent = sideLabels[i];
 
       let beforeEdit = '';
-
-      input.addEventListener('focus', () => {
-        beforeEdit = tuneTarget.style[cssProp] || '';
-      });
-
+      input.addEventListener('focus', () => { beforeEdit = tuneTarget.style[cssProp] || ''; });
       input.addEventListener('keydown', (e) => {
         if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
           e.preventDefault();
-          const increment = e.shiftKey ? 10 : 1;
-          const current = parseFloat(input.value) || 0;
-          const newVal = e.key === 'ArrowUp' ? current + increment : Math.max(0, current - increment);
-          input.value = Math.round(newVal);
-          applySpacingValue(input, i, newVal);
+          const inc = e.shiftKey ? 10 : 1;
+          const cur = parseFloat(input.value) || 0;
+          const nv = Math.max(0, e.key === 'ArrowUp' ? cur + inc : cur - inc);
+          input.value = Math.round(nv);
+          applySide(i, nv);
         }
       });
-
       input.addEventListener('change', () => {
-        const newVal = parseFloat(input.value) || 0;
-        applySpacingValue(input, i, newVal);
+        const nv = parseFloat(input.value) || 0;
+        applySide(i, nv);
         undoStack.push({ element: tuneTarget, prop: cssProp, oldValue: beforeEdit });
         redoStack = [];
       });
 
       inputs.push(input);
       field.appendChild(input);
-      field.appendChild(sideLabel);
-      inputRow.appendChild(field);
+      field.appendChild(sl);
+      expandedRow.appendChild(field);
     });
 
-    // Link toggle
-    const linkBtn = document.createElement('button');
-    linkBtn.className = 'tune-spacing-link active';
-    linkBtn.innerHTML = '&#128279;';
-    linkBtn.title = 'Link all sides';
-    linkBtn.addEventListener('click', () => {
-      linked = !linked;
-      linkBtn.classList.toggle('active', linked);
+    // Collapse button inside expanded view
+    const collapseBtn = document.createElement('button');
+    collapseBtn.className = 'tune-spacing-expand';
+    collapseBtn.title = 'Set all sides equally';
+    collapseBtn.textContent = '⊟';
+    expandedRow.appendChild(collapseBtn);
+
+    container.appendChild(expandedRow);
+
+    // Toggle
+    function setExpanded(exp) {
+      expanded = exp;
+      collapsedRow.style.display = expanded ? 'none' : '';
+      expandedRow.style.display = expanded ? 'flex' : 'none';
+    }
+    expandBtn.addEventListener('click', () => setExpanded(true));
+    collapseBtn.addEventListener('click', () => {
+      // Sync collapsed input to the top-side value
+      collapsedInput.value = inputs[0].value;
+      setExpanded(false);
     });
-    inputRow.appendChild(linkBtn);
+    setExpanded(expanded);
 
-    container.appendChild(inputRow);
-
-    function applySpacingValue(changedInput, changedIndex, newVal) {
-      if (linked) {
-        // Apply to all four sides
-        inputs.forEach((inp, i) => {
-          inp.value = Math.round(newVal);
-          const cssProp = prop + sides[i];
-          if (!tuneOriginalStyles.hasOwnProperty(cssProp)) {
-            tuneOriginalStyles[cssProp] = tuneTarget.style[cssProp] || '';
-          }
-          tuneTarget.style[cssProp] = newVal + 'px';
-        });
-      } else {
-        // Apply to just this side
-        const cssProp = prop + sides[changedIndex];
+    function applyAll(val) {
+      sides.forEach((side, i) => {
+        const cssProp = prop + side;
         if (!tuneOriginalStyles.hasOwnProperty(cssProp)) {
           tuneOriginalStyles[cssProp] = tuneTarget.style[cssProp] || '';
         }
-        tuneTarget.style[cssProp] = newVal + 'px';
+        tuneTarget.style[cssProp] = val + 'px';
+        if (inputs[i]) inputs[i].value = Math.round(val);
+      });
+    }
+
+    function applySide(index, val) {
+      const cssProp = prop + sides[index];
+      if (!tuneOriginalStyles.hasOwnProperty(cssProp)) {
+        tuneOriginalStyles[cssProp] = tuneTarget.style[cssProp] || '';
       }
+      tuneTarget.style[cssProp] = val + 'px';
     }
 
     return container;

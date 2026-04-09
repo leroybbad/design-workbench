@@ -441,12 +441,13 @@
     });
 
     tuneChanges.forEach((tc, i) => {
+      const isTheme = tc._themeSystem || tc._themeColors || tc._themeFineTune;
       const propList = Object.keys(tc.changes).map(p => p + ': ' + tc.changes[p]).join(', ');
       allChanges.push({
-        type: 'tune',
+        type: isTheme ? 'theme' : 'tune',
         id: 'tune-' + i,
-        element: '<' + tc.tag + '> ' + (tc.text || '').slice(0, 40),
-        detail: propList,
+        element: isTheme ? (tc.text || 'Theme change') : '<' + tc.tag + '> ' + (tc.text || '').slice(0, 40),
+        detail: isTheme ? '' : propList,
         timestamp: tc.timestamp || Date.now(),
         index: i,
         data: tc
@@ -466,7 +467,7 @@
 
       const typeIcon = document.createElement('span');
       typeIcon.className = 'sidebar-type-icon';
-      typeIcon.textContent = change.type === 'comment' ? '💬' : '🎛';
+      typeIcon.textContent = change.type === 'comment' ? '💬' : change.type === 'theme' ? '🎨' : '🎛';
 
       const elDesc = document.createElement('span');
       elDesc.className = 'sidebar-element';

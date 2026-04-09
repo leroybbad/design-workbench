@@ -832,16 +832,16 @@
     typographyPanel.className = 'tune-controls';
     const fontSize = parseFloat(cs.fontSize);
     const fontSizeToken = resolveToken(el, 'font-size');
-    typographyPanel.appendChild(createSlider('Font Size', 'fontSize', fontSize, 8, 72, 'px', 1, fontSizeToken));
+    typographyPanel.appendChild(createNumberInput('Font Size', 'fontSize', fontSize, 'px', 1, fontSizeToken));
     const fontWeight = parseInt(cs.fontWeight) || 400;
     const fontWeightToken = resolveToken(el, 'font-weight');
-    typographyPanel.appendChild(createSlider('Weight', 'fontWeight', fontWeight, 100, 900, '', 100, fontWeightToken));
+    typographyPanel.appendChild(createNumberInput('Weight', 'fontWeight', fontWeight, '', 100, fontWeightToken));
     const lineHeight = parseFloat(cs.lineHeight) || fontSize * 1.5;
     const lineHeightToken = resolveToken(el, 'line-height');
-    typographyPanel.appendChild(createSlider('Line Height', 'lineHeight', lineHeight, 8, 80, 'px', 1, lineHeightToken));
+    typographyPanel.appendChild(createNumberInput('Line Height', 'lineHeight', lineHeight, 'px', 1, lineHeightToken));
     const letterSpacing = cs.letterSpacing === 'normal' ? 0 : parseFloat(cs.letterSpacing);
     const letterSpacingToken = resolveToken(el, 'letter-spacing');
-    typographyPanel.appendChild(createSlider('Tracking', 'letterSpacing', letterSpacing, -2, 10, 'px', 0.1, letterSpacingToken));
+    typographyPanel.appendChild(createNumberInput('Tracking', 'letterSpacing', letterSpacing, 'px', 0.1, letterSpacingToken));
     const opacity = parseFloat(cs.opacity);
     typographyPanel.appendChild(createSlider('Opacity', 'opacity', opacity, 0, 1, '', 0.05));
     tabPanels['Typography'] = typographyPanel;
@@ -851,12 +851,8 @@
     const spacingPanel = document.createElement('div');
     spacingPanel.className = 'tune-controls';
     spacingPanel.style.display = 'none';
-    const paddingTop = parseFloat(cs.paddingTop) || 0;
-    const paddingToken = resolveToken(el, 'padding');
-    spacingPanel.appendChild(createSlider('Padding', 'padding', paddingTop, 0, 80, 'px', 1, paddingToken));
-    const marginTop = parseFloat(cs.marginTop) || 0;
-    const marginToken = resolveToken(el, 'margin');
-    spacingPanel.appendChild(createSlider('Margin', 'margin', marginTop, 0, 80, 'px', 1, marginToken));
+    spacingPanel.appendChild(createSpacingGroup('Padding', 'padding', cs));
+    spacingPanel.appendChild(createSpacingGroup('Margin', 'margin', cs));
     tabPanels['Spacing'] = spacingPanel;
     panel.appendChild(spacingPanel);
 
@@ -1066,10 +1062,10 @@
     borderPanel.style.display = 'none';
     const borderRadius = parseFloat(cs.borderRadius) || 0;
     const borderRadiusToken = resolveToken(el, 'border-radius');
-    borderPanel.appendChild(createSlider('Radius', 'borderRadius', borderRadius, 0, 50, 'px', 1, borderRadiusToken));
+    borderPanel.appendChild(createNumberInput('Radius', 'borderRadius', borderRadius, 'px', 1, borderRadiusToken));
     const borderWidth = parseFloat(cs.borderWidth) || 0;
     const borderWidthToken = resolveToken(el, 'border-width');
-    borderPanel.appendChild(createSlider('Width', 'borderWidth', borderWidth, 0, 10, 'px', 1, borderWidthToken));
+    borderPanel.appendChild(createNumberInput('Width', 'borderWidth', borderWidth, 'px', 1, borderWidthToken));
     tabPanels['Border'] = borderPanel;
     panel.appendChild(borderPanel);
 
@@ -1247,6 +1243,179 @@
 
   function cssPropToKebab(prop) {
     return prop.replace(/([A-Z])/g, '-$1').toLowerCase();
+  }
+
+  function createNumberInput(label, prop, value, unit, step, tokenInfo) {
+    step = step || 1;
+    const row = document.createElement('div');
+    row.className = 'tune-row';
+
+    const lbl = document.createElement('label');
+    lbl.className = 'tune-label';
+    if (tokenInfo) {
+      lbl.innerHTML = label + ' <code class="tune-token-name">' + tokenInfo.token + '</code>';
+    } else {
+      lbl.textContent = label;
+    }
+
+    const input = document.createElement('input');
+    input.type = 'number';
+    input.className = 'tune-number-input';
+    input.value = step < 1 ? value.toFixed(2) : Math.round(value);
+    input.step = step;
+    input.dataset.unit = unit;
+
+    let beforeEdit = '';
+
+    input.addEventListener('focus', () => {
+      if (tokenInfo) {
+        beforeEdit = document.documentElement.style.getPropertyValue(tokenInfo.token) || '';
+      } else {
+        beforeEdit = tuneTarget.style[prop] || '';
+      }
+    });
+
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+        e.preventDefault();
+        const increment = e.shiftKey ? step * 10 : step;
+        const current = parseFloat(input.value) || 0;
+        const newVal = e.key === 'ArrowUp' ? current + increment : current - increment;
+        input.value = step < 1 ? newVal.toFixed(2) : Math.round(newVal);
+        applyValue(parseFloat(input.value));
+      }
+    });
+
+    input.addEventListener('change', () => {
+      applyValue(parseFloat(input.value) || 0);
+      // Push to undo
+      if (tokenInfo) {
+        undoStack.push({ element: document.documentElement, prop: tokenInfo.token, oldValue: beforeEdit, isToken: true });
+      } else {
+        undoStack.push({ element: tuneTarget, prop: prop, oldValue: beforeEdit });
+      }
+      redoStack = [];
+    });
+
+    function applyValue(newVal) {
+      if (tokenInfo) {
+        if (!tuneOriginalStyles.hasOwnProperty('token:' + tokenInfo.token)) {
+          tuneOriginalStyles['token:' + tokenInfo.token] = document.documentElement.style.getPropertyValue(tokenInfo.token) || '';
+        }
+        document.documentElement.style.setProperty(tokenInfo.token, newVal + unit);
+      } else {
+        if (!tuneOriginalStyles.hasOwnProperty(prop)) {
+          tuneOriginalStyles[prop] = tuneTarget.style[prop] || '';
+        }
+        tuneTarget.style[prop] = newVal + unit;
+      }
+    }
+
+    row.appendChild(lbl);
+    row.appendChild(input);
+    return row;
+  }
+
+  function createSpacingGroup(label, prop, cs) {
+    const container = document.createElement('div');
+    container.className = 'tune-spacing-group';
+
+    const headerRow = document.createElement('div');
+    headerRow.className = 'tune-spacing-header';
+    headerRow.textContent = label;
+    container.appendChild(headerRow);
+
+    const sides = ['Top', 'Right', 'Bottom', 'Left'];
+    const sideLabels = ['T', 'R', 'B', 'L'];
+    let linked = true;
+    const inputs = [];
+
+    const inputRow = document.createElement('div');
+    inputRow.className = 'tune-spacing-inputs';
+
+    sides.forEach((side, i) => {
+      const cssProp = prop + side; // paddingTop, paddingRight, etc.
+      const currentVal = parseFloat(cs[cssProp]) || 0;
+
+      const field = document.createElement('div');
+      field.className = 'tune-spacing-field';
+
+      const input = document.createElement('input');
+      input.type = 'number';
+      input.className = 'tune-number-input tune-spacing-input';
+      input.value = Math.round(currentVal);
+      input.step = 1;
+      input.title = side;
+
+      const sideLabel = document.createElement('span');
+      sideLabel.className = 'tune-spacing-side-label';
+      sideLabel.textContent = sideLabels[i];
+
+      let beforeEdit = '';
+
+      input.addEventListener('focus', () => {
+        beforeEdit = tuneTarget.style[cssProp] || '';
+      });
+
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+          e.preventDefault();
+          const increment = e.shiftKey ? 10 : 1;
+          const current = parseFloat(input.value) || 0;
+          const newVal = e.key === 'ArrowUp' ? current + increment : Math.max(0, current - increment);
+          input.value = Math.round(newVal);
+          applySpacingValue(input, i, newVal);
+        }
+      });
+
+      input.addEventListener('change', () => {
+        const newVal = parseFloat(input.value) || 0;
+        applySpacingValue(input, i, newVal);
+        undoStack.push({ element: tuneTarget, prop: cssProp, oldValue: beforeEdit });
+        redoStack = [];
+      });
+
+      inputs.push(input);
+      field.appendChild(input);
+      field.appendChild(sideLabel);
+      inputRow.appendChild(field);
+    });
+
+    // Link toggle
+    const linkBtn = document.createElement('button');
+    linkBtn.className = 'tune-spacing-link active';
+    linkBtn.innerHTML = '&#128279;';
+    linkBtn.title = 'Link all sides';
+    linkBtn.addEventListener('click', () => {
+      linked = !linked;
+      linkBtn.classList.toggle('active', linked);
+    });
+    inputRow.appendChild(linkBtn);
+
+    container.appendChild(inputRow);
+
+    function applySpacingValue(changedInput, changedIndex, newVal) {
+      if (linked) {
+        // Apply to all four sides
+        inputs.forEach((inp, i) => {
+          inp.value = Math.round(newVal);
+          const cssProp = prop + sides[i];
+          if (!tuneOriginalStyles.hasOwnProperty(cssProp)) {
+            tuneOriginalStyles[cssProp] = tuneTarget.style[cssProp] || '';
+          }
+          tuneTarget.style[cssProp] = newVal + 'px';
+        });
+      } else {
+        // Apply to just this side
+        const cssProp = prop + sides[changedIndex];
+        if (!tuneOriginalStyles.hasOwnProperty(cssProp)) {
+          tuneOriginalStyles[cssProp] = tuneTarget.style[cssProp] || '';
+        }
+        tuneTarget.style[cssProp] = newVal + 'px';
+      }
+    }
+
+    return container;
   }
 
   function createSlider(label, prop, value, min, max, unit, step, tokenInfo) {

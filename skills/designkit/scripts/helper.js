@@ -781,6 +781,13 @@
 
     const cs = window.getComputedStyle(el);
 
+    // Detect element type for context-aware tabs
+    const tag = el.tagName.toLowerCase();
+    const isText = ['h1','h2','h3','h4','h5','h6','p','span','a','label','li','td','th','caption','figcaption','blockquote','em','strong','b','i','u','small','code','pre'].includes(tag);
+    const isContainer = ['div','section','article','nav','main','aside','header','footer','ul','ol','table','form','fieldset','details'].includes(tag);
+    const isInput = ['input','button','select','textarea'].includes(tag);
+    const isImage = ['img','svg','picture','video','canvas'].includes(tag);
+
     // Floating panel wrapper
     const dkPanel = document.createElement('div');
     dkPanel.className = 'dk-panel open';
@@ -791,7 +798,6 @@
     const dkIcon = document.createElement('span');
     dkIcon.className = 'dk-panel-icon';
     dkIcon.innerHTML = '<svg viewBox="0 0 16 16" fill="none"><line x1="3" y1="4" x2="13" y2="4" stroke="currentColor" stroke-width="1.25" stroke-linecap="round"/><circle cx="9" cy="4" r="1.5" fill="currentColor"/><line x1="3" y1="8" x2="13" y2="8" stroke="currentColor" stroke-width="1.25" stroke-linecap="round"/><circle cx="5" cy="8" r="1.5" fill="currentColor"/><line x1="3" y1="12" x2="13" y2="12" stroke="currentColor" stroke-width="1.25" stroke-linecap="round"/><circle cx="10" cy="12" r="1.5" fill="currentColor"/></svg>';
-    const tag = el.tagName.toLowerCase();
     const cls = el.className && typeof el.className === 'string'
       ? '.' + el.className.trim().split(/\s+/).filter(c => !c.startsWith('tune-') && !c.startsWith('inspect-')).slice(0, 2).join('.')
       : '';
@@ -833,7 +839,14 @@
     // Tab bar
     const tabBar = document.createElement('div');
     tabBar.className = 'tune-tabs';
-    const tabNames = ['Typography', 'Spacing', 'Colors', 'Shadow', 'Border'];
+    const tabNames = [];
+    if (isText || isInput) tabNames.push('Typography');
+    tabNames.push('Spacing');
+    tabNames.push('Colors');
+    if (isContainer || isImage) tabNames.push('Shadow');
+    if (isContainer || isImage || isInput) tabNames.push('Border');
+    // Fallback: if somehow nothing matched, show all
+    if (tabNames.length === 0) tabNames.push('Typography', 'Spacing', 'Colors', 'Shadow', 'Border');
     const tabPanels = {};
 
     tabNames.forEach((name, i) => {
@@ -854,51 +867,170 @@
     let applyGlobally = false;
 
     // Typography tab
-    const typographyPanel = document.createElement('div');
-    typographyPanel.className = 'tune-controls';
-    const fontSize = parseFloat(cs.fontSize);
-    const fontSizeToken = resolveToken(el, 'font-size');
-    typographyPanel.appendChild(createNumberInput('Font Size', 'fontSize', fontSize, 'px', 1, fontSizeToken));
-    const fontWeight = parseInt(cs.fontWeight) || 400;
-    const fontWeightToken = resolveToken(el, 'font-weight');
-    typographyPanel.appendChild(createNumberInput('Weight', 'fontWeight', fontWeight, '', 100, fontWeightToken));
-    const lineHeight = parseFloat(cs.lineHeight) || fontSize * 1.5;
-    const lineHeightToken = resolveToken(el, 'line-height');
-    typographyPanel.appendChild(createNumberInput('Line Height', 'lineHeight', lineHeight, 'px', 1, lineHeightToken));
-    const letterSpacing = cs.letterSpacing === 'normal' ? 0 : parseFloat(cs.letterSpacing);
-    const letterSpacingToken = resolveToken(el, 'letter-spacing');
-    typographyPanel.appendChild(createNumberInput('Tracking', 'letterSpacing', letterSpacing, 'px', 0.1, letterSpacingToken));
-    const opacity = parseFloat(cs.opacity);
-    typographyPanel.appendChild(createSlider('Opacity', 'opacity', opacity, 0, 1, '', 0.05));
-    tabPanels['Typography'] = typographyPanel;
-    panel.appendChild(typographyPanel);
+    if (tabNames.includes('Typography')) {
+      const typographyPanel = document.createElement('div');
+      typographyPanel.className = 'tune-controls';
+      const fontSize = parseFloat(cs.fontSize);
+      const fontSizeToken = resolveToken(el, 'font-size');
+      typographyPanel.appendChild(createNumberInput('Font Size', 'fontSize', fontSize, 'px', 1, fontSizeToken));
+      const fontWeight = parseInt(cs.fontWeight) || 400;
+      const fontWeightToken = resolveToken(el, 'font-weight');
+      typographyPanel.appendChild(createNumberInput('Weight', 'fontWeight', fontWeight, '', 100, fontWeightToken));
+      const lineHeight = parseFloat(cs.lineHeight) || fontSize * 1.5;
+      const lineHeightToken = resolveToken(el, 'line-height');
+      typographyPanel.appendChild(createNumberInput('Line Height', 'lineHeight', lineHeight, 'px', 1, lineHeightToken));
+      const letterSpacing = cs.letterSpacing === 'normal' ? 0 : parseFloat(cs.letterSpacing);
+      const letterSpacingToken = resolveToken(el, 'letter-spacing');
+      typographyPanel.appendChild(createNumberInput('Tracking', 'letterSpacing', letterSpacing, 'px', 0.1, letterSpacingToken));
+      const opacity = parseFloat(cs.opacity);
+      typographyPanel.appendChild(createSlider('Opacity', 'opacity', opacity, 0, 1, '', 0.05));
+
+      if (isText) {
+        // Text style toggles
+        const toggleRow = document.createElement('div');
+        toggleRow.className = 'tune-row tune-text-toggles';
+
+        const toggles = [
+          { label: 'B', prop: 'fontWeight', onValue: '700', offValue: cs.fontWeight, title: 'Bold', cssProp: 'font-weight' },
+          { label: 'I', prop: 'fontStyle', onValue: 'italic', offValue: 'normal', title: 'Italic', cssProp: 'font-style' },
+          { label: 'U', prop: 'textDecoration', onValue: 'underline', offValue: 'none', title: 'Underline', cssProp: 'text-decoration' },
+          { label: 'S', prop: 'textDecoration', onValue: 'line-through', offValue: 'none', title: 'Strikethrough', cssProp: 'text-decoration' },
+        ];
+
+        toggles.forEach(t => {
+          const btn = document.createElement('button');
+          btn.className = 'tune-text-toggle';
+          btn.textContent = t.label;
+          btn.title = t.title;
+          // Check if currently active
+          const current = cs[t.cssProp.replace(/-([a-z])/g, (_, c) => c.toUpperCase())];
+          if ((t.prop === 'fontWeight' && parseInt(current) >= 700) ||
+              (t.prop !== 'fontWeight' && current && current.includes(t.onValue))) {
+            btn.classList.add('active');
+          }
+          btn.addEventListener('click', () => {
+            const isActive = btn.classList.contains('active');
+            const newVal = isActive ? t.offValue : t.onValue;
+            if (!tuneOriginalStyles.hasOwnProperty(t.prop)) {
+              tuneOriginalStyles[t.prop] = tuneTarget.style[t.prop] || '';
+            }
+            const oldVal = tuneTarget.style[t.prop] || '';
+            tuneTarget.style[t.prop] = newVal;
+            btn.classList.toggle('active');
+            undoStack.push({ element: tuneTarget, prop: t.prop, oldValue: oldVal });
+            redoStack = [];
+          });
+          toggleRow.appendChild(btn);
+        });
+
+        // Text alignment
+        const alignRow = document.createElement('div');
+        alignRow.className = 'tune-row tune-text-toggles';
+        alignRow.style.marginTop = '6px';
+
+        const aligns = [
+          { label: '⫷', value: 'left', title: 'Align left' },
+          { label: '≡', value: 'center', title: 'Align center' },
+          { label: '⫸', value: 'right', title: 'Align right' },
+          { label: '⊞', value: 'justify', title: 'Justify' },
+        ];
+
+        const currentAlign = cs.textAlign;
+        aligns.forEach(a => {
+          const btn = document.createElement('button');
+          btn.className = 'tune-text-toggle';
+          btn.textContent = a.label;
+          btn.title = a.title;
+          if (currentAlign === a.value || (a.value === 'left' && currentAlign === 'start')) {
+            btn.classList.add('active');
+          }
+          btn.addEventListener('click', () => {
+            if (!tuneOriginalStyles.hasOwnProperty('textAlign')) {
+              tuneOriginalStyles['textAlign'] = tuneTarget.style.textAlign || '';
+            }
+            const oldVal = tuneTarget.style.textAlign || '';
+            tuneTarget.style.textAlign = a.value;
+            alignRow.querySelectorAll('.tune-text-toggle').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            undoStack.push({ element: tuneTarget, prop: 'textAlign', oldValue: oldVal });
+            redoStack = [];
+          });
+          alignRow.appendChild(btn);
+        });
+
+        // Text transform
+        const transformRow = document.createElement('div');
+        transformRow.className = 'tune-row tune-text-toggles';
+        transformRow.style.marginTop = '6px';
+
+        const transforms = [
+          { label: 'Aa', value: 'none', title: 'Normal' },
+          { label: 'AA', value: 'uppercase', title: 'Uppercase' },
+          { label: 'aa', value: 'lowercase', title: 'Lowercase' },
+          { label: 'Aa', value: 'capitalize', title: 'Capitalize' },
+        ];
+
+        const currentTransform = cs.textTransform;
+        transforms.forEach((t, i) => {
+          const btn = document.createElement('button');
+          btn.className = 'tune-text-toggle';
+          btn.textContent = t.label;
+          btn.title = t.title;
+          if (currentTransform === t.value || (t.value === 'none' && currentTransform === 'none')) {
+            btn.classList.add('active');
+          }
+          btn.addEventListener('click', () => {
+            if (!tuneOriginalStyles.hasOwnProperty('textTransform')) {
+              tuneOriginalStyles['textTransform'] = tuneTarget.style.textTransform || '';
+            }
+            const oldVal = tuneTarget.style.textTransform || '';
+            tuneTarget.style.textTransform = t.value;
+            transformRow.querySelectorAll('.tune-text-toggle').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            undoStack.push({ element: tuneTarget, prop: 'textTransform', oldValue: oldVal });
+            redoStack = [];
+          });
+          transformRow.appendChild(btn);
+        });
+
+        typographyPanel.appendChild(document.createElement('hr')); // visual separator
+        typographyPanel.appendChild(toggleRow);
+        typographyPanel.appendChild(alignRow);
+        typographyPanel.appendChild(transformRow);
+      }
+
+      tabPanels['Typography'] = typographyPanel;
+      panel.appendChild(typographyPanel);
+    }
 
     // Spacing tab
-    const spacingPanel = document.createElement('div');
-    spacingPanel.className = 'tune-controls';
-    spacingPanel.style.display = 'none';
-    spacingPanel.appendChild(createSpacingGroup('Padding', 'padding', cs));
-    spacingPanel.appendChild(createSpacingGroup('Margin', 'margin', cs));
-    tabPanels['Spacing'] = spacingPanel;
-    panel.appendChild(spacingPanel);
+    if (tabNames.includes('Spacing')) {
+      const spacingPanel = document.createElement('div');
+      spacingPanel.className = 'tune-controls';
+      spacingPanel.appendChild(createSpacingGroup('Padding', 'padding', cs));
+      spacingPanel.appendChild(createSpacingGroup('Margin', 'margin', cs));
+      tabPanels['Spacing'] = spacingPanel;
+      panel.appendChild(spacingPanel);
+    }
 
     // Colors tab
-    const colorsPanel = document.createElement('div');
-    colorsPanel.className = 'tune-controls';
-    colorsPanel.style.display = 'none';
-    const color = rgbToHex(cs.color);
-    const colorToken = resolveToken(el, 'color');
-    colorsPanel.appendChild(createColorPicker('Color', 'color', color, colorToken));
-    const bgColor = cs.backgroundColor === 'rgba(0, 0, 0, 0)' || cs.backgroundColor === 'transparent' ? '#ffffff' : rgbToHex(cs.backgroundColor);
-    const bgColorToken = resolveToken(el, 'background-color');
-    colorsPanel.appendChild(createColorPicker('Background', 'backgroundColor', bgColor, bgColorToken));
-    tabPanels['Colors'] = colorsPanel;
-    panel.appendChild(colorsPanel);
+    if (tabNames.includes('Colors')) {
+      const colorsPanel = document.createElement('div');
+      colorsPanel.className = 'tune-controls';
+      const color = rgbToHex(cs.color);
+      const colorToken = resolveToken(el, 'color');
+      colorsPanel.appendChild(createColorPicker('Color', 'color', color, colorToken));
+      const bgColor = cs.backgroundColor === 'rgba(0, 0, 0, 0)' || cs.backgroundColor === 'transparent' ? '#ffffff' : rgbToHex(cs.backgroundColor);
+      const bgColorToken = resolveToken(el, 'background-color');
+      colorsPanel.appendChild(createColorPicker('Background', 'backgroundColor', bgColor, bgColorToken));
+      tabPanels['Colors'] = colorsPanel;
+      panel.appendChild(colorsPanel);
+    }
 
     // Shadow tab
+    if (tabNames.includes('Shadow')) {
     const shadowPanel = document.createElement('div');
     shadowPanel.className = 'tune-controls';
-    shadowPanel.style.display = 'none';
 
     const shadowRamps = {
       'Tailwind': [
@@ -1081,19 +1213,26 @@
 
     tabPanels['Shadow'] = shadowPanel;
     panel.appendChild(shadowPanel);
+    } // end Shadow tab
 
     // Border tab
-    const borderPanel = document.createElement('div');
-    borderPanel.className = 'tune-controls';
-    borderPanel.style.display = 'none';
-    const borderRadius = parseFloat(cs.borderRadius) || 0;
-    const borderRadiusToken = resolveToken(el, 'border-radius');
-    borderPanel.appendChild(createNumberInput('Radius', 'borderRadius', borderRadius, 'px', 1, borderRadiusToken));
-    const borderWidth = parseFloat(cs.borderWidth) || 0;
-    const borderWidthToken = resolveToken(el, 'border-width');
-    borderPanel.appendChild(createNumberInput('Width', 'borderWidth', borderWidth, 'px', 1, borderWidthToken));
-    tabPanels['Border'] = borderPanel;
-    panel.appendChild(borderPanel);
+    if (tabNames.includes('Border')) {
+      const borderPanel = document.createElement('div');
+      borderPanel.className = 'tune-controls';
+      const borderRadius = parseFloat(cs.borderRadius) || 0;
+      const borderRadiusToken = resolveToken(el, 'border-radius');
+      borderPanel.appendChild(createNumberInput('Radius', 'borderRadius', borderRadius, 'px', 1, borderRadiusToken));
+      const borderWidth = parseFloat(cs.borderWidth) || 0;
+      const borderWidthToken = resolveToken(el, 'border-width');
+      borderPanel.appendChild(createNumberInput('Width', 'borderWidth', borderWidth, 'px', 1, borderWidthToken));
+      tabPanels['Border'] = borderPanel;
+      panel.appendChild(borderPanel);
+    } // end Border tab
+
+    // Set initial tab visibility: first tab visible, all others hidden
+    tabNames.forEach((name, i) => {
+      if (tabPanels[name]) tabPanels[name].style.display = i === 0 ? '' : 'none';
+    });
 
     // Global apply: mirror changes to all matching elements
     function findMatchingElements() {

@@ -22,10 +22,10 @@ A guided brainstorming flow that prevents AI slop by anchoring every design deci
 
 A browser-based companion for hands-on design refinement. Claude generates a prototype, you open it in the Designkit Viewer and use visual tools directly on the design:
 
-- **Comment** (Shift+C) — Click any element, attach a note. Pins mark your feedback visually.
-- **Inspect** (Shift+I) — Hover to see computed design properties: spacing, typography, colors, borders.
-- **Tune** (Shift+T) — Click an element, drag sliders to adjust font size, spacing, colors, shadows, radius — live in the browser. Changes cascade through CSS tokens.
-- **Theme** (Shift+D) — Swap entire design systems, color palettes, and fine-tune typography/spacing/radius globally. 10 built-in palettes with dark/warm/cool variants and custom accent color picker.
+- **Comment** (Ctrl+C) — Click any element, attach a note. Pins mark your feedback visually.
+- **Inspect** (Ctrl+I) — Hover to see computed design properties: spacing, typography, colors, borders.
+- **Tune** (Ctrl+T) — Click an element, drag sliders to adjust font size, spacing, colors, shadows, radius — live in the browser. Changes cascade through CSS tokens.
+- **Theme** (Ctrl+D) — Swap entire design systems, color palettes, and fine-tune typography/spacing/radius globally. 10 built-in palettes with dark/warm/cool variants and custom accent color picker.
 
 When you're done tweaking, hit **Send** (Shift+Cmd+Enter). Claude reads your structured feedback and updates the design. Repeat until it's right.
 
@@ -55,11 +55,11 @@ The skills, server, and all tools ship with the plugin — nothing to build.
 
 | Shortcut | Action |
 |----------|--------|
-| Shift+C | Toggle Comment mode |
-| Shift+I | Toggle Inspect mode |
-| Shift+T | Toggle Tune mode (per-element) |
-| Shift+D | Toggle Theme Selector (global) |
-| Shift+A | Show staged changes |
+| Ctrl+C | Toggle Comment mode |
+| Ctrl+I | Toggle Inspect mode |
+| Ctrl+T | Toggle Tune mode (per-element) |
+| Ctrl+D | Toggle Theme Selector (global) |
+| Ctrl+A | Show staged changes |
 | Shift+Cmd+Enter | Send changes to Claude |
 | Cmd+Z | Undo adjustment |
 | Cmd+Shift+Z | Redo adjustment |

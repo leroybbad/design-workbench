@@ -44,7 +44,7 @@ You MUST create a task for each item and complete them in order:
 4. **Deep dive** — render selected concepts at full detail
 5. **Converge** — user picks a direction
 6. **Generate first prototype** at full fidelity with Tailwind/Shadcn as default
-7. **Hand off** — tell user to use Theme Selector (Shift+D) to swap design systems, colors, and fine-tune. Also offer refinement via designkit or implementation path
+7. **Hand off** — tell user to use Theme Selector (Ctrl+D) to swap design systems, colors, and fine-tune. Also offer refinement via designkit or implementation path
 
 ## Phase 1: Read the Room
 
@@ -124,7 +124,7 @@ Ask only what you don't already know:
 **Do NOT ask about look & feel or palettes during discovery.** Concepts should
 be design-system-agnostic — neutral, clean styling so the user evaluates structure
 and layout without being distracted by color or personality. The user swaps design
-systems live in the viewer after the prototype is generated (Shift+D).
+systems live in the viewer after the prototype is generated (Ctrl+D).
 
 ## Phase 3: High-Level Concepts (Diverge)
 
@@ -165,7 +165,7 @@ After the user selects 1-3 concepts:
 4. **End with a structural verdict** for each concept — rendered as text below the
    prototype, not inside it: what the pattern gets right, where it strains, what it
    implies for next steps
-5. Tell the user: "Scroll through and click your favorite. You can also use Comment (Shift+C) to tag specific elements you like from ANY concept — even ones you don't pick overall. When you Send, I'll combine your pick with your annotations to build the best version."
+5. Tell the user: "Scroll through and click your favorite. You can also use Comment (Ctrl+C) to tag specific elements you like from ANY concept — even ones you don't pick overall. When you Send, I'll combine your pick with your annotations to build the best version."
 
 ## Phase 4: Converge
 
@@ -195,7 +195,7 @@ After the user selects 1-3 concepts:
 
 1. Take the chosen concept and render it at full fidelity
 2. Use **Tailwind/Shadcn tokens as the default** — the user will swap design systems
-   live in the viewer using the Theme Selector (Shift+D)
+   live in the viewer using the Theme Selector (Ctrl+D)
 3. If codebase tokens were detected in Phase 1, use those instead of Tailwind
 4. Use real content, proper spacing, complete structure
 5. Follow the designkit SKILL.md authoring standards (CSS classes, tokens, semantic names, Lucide icons, anti-slop rules)
@@ -208,8 +208,8 @@ After the brief is written and prototype is shown:
 > "Design brief saved to `docs/designkit/briefs/<filename>.md`. The first prototype
 > is in the browser. From here you can:
 >
-> - **Theme** (Shift+D) — swap design systems, color palettes, and fine-tune typography/spacing/radius
-> - **Refine** — use Comment (Shift+C) and Tune (Shift+T) for per-element adjustments
+> - **Theme** (Ctrl+D) — swap design systems, color palettes, and fine-tune typography/spacing/radius
+> - **Refine** — use Comment (Ctrl+C) and Tune (Ctrl+T) for per-element adjustments
 > - **Implement** — use the brief as input for a coding plan
 > - **Keep exploring** — if this direction doesn't feel right, we can go back"
 

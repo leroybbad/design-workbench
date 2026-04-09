@@ -162,23 +162,23 @@
   }
 
   document.addEventListener('keydown', (e) => {
-    if (e.shiftKey && e.key === 'C') {
+    if (e.ctrlKey && e.key === 'c') {
       e.preventDefault();
       if (inspectMode) setInspectMode(false);
       setCommentMode(!commentMode);
     }
-    if (e.shiftKey && e.key === 'I') {
+    if (e.ctrlKey && e.key === 'i') {
       e.preventDefault();
       if (commentMode) setCommentMode(false);
       setInspectMode(!inspectMode);
     }
-    if (e.shiftKey && e.key === 'T') {
+    if (e.ctrlKey && e.key === 't') {
       e.preventDefault();
       if (commentMode) setCommentMode(false);
       if (inspectMode) setInspectMode(false);
       setTuneMode(!tuneMode);
     }
-    if (e.shiftKey && e.key === 'D') {
+    if (e.ctrlKey && e.key === 'd') {
       e.preventDefault();
       if (commentMode) setCommentMode(false);
       if (inspectMode) setInspectMode(false);
@@ -197,7 +197,7 @@
         setThemeMode(false);
       }
     }
-    if (e.shiftKey && e.key === 'A' && !e.metaKey && !e.ctrlKey) {
+    if (e.ctrlKey && e.key === 'a' && !e.metaKey && !e.shiftKey) {
       e.preventDefault();
       toggleSidebar();
     }
@@ -2079,11 +2079,11 @@
     if (toolbar) {
       // Design tools
       const designTools = [
-        { id: 'inspect-toggle', title: 'Inspect (Shift+I)', icon: '<path d="M13.5 2.5l-1-1-2 2-1-1-5 5 2 2 5-5-1-1z" stroke="currentColor" stroke-width="1.1" stroke-linejoin="round" fill="none"/><path d="M4.5 9.5l-2 4 4-2" stroke="currentColor" stroke-width="1.1" stroke-linejoin="round" fill="none"/>', action: () => { if (commentMode) setCommentMode(false); if (tuneMode) setTuneMode(false); setInspectMode(!inspectMode); } },
-        { id: 'tune-toggle', title: 'Tune (Shift+T)', icon: '<line x1="3" y1="4" x2="13" y2="4" stroke="currentColor" stroke-width="1.25" stroke-linecap="round"/><circle cx="9" cy="4" r="1.5" fill="currentColor"/><line x1="3" y1="8" x2="13" y2="8" stroke="currentColor" stroke-width="1.25" stroke-linecap="round"/><circle cx="5" cy="8" r="1.5" fill="currentColor"/><line x1="3" y1="12" x2="13" y2="12" stroke="currentColor" stroke-width="1.25" stroke-linecap="round"/><circle cx="10" cy="12" r="1.5" fill="currentColor"/>', action: () => { if (commentMode) setCommentMode(false); if (inspectMode) setInspectMode(false); setTuneMode(!tuneMode); } },
+        { id: 'inspect-toggle', title: 'Inspect (Ctrl+I)', icon: '<path d="M13.5 2.5l-1-1-2 2-1-1-5 5 2 2 5-5-1-1z" stroke="currentColor" stroke-width="1.1" stroke-linejoin="round" fill="none"/><path d="M4.5 9.5l-2 4 4-2" stroke="currentColor" stroke-width="1.1" stroke-linejoin="round" fill="none"/>', action: () => { if (commentMode) setCommentMode(false); if (tuneMode) setTuneMode(false); setInspectMode(!inspectMode); } },
+        { id: 'tune-toggle', title: 'Tune (Ctrl+T)', icon: '<line x1="3" y1="4" x2="13" y2="4" stroke="currentColor" stroke-width="1.25" stroke-linecap="round"/><circle cx="9" cy="4" r="1.5" fill="currentColor"/><line x1="3" y1="8" x2="13" y2="8" stroke="currentColor" stroke-width="1.25" stroke-linecap="round"/><circle cx="5" cy="8" r="1.5" fill="currentColor"/><line x1="3" y1="12" x2="13" y2="12" stroke="currentColor" stroke-width="1.25" stroke-linecap="round"/><circle cx="10" cy="12" r="1.5" fill="currentColor"/>', action: () => { if (commentMode) setCommentMode(false); if (inspectMode) setInspectMode(false); setTuneMode(!tuneMode); } },
         {
           id: 'theme-toggle',
-          title: 'Theme (Shift+D)',
+          title: 'Theme (Ctrl+D)',
           icon: '<circle cx="8" cy="8" r="5.5" stroke="currentColor" stroke-width="1.25" fill="none"/><path d="M8 2.5a5.5 5.5 0 0 0 0 11V2.5z" fill="currentColor"/>',
           action: () => {
             if (commentMode) setCommentMode(false);
@@ -2125,7 +2125,7 @@
         const btn = document.createElement('button');
         btn.id = 'sidebar-toggle';
         btn.className = 'comment-toggle';
-        btn.title = 'View changes (Shift+A)';
+        btn.title = 'View changes (Ctrl+A)';
         btn.innerHTML = '<svg class="comment-icon" viewBox="0 0 16 16" fill="none">' +
           '<rect x="2.5" y="1.5" width="11" height="13" rx="1" stroke="currentColor" stroke-width="1.25" fill="none"/>' +
           '<line x1="5" y1="5" x2="11" y2="5" stroke="currentColor" stroke-width="1"/>' +
@@ -2388,7 +2388,7 @@
       id: target.id || null
     });
 
-    showToast('Interest captured. Use Comment (⇧C) to tag what you like, then Send (⇧⌘↵) when ready.');
+    showToast('Interest captured. Use Comment (⌃C) to tag what you like, then Send (⇧⌘↵) when ready.');
 
     // Update indicator bar (defer so toggleSelect runs first)
     setTimeout(() => {

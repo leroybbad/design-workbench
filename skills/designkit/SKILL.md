@@ -33,10 +33,10 @@ skills/designkit/scripts/start-server.sh --project-dir /path/to/project
 Returns JSON with `screen_dir`, `state_dir`, and `url`. Save all three.
 
 Tell the user to open the URL. Remind them of the keyboard shortcuts:
-- **Shift+C** — Comment mode (click to annotate elements)
-- **Shift+I** — Inspect mode (hover to see computed properties)
-- **Shift+T** — Tune mode (click to open live adjustment panel)
-- **Shift+A** — View staged changes
+- **Ctrl+C** — Comment mode (click to annotate elements)
+- **Ctrl+I** — Inspect mode (hover to see computed properties)
+- **Ctrl+T** — Tune mode (click to open live adjustment panel)
+- **Ctrl+A** — View staged changes
 - **Cmd+Z / Cmd+Shift+Z** — Undo/redo tune adjustments
 - **Shift+Cmd+Enter** — Send changes to Claude
 - **Esc** — Deselect tool / close panels
@@ -187,7 +187,7 @@ The file contains JSONL — one JSON object per line. Two types:
 ## The Iteration Loop
 
 1. Write HTML to `screen_dir` following authoring standards
-2. Tell the user: "Design is up at [URL]. Use the tools to review — Shift+C for comments, Shift+T to tune values. Click Send when ready."
+2. Tell the user: "Design is up at [URL]. Use the tools to review — Ctrl+C for comments, Ctrl+T to tune values. Click Send when ready."
 3. User reviews, annotates, tunes, sends
 4. Read `$STATE_DIR/events`
 5. Apply changes, write new HTML file

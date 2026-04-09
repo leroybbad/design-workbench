@@ -31,20 +31,9 @@ When you're done tweaking, hit **Send** (Shift+Cmd+Enter). Claude reads your str
 
 ## Install
 
-In Claude Code, run these two commands:
+In the Claude Code VS Code extension, add `leroybbad/designkit` as a marketplace plugin. In the CLI, use `/plugin marketplace add leroybbad/designkit`.
 
-```
-/plugin marketplace add leroybbad/designkit
-/plugin install designkit@designkit
-```
-
-Then reload plugins without restarting:
-
-```
-/reload-plugins
-```
-
-That's it. The skills, server, and all tools ship with the plugin — nothing to build.
+The skills, server, and all tools ship with the plugin — nothing to build.
 
 ## How It Works
 

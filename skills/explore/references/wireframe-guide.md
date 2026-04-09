@@ -12,7 +12,7 @@ power comes from using each at the right moment.
 
 ---
 
-## Level 1: Schematic Thumbnails (Diverge)
+## Level 1: Schematic Concepts (Diverge)
 
 **Purpose:** Generate 6-8 structurally distinct layout patterns that the user can scan
 and compare in a single view.

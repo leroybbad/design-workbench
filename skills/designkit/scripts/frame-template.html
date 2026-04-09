@@ -70,153 +70,100 @@
     }
 
     /* ===== FRAME STRUCTURE ===== */
-    .header {
-      background: #1a1a1e;
-      padding: 0.5rem 1.5rem;
-      min-height: 40px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border-bottom: 1px solid #2a2a2e;
-      flex-shrink: 0;
-      position: relative;
-    }
-    .header h1 { font-size: 0.85rem; font-weight: 500; color: #8e8e93; }
-    .header .status { display: none; }
-
     .main { flex: 1; overflow-y: auto; }
     #claude-content { padding: 0; min-height: 100%; background: transparent; }
 
-    .indicator-bar { display: none; }
-
-    /* ===== APP MENU BAR ===== */
-    .app-menu {
+    /* ===== FLOATING TOOLBAR ===== */
+    .dk-toolbar {
+      position: fixed;
+      top: 80px;
+      left: 16px;
+      z-index: 10000;
       display: flex;
-      align-items: center;
-      gap: 0;
-    }
-    .menu-item {
-      position: relative;
-      padding: 0.3rem 0.6rem;
-      font-size: 0.75rem;
-      color: #aeaeb2;
-      cursor: pointer;
-      border-radius: 4px;
-      user-select: none;
-      background: none;
-      border: none;
-      font-family: inherit;
-    }
-    .menu-item:hover { background: #2a2a2e; color: #d1d1d6; }
-    .menu-dropdown {
-      display: none;
-      position: absolute;
-      top: 100%;
-      left: 0;
-      margin-top: 4px;
-      background: #252528;
-      border: 1px solid #3a3a3e;
-      border-radius: 8px;
-      padding: 0.3rem 0;
-      min-width: 180px;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
-      z-index: 3000;
-    }
-    .menu-dropdown.open { display: block; }
-    .menu-dropdown-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 0.35rem 0.75rem;
-      font-size: 0.75rem;
-      color: #d1d1d6;
-      cursor: pointer;
-      background: none;
-      border: none;
-      width: 100%;
-      text-align: left;
-      font-family: inherit;
-    }
-    .menu-dropdown-item:hover { background: var(--accent); color: white; }
-    .menu-dropdown-item.active { color: var(--accent); }
-    .menu-dropdown-item.active:hover { color: white; }
-    .menu-dropdown-item .menu-shortcut {
-      color: #636366;
-      font-size: 0.65rem;
-      font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
-    }
-    .menu-dropdown-item:hover .menu-shortcut { color: rgba(255,255,255,0.6); }
-    .menu-dropdown-item.disabled {
-      color: #4a4a4e;
-      cursor: default;
-    }
-    .menu-dropdown-item.disabled:hover { background: none; color: #4a4a4e; }
-    .menu-separator {
-      height: 1px;
-      background: #3a3a3e;
-      margin: 0.25rem 0.5rem;
-    }
-
-    /* ===== TOOLBAR GROUP ===== */
-    .toolbar-group {
-      position: absolute;
-      left: 50%;
-      transform: translateX(-50%);
-      display: flex;
-      align-items: center;
+      flex-direction: column;
+      background: #1a1a1e;
+      border-radius: 14px;
+      padding: 6px;
       gap: 2px;
-      background: #252528;
-      border: 1px solid #3a3a3e;
-      border-radius: 8px;
-      padding: 3px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.28), 0 0 0 1px rgba(255,255,255,0.06);
+      user-select: none;
+      cursor: grab;
     }
-    .toolbar-divider {
-      width: 1px;
-      height: 18px;
-      background: #3a3a3e;
-      margin: 0 3px;
-      flex-shrink: 0;
-    }
+    .dk-toolbar.dragging { cursor: grabbing; }
+    .dk-toolbar.dragging .dk-tool { pointer-events: none; }
 
-    /* ===== COMMENT MODE TOGGLE ===== */
-    .comment-toggle {
+    .dk-brand {
       display: flex;
+      flex-direction: column;
       align-items: center;
-      gap: 0.4rem;
-      padding: 0.25rem 0.5rem;
-      border-radius: 6px;
-      border: 1px solid transparent;
-      background: none;
-      color: #aeaeb2;
-      font-size: 0.75rem;
-      cursor: pointer;
-      transition: all 0.15s ease;
-      font-family: inherit;
+      padding: 4px 0 2px;
+      line-height: 1;
     }
-    .comment-toggle:hover { background: #2a2a2e; color: #d1d1d6; }
-    .comment-toggle.active {
-      background: var(--annotation-new);
-      color: white;
-      border-color: var(--annotation-new);
+    .dk-brand-d { font-size: 0.8125rem; font-weight: 800; color: #e5e5e7; letter-spacing: -0.02em; }
+    .dk-brand-k { font-size: 0.5625rem; font-weight: 600; color: #636366; letter-spacing: 0.02em; margin-top: -2px; }
+
+    .dk-tool {
+      width: 36px; height: 36px; border-radius: 8px; border: none;
+      background: none; color: #8e8e93;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; font-size: 1rem; transition: background 0.12s, color 0.12s;
+      position: relative;
     }
-    .comment-toggle .comment-icon {
-      width: 16px;
-      height: 16px;
+    .dk-tool:hover { background: #2a2a2e; color: #d1d1d6; }
+    .dk-tool.active { background: #0a84ff; color: #fff; }
+    .dk-tool svg { width: 16px; height: 16px; }
+
+    .dk-divider { width: 22px; height: 1px; background: #2a2a2e; margin: 3px auto; }
+
+    .dk-send {
+      width: 36px; height: 36px; border-radius: 8px; border: none;
+      background: none; color: #3a3a3e;
+      display: flex; align-items: center; justify-content: center;
+      cursor: default; font-size: 1rem; transition: all 0.15s;
     }
-    .comment-badge {
-      background: #2a2a2e;
-      color: #8e8e93;
-      font-size: 0.65rem;
-      padding: 0.1rem 0.35rem;
-      border-radius: 10px;
-      font-weight: 600;
-      min-width: 1.1rem;
-      text-align: center;
+    .dk-send.ready { background: #0a84ff; color: #fff; cursor: pointer; }
+    .dk-send.ready:hover { background: #3898ff; }
+    .dk-send svg { width: 16px; height: 16px; }
+
+    .dk-badge {
+      position: absolute; top: 4px; right: 4px;
+      width: 7px; height: 7px; background: #0a84ff;
+      border-radius: 50%; display: none;
     }
-    .comment-toggle.active .comment-badge {
-      background: rgba(255,255,255,0.25);
-      color: white;
+    .dk-badge.on { display: block; }
+
+    /* ===== FLOATING PANEL ===== */
+    .dk-panel {
+      position: fixed;
+      z-index: 9999;
+      background: #1a1a1e;
+      border-radius: 14px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.28), 0 0 0 1px rgba(255,255,255,0.06);
+      width: 300px;
+      max-height: 70vh;
+      display: none;
+      flex-direction: column;
+      overflow: hidden;
     }
+    .dk-panel.open { display: flex; }
+
+    .dk-panel-header {
+      display: flex; align-items: center; gap: 8px;
+      padding: 10px 14px;
+      border-bottom: 1px solid #2a2a2e;
+      flex-shrink: 0; cursor: grab;
+    }
+    .dk-panel-header.dragging { cursor: grabbing; }
+    .dk-panel-icon { color: #0a84ff; font-size: 14px; display: flex; align-items: center; }
+    .dk-panel-icon svg { width: 14px; height: 14px; }
+    .dk-panel-title { font-size: 0.8125rem; font-weight: 600; color: #e5e5e7; flex: 1; }
+    .dk-panel-close {
+      background: none; border: none; color: #636366;
+      font-size: 1.125rem; cursor: pointer; line-height: 1;
+      width: 24px; height: 24px; border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .dk-panel-close:hover { background: #2a2a2e; color: #8e8e93; }
 
     /* ===== ANNOTATION PINS ===== */
     .annotation-pin {
@@ -527,19 +474,8 @@
       outline-color: transparent !important;
     }
 
-    .tune-panel {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      background: #1a1a1e;
-      border-top: 1px solid #3a3a3e;
-      z-index: 2000;
-      padding: 0.75rem 1.5rem;
-      box-shadow: 0 -4px 20px rgba(0,0,0,0.3);
-      max-height: 40vh;
-      overflow-y: auto;
-    }
+    /* tune-panel class is kept for internal control CSS — positioning now done by dk-panel */
+    .tune-panel { padding: 0.75rem 1.5rem; overflow-y: auto; flex: 1; }
     .tune-header {
       display: flex;
       justify-content: space-between;
@@ -815,31 +751,20 @@
     }
 
     /* ===== THEME SELECTOR PANEL ===== */
-    .theme-panel {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      background: #1a1a1e;
-      border-top: 1px solid #3a3a3e;
-      z-index: 2000;
-      box-shadow: 0 -4px 20px rgba(0,0,0,0.3);
-      max-height: 50vh;
-      display: flex;
-      flex-direction: column;
-    }
+    /* theme-panel positioning now done by dk-panel; these classes handle internals */
+    .theme-panel { display: flex; flex-direction: column; flex: 1; overflow: hidden; }
     .theme-panel-header {
       flex-shrink: 0;
-      padding: 0.75rem 1.5rem 0;
+      padding: 0.5rem 1rem 0;
     }
     .theme-panel-body {
       flex: 1;
       overflow-y: auto;
-      padding: 0.75rem 1.5rem;
+      padding: 0.5rem 1rem;
     }
     .theme-panel-footer {
       flex-shrink: 0;
-      padding: 0.5rem 1.5rem;
+      padding: 0.5rem 1rem;
       border-top: 1px solid #3a3a3e;
       display: flex;
       justify-content: flex-end;
@@ -1221,86 +1146,10 @@
   </style>
 </head>
 <body>
-  <div class="header" id="dc-header">
-    <div style="display: flex; align-items: center; gap: 0.75rem;">
-      <h1>Designkit Viewer</h1>
-      <nav class="app-menu" id="app-menu">
-        <div class="menu-item" data-menu="tools">
-          Tools
-          <div class="menu-dropdown" id="menu-tools">
-            <button class="menu-dropdown-item" data-action="deselect-mode">
-              <span>Deselect Tool</span>
-              <span class="menu-shortcut">Esc</span>
-            </button>
-            <div class="menu-separator"></div>
-            <button class="menu-dropdown-item" data-action="comment-mode" id="menu-comment">
-              <span>Comment</span>
-              <span class="menu-shortcut">&#8963;C</span>
-            </button>
-            <button class="menu-dropdown-item" data-action="inspect-mode" id="menu-inspect">
-              <span>Inspect</span>
-              <span class="menu-shortcut">&#8963;I</span>
-            </button>
-            <button class="menu-dropdown-item" data-action="tune-mode" id="menu-tune">
-              <span>Tune</span>
-              <span class="menu-shortcut">&#8963;T</span>
-            </button>
-            <button class="menu-dropdown-item" data-action="theme-mode" id="menu-theme">
-              <span>Theme</span>
-              <span class="menu-shortcut">&#8963;D</span>
-            </button>
-            <div class="menu-separator"></div>
-            <button class="menu-dropdown-item" data-action="send-comments" id="menu-send">
-              <span>Send Comments</span>
-              <span class="menu-shortcut">&#8679;&#8984;&#9166;</span>
-            </button>
-          </div>
-        </div>
-        <div class="menu-item" data-menu="edit">
-          Edit
-          <div class="menu-dropdown" id="menu-edit">
-            <button class="menu-dropdown-item" data-action="undo" id="menu-undo">
-              <span>Undo</span>
-              <span class="menu-shortcut">&#8984;Z</span>
-            </button>
-            <button class="menu-dropdown-item" data-action="redo" id="menu-redo">
-              <span>Redo</span>
-              <span class="menu-shortcut">&#8984;&#8679;Z</span>
-            </button>
-          </div>
-        </div>
-        <div class="menu-item" data-menu="view">
-          View
-          <div class="menu-dropdown" id="menu-view">
-            <button class="menu-dropdown-item" data-action="toggle-comments" id="menu-toggle-comments">
-              <span>Show Changes</span>
-              <span class="menu-shortcut">&#8963;A</span>
-            </button>
-          </div>
-        </div>
-      </nav>
-    </div>
-    <div class="toolbar-group" id="toolbar-group">
-      <!-- Tool buttons injected by helper.js -->
-    </div>
-    <div style="display: flex; align-items: center; gap: 0.5rem;">
-      <button class="comment-toggle" id="comment-toggle" title="Toggle comment mode (Ctrl+C)">
-        <svg class="comment-icon" viewBox="0 0 16 16" fill="none">
-          <path d="M3.5 1.5h9c.55 0 1 .45 1 1v7c0 .55-.45 1-1 1H5.5L2.5 13.5V2.5c0-.55.45-1 1-1z" stroke="currentColor" stroke-width="1.25" fill="none"/>
-        </svg>
-        <span class="comment-badge" id="comment-count">0</span>
-      </button>
-    </div>
-  </div>
-
   <div class="main">
     <div id="claude-content">
       <!-- CONTENT -->
     </div>
-  </div>
-
-  <div class="indicator-bar">
-    <span id="indicator-text">Click an option above, then return to the terminal</span>
   </div>
 
 </body>

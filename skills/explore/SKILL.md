@@ -55,14 +55,37 @@ Before asking any questions, assess what you already know:
 - Note the specificity level: vague idea / scoped feature / extending existing product
 
 **From the codebase (if one exists):**
-Scan for existing design tokens and systems. Look for:
-- `tailwind.config.*` files
-- `theme.*` files
-- CSS files with `:root` custom properties
-- Package imports: `@mui`, `antd`, `@chakra-ui`, `@radix-ui`, shadcn config
-- Any `tokens` or `variables` CSS/SCSS files
+Scan the project directory for existing design tokens. Search in this priority order:
 
-If tokens are found, note them. You'll confirm with the user in Phase 2.
+1. **Token files** — `tokens.css`, `tokens.json`, `variables.css`, `variables.scss`,
+   `design-tokens.*`, any file with "token" or "variable" in the name
+2. **Theme files** — `theme.css`, `theme.ts`, `theme.js`, `tailwind.config.*`
+3. **CSS with `:root` blocks** — any `.css` or `.scss` file containing `:root {` with
+   custom properties
+4. **Package imports** — `@mui`, `antd`, `@chakra-ui`, `@radix-ui`, shadcn config in
+   `package.json`
+5. **HTML with inline styles** — if no token files exist, scan `.html` files for
+   repeated color/font/spacing values in `style=""` attributes
+
+**When tokens are found:**
+- Read the file and extract the CSS custom properties (or Tailwind config values)
+- Map them to our token schema: `--color-*`, `--space-*`, `--font-*`, `--radius-*`, `--shadow-*`
+- Tell the user what you found: "I found `tokens.css` with 22 custom properties.
+  Here are the key values I'll use as your base: [primary: #3b82f6, bg: #ffffff, ...]
+  Does this look right, or should I adjust anything?"
+- Use these tokens instead of Tailwind/Shadcn defaults for the prototype
+
+**When only inline-styled HTML is found:**
+- Scan for the most common color values, font sizes, and spacing values
+- Offer: "I don't see a token file, but `app.html` uses #3b82f6, #1e293b, and 16px
+  body text consistently. Want me to build a token set from those, or start fresh?"
+
+**When nothing is found:**
+- Move on — Tailwind/Shadcn will be the default. The user can swap via Theme Selector.
+
+**If the user points to an external file:**
+- Accept a file path if they say "my tokens are at /path/to/tokens.css"
+- Read and extract the same way
 
 **Adaptive depth:**
 - Vague idea → full discovery (all three threads)

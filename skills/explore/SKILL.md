@@ -29,7 +29,6 @@ Do NOT generate a final prototype, write production HTML, or invoke the designki
 1. A problem statement exists (who, what, why)
 2. An interaction model is identified (pattern, navigation, density)
 3. A concept direction is chosen (from Crazy 8s → deep dive → convergence)
-4. A palette/look-and-feel is selected (after convergence, not before)
 
 You MAY show visual content in the browser during exploration (concept thumbnails,
 deep dive wireframes). These are exploration artifacts, not prototypes.
@@ -44,10 +43,8 @@ You MUST create a task for each item and complete them in order:
 3. **Crazy 8s** — generate 6-8 abstract structural thumbnails in a grid
 4. **Deep dive** — render selected concepts at full detail
 5. **Converge** — user picks a direction
-6. **Pick palette** — show palette options (or confirm codebase tokens) AFTER convergence
-7. **Write design brief** to `docs/designkit/briefs/YYYY-MM-DD-<topic>.md`
-8. **Generate first prototype** at full fidelity with chosen palette
-9. **Hand off** — offer refinement via designkit or implementation path
+6. **Generate first prototype** at full fidelity with Tailwind/Shadcn as default
+7. **Hand off** — tell user to use Theme Selector (Shift+D) to swap design systems, colors, and fine-tune. Also offer refinement via designkit or implementation path
 
 ## Phase 1: Read the Room
 
@@ -101,10 +98,10 @@ Ask only what you don't already know:
 - Scoped feature in existing product → Light A, then B
 - Use judgment. Skip questions the user already answered.
 
-**Do NOT ask about look & feel or palettes during discovery.** Palette selection
-happens after the user has chosen a concept direction (Phase 4). Concepts should
+**Do NOT ask about look & feel or palettes during discovery.** Concepts should
 be design-system-agnostic — neutral, clean styling so the user evaluates structure
-and layout without being distracted by color or personality.
+and layout without being distracted by color or personality. The user swaps design
+systems live in the viewer after the prototype is generated (Shift+D).
 
 ## Phase 3: Schematic Thumbnails (Diverge)
 
@@ -147,7 +144,7 @@ After the user selects 1-3 thumbnails:
    implies for next steps
 5. Tell the user: "Scroll through and click your favorite. You can also use Comment (Shift+C) to tag specific elements you like from ANY concept — even ones you don't pick overall. When you Send, I'll combine your pick with your annotations to build the best version."
 
-## Phase 4: Converge + Pick Palette
+## Phase 4: Converge
 
 ### Converge on direction
 
@@ -158,28 +155,7 @@ After the user selects 1-3 thumbnails:
   maybe exploring a different angle or combining ideas differently — just tell me
   what you liked and I can generate 2-3 more. Otherwise we'll move to the prototype."
 - If they want more concepts, go back to Phase 3b with their feedback
-- If they're happy, move to palette selection
-
-### Pick palette (NOW — after convergence)
-
-Once the structural direction is locked, give it a visual personality:
-
-If codebase tokens were detected in Phase 1:
-> "I found [system/tokens] in your project. Should I use these as the base,
-> or do you want to explore other directions?"
-
-If no codebase tokens, or the user wants to explore:
-1. Start the Design Companion server if not already running (see Server section)
-2. Copy the pre-built palette selector to the screen directory:
-   ```bash
-   cp skills/designkit/scripts/palette-selector.html "$SCREEN_DIR/palette-selector.html"
-   ```
-3. Tell the user: "Now let's give it personality — pick the palette that feels right"
-4. Read `$STATE_DIR/events` for their click — the choice value maps to a palette name
-5. Read `references/palettes.md` to get the full token set for the chosen palette
-
-This is the moment where "Apple HIG" vs "Corporate Dense" vs "Neon AI" actually
-matters — because it immediately transforms the chosen concept into the first prototype.
+- If they're happy, move to prototype generation
 
 ## Phase 5: Output
 
@@ -194,15 +170,13 @@ matters — because it immediately transforms the chosen concept into the first 
 
 ### Generate the first prototype
 
-1. Take the chosen concept wireframe and render it at higher fidelity
-2. Apply the full (unmuted) palette tokens
-3. Use real content, proper spacing, complete structure
-4. Follow the designkit SKILL.md authoring standards:
-   - CSS classes, not inline styles
-   - CSS custom properties (tokens) for all design values
-   - Semantic class names
-   - Token block in `<style>` at top
-5. Write to the screen directory and tell the user to check the browser
+1. Take the chosen concept and render it at full fidelity
+2. Use **Tailwind/Shadcn tokens as the default** — the user will swap design systems
+   live in the viewer using the Theme Selector (Shift+D)
+3. If codebase tokens were detected in Phase 1, use those instead of Tailwind
+4. Use real content, proper spacing, complete structure
+5. Follow the designkit SKILL.md authoring standards (CSS classes, tokens, semantic names, Lucide icons, anti-slop rules)
+6. Write to the screen directory and tell the user to check the browser
 
 ### Hand off
 
@@ -211,8 +185,8 @@ After the brief is written and prototype is shown:
 > "Design brief saved to `docs/designkit/briefs/<filename>.md`. The first prototype
 > is in the browser. From here you can:
 >
-> - **Refine** — use the Design Companion tools (Shift+C to comment, Shift+T to tune)
->   and send feedback for iteration
+> - **Theme** (Shift+D) — swap design systems, color palettes, and fine-tune typography/spacing/radius
+> - **Refine** — use Comment (Shift+C) and Tune (Shift+T) for per-element adjustments
 > - **Implement** — use the brief as input for a coding plan
 > - **Keep exploring** — if this direction doesn't feel right, we can go back"
 
@@ -246,7 +220,7 @@ for their feedback (clicks, comments, tune changes) as JSONL.
 - **One question per message.** Never combine multiple questions.
 - **Multiple choice preferred.** Easier to answer than open-ended.
 - **Never re-ask.** Skip questions the user already answered.
-- **Structure before style.** Explore layout patterns first (neutral styling), pick palette after convergence.
+- **Structure before style.** Explore layout patterns with neutral styling. Users swap design systems live in the viewer after the prototype is generated.
 - **Semantic color, not decorative.** Assign 2-3 colors structural meaning before generating thumbnails. Hold constant across the session.
 - **Two fidelity levels, never averaged.** Level 1 = abstract primitives for divergence. Level 2 = structural prototypes for pressure-testing. Don't mix them.
 - **Stress-test every pattern.** Level 2 prototypes must include at least one toggle or scenario that forces the pattern into a harder state.

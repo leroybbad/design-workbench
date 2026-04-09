@@ -31,7 +31,9 @@ When you're done tweaking, hit **Send** (Shift+Cmd+Enter). Claude reads your str
 
 ## Install
 
-In the Claude Code VS Code extension, add `leroybbad/designkit` as a marketplace plugin. In the CLI, use `/plugin marketplace add leroybbad/designkit`.
+In the Claude Code /plugins marketplace, add `leroybbad/designkit` as a marketplace plugin. In the CLI, use `/plugin marketplace add leroybbad/designkit`.  
+
+Be sure to enable auto-updates in the cli Claude Code (that setting isnt evidently available via VS code extension).
 
 The skills, server, and all tools ship with the plugin — nothing to build.
 

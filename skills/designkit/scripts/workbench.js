@@ -105,8 +105,10 @@ window.DKWorkbench = (function () {
     }
 
     // Stay in placement mode — user can keep clicking to place more
-    // Clear the target so the next hover recalculates
+    // Hide the line and clear target so the next hover recalculates
     placementTarget = null;
+    if (placementLine) placementLine.style.display = 'none';
+    document.querySelectorAll('.dk-slot-highlight').forEach(el => el.classList.remove('dk-slot-highlight'));
   }
 
   function insertSection(html, afterSection) {

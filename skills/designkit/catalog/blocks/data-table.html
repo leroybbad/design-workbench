@@ -1,0 +1,29 @@
+<!--
+name: Data Table
+category: Sections
+description: Simple data table with header and rows
+slots: none
+-->
+<div class="data-table-wrapper" data-block="data-table" style="padding: 1rem;">
+  <table class="data-table" style="width: 100%; border-collapse: collapse; font-size: 0.875rem;">
+    <thead>
+      <tr style="border-bottom: 2px solid var(--color-border, #e5e7eb);">
+        <th style="text-align: left; padding: 0.75rem; color: var(--color-text-secondary, #6b7280); font-weight: 600;">Name</th>
+        <th style="text-align: left; padding: 0.75rem; color: var(--color-text-secondary, #6b7280); font-weight: 600;">Status</th>
+        <th style="text-align: right; padding: 0.75rem; color: var(--color-text-secondary, #6b7280); font-weight: 600;">Amount</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr style="border-bottom: 1px solid var(--color-border, #e5e7eb);">
+        <td style="padding: 0.75rem; color: var(--color-text, #1a1a2e);">Project Alpha</td>
+        <td style="padding: 0.75rem;"><span style="color: var(--color-success, #059669);">Active</span></td>
+        <td style="padding: 0.75rem; text-align: right; color: var(--color-text, #1a1a2e);">$12,400</td>
+      </tr>
+      <tr style="border-bottom: 1px solid var(--color-border, #e5e7eb);">
+        <td style="padding: 0.75rem; color: var(--color-text, #1a1a2e);">Project Beta</td>
+        <td style="padding: 0.75rem;"><span style="color: var(--color-warning, #d97706);">Pending</span></td>
+        <td style="padding: 0.75rem; text-align: right; color: var(--color-text, #1a1a2e);">$8,200</td>
+      </tr>
+    </tbody>
+  </table>
+</div>

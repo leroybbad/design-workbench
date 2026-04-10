@@ -2728,14 +2728,15 @@
       + '<button class="dk-snapshot-nav" id="snap-next" title="Next save point" disabled>\u25B6</button>';
     dkToolbar.appendChild(snapIndicator);
 
+    document.body.appendChild(dkToolbar);
+
+    // Wire snapshot nav after toolbar is in the DOM
     document.getElementById('snap-prev').addEventListener('click', () => {
       sendEvent({ type: 'snapshot-undo' });
     });
     document.getElementById('snap-next').addEventListener('click', () => {
       sendEvent({ type: 'snapshot-redo' });
     });
-
-    document.body.appendChild(dkToolbar);
 
     // ----- Toolbar drag -----
     let tbDrag = false, tbSX, tbSY, tbSL, tbST;

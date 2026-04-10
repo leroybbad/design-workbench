@@ -211,3 +211,54 @@ Mockup files persist in `.designkit/sessions/` under the project directory for l
 - **One screen at a time.** Focus on refining one surface, not multi-page flows.
 - **Simple lifecycle.** Fresh comments each round. No state management across iterations.
 - **Don't guess what changed.** Read the events file. The designer's annotations are precise.
+
+---
+
+## Workbench Mode
+
+The Design Companion also supports a **workbench mode** where designers compose pages from pre-built design system blocks. Additional keyboard shortcuts:
+
+- **Ctrl+B** — Blocks panel (browse and insert catalog blocks)
+- **Cmd+S** — Save snapshot
+- **◀ / ▶** in the toolbar — Navigate between save points
+
+### Block Catalog
+
+The workbench serves blocks from `catalog/` (relative to the skill directory). Run the prep script to generate a catalog from a component library:
+
+```bash
+node skills/designkit/scripts/prep.cjs --source <component-dir> --output skills/designkit/catalog [--tokens <css-file>]
+```
+
+This generates `catalog/blocks/`, `catalog/templates/`, and `catalog/manifest.json`.
+
+### Surgical Edits
+
+When the workbench is running and the user asks Claude to make changes:
+
+1. Read the current canvas state from the latest snapshot: `$SESSION_DIR/snapshots/NNN.html` (check `pointer.json` for the current number)
+2. Read the token sheet from `catalog/tokens.css`
+3. Read `catalog/manifest.json` to know what blocks exist
+4. Make the requested HTML edit as a **fragment** — do NOT regenerate the entire page
+5. Write the modified HTML as the next snapshot file (increment the snapshot counter, e.g. `004.html`)
+6. Update `pointer.json` to `{ "current": 4, "total": 4 }`
+7. The server will detect the new file and broadcast a reload to the browser
+
+### Save to Catalog
+
+When the user says "save this as a block" or "add this to the catalog":
+
+1. Extract the selected section/element HTML
+2. Add YAML frontmatter in an HTML comment (ask user for name and category if not obvious)
+3. Write to `catalog/blocks/<name>.html`
+4. Re-run: `node skills/designkit/scripts/prep.cjs --source catalog/blocks --output catalog`
+5. The blocks panel will show the new block on next refresh
+
+### Canvas Document Format
+
+The canvas uses standard HTML with data attributes:
+
+- `data-canvas` — root container (on `<main>`)
+- `data-section` + `data-section-id` — top-level reorderable units
+- `data-slot` — containers that accept child blocks
+- `data-block` — identifies which catalog block was inserted

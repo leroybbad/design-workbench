@@ -44,11 +44,7 @@
     const sendBtn = document.getElementById('send-annotations');
     if (sendBtn) {
       const hasChanges = annotations.length > 0 || tuneChanges.length > 0 || (themeState && themeState.system);
-      sendBtn.disabled = !hasChanges;
-      sendBtn.style.opacity = hasChanges ? '1' : '0.4';
-      sendBtn.style.background = hasChanges ? 'var(--accent, #0a84ff)' : 'none';
-      sendBtn.style.color = hasChanges ? '#fff' : '';
-      sendBtn.style.borderColor = hasChanges ? 'var(--accent, #0a84ff)' : '';
+      sendBtn.classList.toggle('ready', hasChanges);
     }
   }
 
@@ -57,8 +53,10 @@
   }
 
   function updateBadge() {
-    const badge = document.getElementById('comment-count');
-    if (badge) badge.textContent = annotations.length;
+    const total = annotations.length + tuneChanges.length;
+    // New floating toolbar badge (dk-badge dot — shown/hidden, no text)
+    const dotBadge = document.getElementById('comment-count-badge');
+    if (dotBadge) dotBadge.classList.toggle('on', total > 0);
   }
 
   // ===== SELECTOR GENERATION =====
@@ -156,6 +154,7 @@
     if (active) {
       if (commentMode) setCommentMode(false);
       if (inspectMode) setInspectMode(false);
+      if (themeMode) setThemeMode(false);
     } else {
       closeTunePanel();
     }
@@ -240,15 +239,6 @@
         }
         showToast('Redo: ' + action.prop);
       }
-    }
-  });
-
-  document.addEventListener('click', (e) => {
-    const toggle = e.target.closest('#comment-toggle');
-    if (toggle) {
-      e.preventDefault();
-      e.stopPropagation();
-      setCommentMode(!commentMode);
     }
   });
 
@@ -723,7 +713,7 @@
   document.addEventListener('mousemove', (e) => {
     if (!inspectMode) return;
 
-    const ignore = e.target.closest('#dc-header, .indicator-bar, .annotation-pin, .annotation-popover, .annotation-sidebar, .inspect-tooltip');
+    const ignore = e.target.closest('#dk-toolbar, .dk-panel, .annotation-pin, .annotation-popover, .annotation-sidebar, .inspect-tooltip');
     if (ignore) {
       if (inspectTooltip) { inspectTooltip.remove(); inspectTooltip = null; }
       document.querySelectorAll('.inspect-highlight').forEach(el => el.classList.remove('inspect-highlight'));
@@ -756,8 +746,12 @@
   // ===== TUNE MODE =====
   function closeTunePanel() {
     if (tuneStyleObserver) { tuneStyleObserver.disconnect(); tuneStyleObserver = null; }
+    // Remove the outer dk-panel wrapper (tune-panel lives inside it now)
     const panel = document.querySelector('.tune-panel');
-    if (panel) panel.remove();
+    if (panel) {
+      const wrapper = panel.closest('.dk-panel') || panel;
+      wrapper.remove();
+    }
     // Revert unapplied changes
     if (tuneTarget && Object.keys(tuneOriginalStyles).length > 0) {
       Object.keys(tuneOriginalStyles).forEach(key => {
@@ -786,28 +780,73 @@
     setTimeout(() => el.classList.add('faded'), 2000);
 
     const cs = window.getComputedStyle(el);
-    const panel = document.createElement('div');
-    panel.className = 'tune-panel';
 
-    const header = document.createElement('div');
-    header.className = 'tune-header';
+    // Detect element type for context-aware tabs
     const tag = el.tagName.toLowerCase();
+    const isText = ['h1','h2','h3','h4','h5','h6','p','span','a','label','li','td','th','caption','figcaption','blockquote','em','strong','b','i','u','small','code','pre'].includes(tag);
+    const isContainer = ['div','section','article','nav','main','aside','header','footer','ul','ol','table','form','fieldset','details'].includes(tag);
+    const isInput = ['input','button','select','textarea'].includes(tag);
+    const isImage = ['img','svg','picture','video','canvas'].includes(tag);
+
+    // Floating panel wrapper
+    const dkPanel = document.createElement('div');
+    dkPanel.className = 'dk-panel open';
+
+    // Draggable panel header
+    const dkHeader = document.createElement('div');
+    dkHeader.className = 'dk-panel-header';
+    const dkIcon = document.createElement('span');
+    dkIcon.className = 'dk-panel-icon';
+    dkIcon.innerHTML = '<svg viewBox="0 0 16 16" fill="none"><line x1="3" y1="4" x2="13" y2="4" stroke="currentColor" stroke-width="1.25" stroke-linecap="round"/><circle cx="9" cy="4" r="1.5" fill="currentColor"/><line x1="3" y1="8" x2="13" y2="8" stroke="currentColor" stroke-width="1.25" stroke-linecap="round"/><circle cx="5" cy="8" r="1.5" fill="currentColor"/><line x1="3" y1="12" x2="13" y2="12" stroke="currentColor" stroke-width="1.25" stroke-linecap="round"/><circle cx="10" cy="12" r="1.5" fill="currentColor"/></svg>';
     const cls = el.className && typeof el.className === 'string'
       ? '.' + el.className.trim().split(/\s+/).filter(c => !c.startsWith('tune-') && !c.startsWith('inspect-')).slice(0, 2).join('.')
       : '';
-    header.innerHTML = '<span class="tune-tag">' + tag + cls + '</span>';
+    const dkTitle = document.createElement('span');
+    dkTitle.className = 'dk-panel-title';
+    dkTitle.textContent = 'Tune: ' + tag + cls;
+    const dkClose = document.createElement('button');
+    dkClose.className = 'dk-panel-close';
+    dkClose.textContent = '\u00d7';
+    dkClose.addEventListener('click', () => closeTunePanel());
+    dkHeader.appendChild(dkIcon);
+    dkHeader.appendChild(dkTitle);
+    dkHeader.appendChild(dkClose);
+    dkPanel.appendChild(dkHeader);
 
-    const closeBtn = document.createElement('button');
-    closeBtn.className = 'tune-close';
-    closeBtn.textContent = '\u00d7';
-    closeBtn.addEventListener('click', () => closeTunePanel());
-    header.appendChild(closeBtn);
-    panel.appendChild(header);
+    // Panel drag
+    let pDrag = false, pSX, pSY, pSL, pST;
+    dkHeader.addEventListener('mousedown', (e) => {
+      if (e.target.closest('.dk-panel-close')) return;
+      pDrag = true; pSX = e.clientX; pSY = e.clientY;
+      pSL = dkPanel.offsetLeft; pST = dkPanel.offsetTop;
+      dkHeader.classList.add('dragging');
+      e.preventDefault();
+    });
+    document.addEventListener('mousemove', function onPanelMove(e) {
+      if (!pDrag) return;
+      dkPanel.style.left = (pSL + e.clientX - pSX) + 'px';
+      dkPanel.style.top = (pST + e.clientY - pSY) + 'px';
+    });
+    document.addEventListener('mouseup', function onPanelUp() {
+      if (pDrag) { pDrag = false; dkHeader.classList.remove('dragging'); }
+    });
+
+    // Inner tune-panel div carries all the original controls
+    const panel = document.createElement('div');
+    panel.className = 'tune-panel';
+    dkPanel.appendChild(panel);
 
     // Tab bar
     const tabBar = document.createElement('div');
     tabBar.className = 'tune-tabs';
-    const tabNames = ['Typography', 'Spacing', 'Colors', 'Shadow', 'Border'];
+    const tabNames = [];
+    if (isText || isInput) tabNames.push('Typography');
+    tabNames.push('Spacing');
+    tabNames.push('Colors');
+    if (isContainer || isImage) tabNames.push('Shadow');
+    if (isContainer || isImage || isInput) tabNames.push('Border');
+    // Fallback: if somehow nothing matched, show all
+    if (tabNames.length === 0) tabNames.push('Typography', 'Spacing', 'Colors', 'Shadow', 'Border');
     const tabPanels = {};
 
     tabNames.forEach((name, i) => {
@@ -828,51 +867,170 @@
     let applyGlobally = false;
 
     // Typography tab
-    const typographyPanel = document.createElement('div');
-    typographyPanel.className = 'tune-controls';
-    const fontSize = parseFloat(cs.fontSize);
-    const fontSizeToken = resolveToken(el, 'font-size');
-    typographyPanel.appendChild(createNumberInput('Font Size', 'fontSize', fontSize, 'px', 1, fontSizeToken));
-    const fontWeight = parseInt(cs.fontWeight) || 400;
-    const fontWeightToken = resolveToken(el, 'font-weight');
-    typographyPanel.appendChild(createNumberInput('Weight', 'fontWeight', fontWeight, '', 100, fontWeightToken));
-    const lineHeight = parseFloat(cs.lineHeight) || fontSize * 1.5;
-    const lineHeightToken = resolveToken(el, 'line-height');
-    typographyPanel.appendChild(createNumberInput('Line Height', 'lineHeight', lineHeight, 'px', 1, lineHeightToken));
-    const letterSpacing = cs.letterSpacing === 'normal' ? 0 : parseFloat(cs.letterSpacing);
-    const letterSpacingToken = resolveToken(el, 'letter-spacing');
-    typographyPanel.appendChild(createNumberInput('Tracking', 'letterSpacing', letterSpacing, 'px', 0.1, letterSpacingToken));
-    const opacity = parseFloat(cs.opacity);
-    typographyPanel.appendChild(createSlider('Opacity', 'opacity', opacity, 0, 1, '', 0.05));
-    tabPanels['Typography'] = typographyPanel;
-    panel.appendChild(typographyPanel);
+    if (tabNames.includes('Typography')) {
+      const typographyPanel = document.createElement('div');
+      typographyPanel.className = 'tune-controls';
+      const fontSize = parseFloat(cs.fontSize);
+      const fontSizeToken = resolveToken(el, 'font-size');
+      typographyPanel.appendChild(createNumberInput('Font Size', 'fontSize', fontSize, 'px', 1, fontSizeToken));
+      const fontWeight = parseInt(cs.fontWeight) || 400;
+      const fontWeightToken = resolveToken(el, 'font-weight');
+      typographyPanel.appendChild(createNumberInput('Weight', 'fontWeight', fontWeight, '', 100, fontWeightToken));
+      const lineHeight = parseFloat(cs.lineHeight) || fontSize * 1.5;
+      const lineHeightToken = resolveToken(el, 'line-height');
+      typographyPanel.appendChild(createNumberInput('Line Height', 'lineHeight', lineHeight, 'px', 1, lineHeightToken));
+      const letterSpacing = cs.letterSpacing === 'normal' ? 0 : parseFloat(cs.letterSpacing);
+      const letterSpacingToken = resolveToken(el, 'letter-spacing');
+      typographyPanel.appendChild(createNumberInput('Tracking', 'letterSpacing', letterSpacing, 'px', 0.1, letterSpacingToken));
+      const opacity = parseFloat(cs.opacity);
+      typographyPanel.appendChild(createSlider('Opacity', 'opacity', opacity, 0, 1, '', 0.05));
+
+      if (isText) {
+        // Text style toggles
+        const toggleRow = document.createElement('div');
+        toggleRow.className = 'tune-row tune-text-toggles';
+
+        const toggles = [
+          { label: 'B', prop: 'fontWeight', onValue: '700', offValue: cs.fontWeight, title: 'Bold', cssProp: 'font-weight' },
+          { label: 'I', prop: 'fontStyle', onValue: 'italic', offValue: 'normal', title: 'Italic', cssProp: 'font-style' },
+          { label: 'U', prop: 'textDecoration', onValue: 'underline', offValue: 'none', title: 'Underline', cssProp: 'text-decoration' },
+          { label: 'S', prop: 'textDecoration', onValue: 'line-through', offValue: 'none', title: 'Strikethrough', cssProp: 'text-decoration' },
+        ];
+
+        toggles.forEach(t => {
+          const btn = document.createElement('button');
+          btn.className = 'tune-text-toggle';
+          btn.textContent = t.label;
+          btn.title = t.title;
+          // Check if currently active
+          const current = cs[t.cssProp.replace(/-([a-z])/g, (_, c) => c.toUpperCase())];
+          if ((t.prop === 'fontWeight' && parseInt(current) >= 700) ||
+              (t.prop !== 'fontWeight' && current && current.includes(t.onValue))) {
+            btn.classList.add('active');
+          }
+          btn.addEventListener('click', () => {
+            const isActive = btn.classList.contains('active');
+            const newVal = isActive ? t.offValue : t.onValue;
+            if (!tuneOriginalStyles.hasOwnProperty(t.prop)) {
+              tuneOriginalStyles[t.prop] = tuneTarget.style[t.prop] || '';
+            }
+            const oldVal = tuneTarget.style[t.prop] || '';
+            tuneTarget.style[t.prop] = newVal;
+            btn.classList.toggle('active');
+            undoStack.push({ element: tuneTarget, prop: t.prop, oldValue: oldVal });
+            redoStack = [];
+          });
+          toggleRow.appendChild(btn);
+        });
+
+        // Text alignment
+        const alignRow = document.createElement('div');
+        alignRow.className = 'tune-row tune-text-toggles';
+        alignRow.style.marginTop = '6px';
+
+        const aligns = [
+          { label: '⫷', value: 'left', title: 'Align left' },
+          { label: '≡', value: 'center', title: 'Align center' },
+          { label: '⫸', value: 'right', title: 'Align right' },
+          { label: '⊞', value: 'justify', title: 'Justify' },
+        ];
+
+        const currentAlign = cs.textAlign;
+        aligns.forEach(a => {
+          const btn = document.createElement('button');
+          btn.className = 'tune-text-toggle';
+          btn.textContent = a.label;
+          btn.title = a.title;
+          if (currentAlign === a.value || (a.value === 'left' && currentAlign === 'start')) {
+            btn.classList.add('active');
+          }
+          btn.addEventListener('click', () => {
+            if (!tuneOriginalStyles.hasOwnProperty('textAlign')) {
+              tuneOriginalStyles['textAlign'] = tuneTarget.style.textAlign || '';
+            }
+            const oldVal = tuneTarget.style.textAlign || '';
+            tuneTarget.style.textAlign = a.value;
+            alignRow.querySelectorAll('.tune-text-toggle').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            undoStack.push({ element: tuneTarget, prop: 'textAlign', oldValue: oldVal });
+            redoStack = [];
+          });
+          alignRow.appendChild(btn);
+        });
+
+        // Text transform
+        const transformRow = document.createElement('div');
+        transformRow.className = 'tune-row tune-text-toggles';
+        transformRow.style.marginTop = '6px';
+
+        const transforms = [
+          { label: 'Aa', value: 'none', title: 'Normal' },
+          { label: 'AA', value: 'uppercase', title: 'Uppercase' },
+          { label: 'aa', value: 'lowercase', title: 'Lowercase' },
+          { label: 'Aa', value: 'capitalize', title: 'Capitalize' },
+        ];
+
+        const currentTransform = cs.textTransform;
+        transforms.forEach((t, i) => {
+          const btn = document.createElement('button');
+          btn.className = 'tune-text-toggle';
+          btn.textContent = t.label;
+          btn.title = t.title;
+          if (currentTransform === t.value || (t.value === 'none' && currentTransform === 'none')) {
+            btn.classList.add('active');
+          }
+          btn.addEventListener('click', () => {
+            if (!tuneOriginalStyles.hasOwnProperty('textTransform')) {
+              tuneOriginalStyles['textTransform'] = tuneTarget.style.textTransform || '';
+            }
+            const oldVal = tuneTarget.style.textTransform || '';
+            tuneTarget.style.textTransform = t.value;
+            transformRow.querySelectorAll('.tune-text-toggle').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            undoStack.push({ element: tuneTarget, prop: 'textTransform', oldValue: oldVal });
+            redoStack = [];
+          });
+          transformRow.appendChild(btn);
+        });
+
+        typographyPanel.appendChild(document.createElement('hr')); // visual separator
+        typographyPanel.appendChild(toggleRow);
+        typographyPanel.appendChild(alignRow);
+        typographyPanel.appendChild(transformRow);
+      }
+
+      tabPanels['Typography'] = typographyPanel;
+      panel.appendChild(typographyPanel);
+    }
 
     // Spacing tab
-    const spacingPanel = document.createElement('div');
-    spacingPanel.className = 'tune-controls';
-    spacingPanel.style.display = 'none';
-    spacingPanel.appendChild(createSpacingGroup('Padding', 'padding', cs));
-    spacingPanel.appendChild(createSpacingGroup('Margin', 'margin', cs));
-    tabPanels['Spacing'] = spacingPanel;
-    panel.appendChild(spacingPanel);
+    if (tabNames.includes('Spacing')) {
+      const spacingPanel = document.createElement('div');
+      spacingPanel.className = 'tune-controls';
+      spacingPanel.appendChild(createSpacingGroup('Padding', 'padding', cs));
+      spacingPanel.appendChild(createSpacingGroup('Margin', 'margin', cs));
+      tabPanels['Spacing'] = spacingPanel;
+      panel.appendChild(spacingPanel);
+    }
 
     // Colors tab
-    const colorsPanel = document.createElement('div');
-    colorsPanel.className = 'tune-controls';
-    colorsPanel.style.display = 'none';
-    const color = rgbToHex(cs.color);
-    const colorToken = resolveToken(el, 'color');
-    colorsPanel.appendChild(createColorPicker('Color', 'color', color, colorToken));
-    const bgColor = cs.backgroundColor === 'rgba(0, 0, 0, 0)' || cs.backgroundColor === 'transparent' ? '#ffffff' : rgbToHex(cs.backgroundColor);
-    const bgColorToken = resolveToken(el, 'background-color');
-    colorsPanel.appendChild(createColorPicker('Background', 'backgroundColor', bgColor, bgColorToken));
-    tabPanels['Colors'] = colorsPanel;
-    panel.appendChild(colorsPanel);
+    if (tabNames.includes('Colors')) {
+      const colorsPanel = document.createElement('div');
+      colorsPanel.className = 'tune-controls';
+      const color = rgbToHex(cs.color);
+      const colorToken = resolveToken(el, 'color');
+      colorsPanel.appendChild(createColorPicker('Color', 'color', color, colorToken));
+      const bgColor = cs.backgroundColor === 'rgba(0, 0, 0, 0)' || cs.backgroundColor === 'transparent' ? '#ffffff' : rgbToHex(cs.backgroundColor);
+      const bgColorToken = resolveToken(el, 'background-color');
+      colorsPanel.appendChild(createColorPicker('Background', 'backgroundColor', bgColor, bgColorToken));
+      tabPanels['Colors'] = colorsPanel;
+      panel.appendChild(colorsPanel);
+    }
 
     // Shadow tab
+    if (tabNames.includes('Shadow')) {
     const shadowPanel = document.createElement('div');
     shadowPanel.className = 'tune-controls';
-    shadowPanel.style.display = 'none';
 
     const shadowRamps = {
       'Tailwind': [
@@ -1055,19 +1213,26 @@
 
     tabPanels['Shadow'] = shadowPanel;
     panel.appendChild(shadowPanel);
+    } // end Shadow tab
 
     // Border tab
-    const borderPanel = document.createElement('div');
-    borderPanel.className = 'tune-controls';
-    borderPanel.style.display = 'none';
-    const borderRadius = parseFloat(cs.borderRadius) || 0;
-    const borderRadiusToken = resolveToken(el, 'border-radius');
-    borderPanel.appendChild(createNumberInput('Radius', 'borderRadius', borderRadius, 'px', 1, borderRadiusToken));
-    const borderWidth = parseFloat(cs.borderWidth) || 0;
-    const borderWidthToken = resolveToken(el, 'border-width');
-    borderPanel.appendChild(createNumberInput('Width', 'borderWidth', borderWidth, 'px', 1, borderWidthToken));
-    tabPanels['Border'] = borderPanel;
-    panel.appendChild(borderPanel);
+    if (tabNames.includes('Border')) {
+      const borderPanel = document.createElement('div');
+      borderPanel.className = 'tune-controls';
+      const borderRadius = parseFloat(cs.borderRadius) || 0;
+      const borderRadiusToken = resolveToken(el, 'border-radius');
+      borderPanel.appendChild(createNumberInput('Radius', 'borderRadius', borderRadius, 'px', 1, borderRadiusToken));
+      const borderWidth = parseFloat(cs.borderWidth) || 0;
+      const borderWidthToken = resolveToken(el, 'border-width');
+      borderPanel.appendChild(createNumberInput('Width', 'borderWidth', borderWidth, 'px', 1, borderWidthToken));
+      tabPanels['Border'] = borderPanel;
+      panel.appendChild(borderPanel);
+    } // end Border tab
+
+    // Set initial tab visibility: first tab visible, all others hidden
+    tabNames.forEach((name, i) => {
+      if (tabPanels[name]) tabPanels[name].style.display = i === 0 ? '' : 'none';
+    });
 
     // Global apply: mirror changes to all matching elements
     function findMatchingElements() {
@@ -1207,7 +1372,8 @@
     applyBar.appendChild(applyBtn);
     panel.appendChild(applyBar);
 
-    document.body.appendChild(panel);
+    document.body.appendChild(dkPanel);
+    positionPanelNextToToolbar(dkPanel);
   }
 
   // ===== TOKEN RESOLUTION =====
@@ -1587,7 +1753,7 @@
   document.addEventListener('click', (e) => {
     if (!tuneMode) return;
 
-    const ignore = e.target.closest('#dc-header, .indicator-bar, .tune-panel, .annotation-sidebar, .annotation-popover, .annotation-pin');
+    const ignore = e.target.closest('#dk-toolbar, .dk-panel, .annotation-sidebar, .annotation-popover, .annotation-pin');
     if (ignore) return;
 
     const root = document.getElementById('claude-content');
@@ -1628,8 +1794,8 @@
     const btn = document.getElementById('theme-toggle');
     if (btn) btn.classList.toggle('active', themeMode);
     if (themeMode) {
-      const existingTune = document.querySelector('.tune-panel');
-      if (existingTune) existingTune.remove();
+      // Close any open tune panel (goes through dk-panel wrapper)
+      closeTunePanel();
       openThemePanel();
     } else {
       closeThemePanel();
@@ -1639,28 +1805,61 @@
     if (themePanel) return;
     themePanel = createThemePanel();
     document.body.appendChild(themePanel);
+    positionPanelNextToToolbar(themePanel);
   }
   function closeThemePanel() {
     if (themePanel) { themePanel.remove(); themePanel = null; }
   }
 
   function createThemePanel() {
+    // Outer floating panel wrapper
+    const dkPanel = document.createElement('div');
+    dkPanel.className = 'dk-panel open';
+
+    // Draggable dk-panel header
+    const dkHeader = document.createElement('div');
+    dkHeader.className = 'dk-panel-header';
+    const dkIcon = document.createElement('span');
+    dkIcon.className = 'dk-panel-icon';
+    dkIcon.innerHTML = '<svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="5.5" stroke="currentColor" stroke-width="1.25" fill="none"/><path d="M8 2.5a5.5 5.5 0 0 0 0 11V2.5z" fill="currentColor"/></svg>';
+    const dkTitle = document.createElement('span');
+    dkTitle.className = 'dk-panel-title';
+    dkTitle.textContent = 'Theme';
+    const dkClose = document.createElement('button');
+    dkClose.className = 'dk-panel-close';
+    dkClose.textContent = '\u00d7';
+    dkClose.addEventListener('click', () => { setThemeMode(false); });
+    dkHeader.appendChild(dkIcon);
+    dkHeader.appendChild(dkTitle);
+    dkHeader.appendChild(dkClose);
+    dkPanel.appendChild(dkHeader);
+
+    // Panel drag
+    let pDrag = false, pSX, pSY, pSL, pST;
+    dkHeader.addEventListener('mousedown', (e) => {
+      if (e.target.closest('.dk-panel-close')) return;
+      pDrag = true; pSX = e.clientX; pSY = e.clientY;
+      pSL = dkPanel.offsetLeft; pST = dkPanel.offsetTop;
+      dkHeader.classList.add('dragging');
+      e.preventDefault();
+    });
+    document.addEventListener('mousemove', function onThemePanelMove(e) {
+      if (!pDrag) return;
+      dkPanel.style.left = (pSL + e.clientX - pSX) + 'px';
+      dkPanel.style.top = (pST + e.clientY - pSY) + 'px';
+    });
+    document.addEventListener('mouseup', function onThemePanelUp() {
+      if (pDrag) { pDrag = false; dkHeader.classList.remove('dragging'); }
+    });
+
+    // Inner panel with original theme controls
     const panel = document.createElement('div');
     panel.className = 'tune-panel theme-panel';
+    dkPanel.appendChild(panel);
 
-    // Fixed header (title + close + tabs)
+    // Fixed header (title + close + tabs) inside theme-panel
     const panelHeader = document.createElement('div');
     panelHeader.className = 'theme-panel-header';
-
-    const header = document.createElement('div');
-    header.className = 'tune-header';
-    header.innerHTML = '<span class="tune-tag">Theme Selector</span>';
-    const closeBtn = document.createElement('button');
-    closeBtn.className = 'tune-close';
-    closeBtn.textContent = '\u00d7';
-    closeBtn.addEventListener('click', () => { setThemeMode(false); });
-    header.appendChild(closeBtn);
-    panelHeader.appendChild(header);
 
     // Tab bar
     const tabBar = document.createElement('div');
@@ -1755,7 +1954,7 @@
       if (tabEl && tabEl._resetAction) tabEl._resetAction();
     };
 
-    return panel;
+    return dkPanel;
   }
 
   function buildSystemTab(panel) {
@@ -2282,87 +2481,148 @@
     };
   }
 
-  // Add toolbar and header buttons on load
+  // ===== FLOATING TOOLBAR =====
+  // Build and inject the floating toolbar on load
   document.addEventListener('DOMContentLoaded', () => {
-    const toolbar = document.getElementById('toolbar-group');
-    const headerRight = document.querySelector('.header > div:last-child');
 
-    // Toolbar buttons (center group)
-    if (toolbar) {
-      // Design tools
-      const designTools = [
-        { id: 'inspect-toggle', title: 'Inspect (Ctrl+I)', icon: '<path d="M13.5 2.5l-1-1-2 2-1-1-5 5 2 2 5-5-1-1z" stroke="currentColor" stroke-width="1.1" stroke-linejoin="round" fill="none"/><path d="M4.5 9.5l-2 4 4-2" stroke="currentColor" stroke-width="1.1" stroke-linejoin="round" fill="none"/>', action: () => { if (commentMode) setCommentMode(false); if (tuneMode) setTuneMode(false); setInspectMode(!inspectMode); } },
-        { id: 'tune-toggle', title: 'Tune (Ctrl+T)', icon: '<line x1="3" y1="4" x2="13" y2="4" stroke="currentColor" stroke-width="1.25" stroke-linecap="round"/><circle cx="9" cy="4" r="1.5" fill="currentColor"/><line x1="3" y1="8" x2="13" y2="8" stroke="currentColor" stroke-width="1.25" stroke-linecap="round"/><circle cx="5" cy="8" r="1.5" fill="currentColor"/><line x1="3" y1="12" x2="13" y2="12" stroke="currentColor" stroke-width="1.25" stroke-linecap="round"/><circle cx="10" cy="12" r="1.5" fill="currentColor"/>', action: () => { if (commentMode) setCommentMode(false); if (inspectMode) setInspectMode(false); setTuneMode(!tuneMode); } },
-        {
-          id: 'theme-toggle',
-          title: 'Theme (Ctrl+D)',
-          icon: '<circle cx="8" cy="8" r="5.5" stroke="currentColor" stroke-width="1.25" fill="none"/><path d="M8 2.5a5.5 5.5 0 0 0 0 11V2.5z" fill="currentColor"/>',
-          action: () => {
-            if (commentMode) setCommentMode(false);
-            if (inspectMode) setInspectMode(false);
-            if (tuneMode) setTuneMode(false);
-            setThemeMode(!themeMode);
-          }
+    // ----- Create floating toolbar -----
+    const dkToolbar = document.createElement('div');
+    dkToolbar.className = 'dk-toolbar';
+    dkToolbar.id = 'dk-toolbar';
+
+    // Brand mark — gradient pill
+    const brand = document.createElement('div');
+    brand.className = 'dk-brand';
+    brand.innerHTML = '<span class="dk-brand-pill">dkit</span>';
+    dkToolbar.appendChild(brand);
+
+    const mkDivider = () => { const d = document.createElement('div'); d.className = 'dk-divider'; return d; };
+
+    dkToolbar.appendChild(mkDivider());
+
+    // Tool definitions — mode-only tools do not open a panel
+    const toolDefs = [
+      {
+        id: 'comment-toggle',
+        title: 'Comment (\u2303C)',
+        icon: '<path d="M3.5 1.5h9c.55 0 1 .45 1 1v7c0 .55-.45 1-1 1H5.5L2.5 13.5V2.5c0-.55.45-1 1-1z" stroke="currentColor" stroke-width="1.25" fill="none"/>',
+        panel: false,
+        action: () => {
+          if (inspectMode) setInspectMode(false);
+          if (tuneMode) setTuneMode(false);
+          if (themeMode) setThemeMode(false);
+          setCommentMode(!commentMode);
         }
-      ];
-
-      designTools.forEach(t => {
-        if (document.getElementById(t.id)) return;
-        const btn = document.createElement('button');
-        btn.id = t.id;
-        btn.className = 'comment-toggle';
-        btn.title = t.title;
-        btn.innerHTML = '<svg class="comment-icon" viewBox="0 0 16 16" fill="none">' + t.icon + '</svg>';
-        btn.addEventListener('click', (e) => { e.stopPropagation(); t.action(); });
-        toolbar.appendChild(btn);
-      });
-
-      // Divider
-      const divider = document.createElement('div');
-      divider.className = 'toolbar-divider';
-      toolbar.appendChild(divider);
-
-      // Feedback tools: comment + sidebar
-      // Move comment button from header into toolbar
-      const existingComment = document.getElementById('comment-toggle');
-      if (existingComment) {
-        toolbar.appendChild(existingComment);
+      },
+      {
+        id: 'inspect-toggle',
+        title: 'Inspect (\u2303I)',
+        icon: '<path d="M13.5 2.5l-1-1-2 2-1-1-5 5 2 2 5-5-1-1z" stroke="currentColor" stroke-width="1.1" stroke-linejoin="round" fill="none"/><path d="M4.5 9.5l-2 4 4-2" stroke="currentColor" stroke-width="1.1" stroke-linejoin="round" fill="none"/>',
+        panel: false,
+        action: () => {
+          if (commentMode) setCommentMode(false);
+          if (tuneMode) setTuneMode(false);
+          if (themeMode) setThemeMode(false);
+          setInspectMode(!inspectMode);
+        }
+      },
+      {
+        id: 'tune-toggle',
+        title: 'Tune (\u2303T)',
+        icon: '<line x1="3" y1="4" x2="13" y2="4" stroke="currentColor" stroke-width="1.25" stroke-linecap="round"/><circle cx="9" cy="4" r="1.5" fill="currentColor"/><line x1="3" y1="8" x2="13" y2="8" stroke="currentColor" stroke-width="1.25" stroke-linecap="round"/><circle cx="5" cy="8" r="1.5" fill="currentColor"/><line x1="3" y1="12" x2="13" y2="12" stroke="currentColor" stroke-width="1.25" stroke-linecap="round"/><circle cx="10" cy="12" r="1.5" fill="currentColor"/>',
+        panel: true,
+        action: () => {
+          if (commentMode) setCommentMode(false);
+          if (inspectMode) setInspectMode(false);
+          setTuneMode(!tuneMode);
+        }
+      },
+      {
+        id: 'theme-toggle',
+        title: 'Theme (\u2303D)',
+        icon: '<circle cx="8" cy="8" r="5.5" stroke="currentColor" stroke-width="1.25" fill="none"/><path d="M8 2.5a5.5 5.5 0 0 0 0 11V2.5z" fill="currentColor"/>',
+        panel: true,
+        action: () => {
+          if (commentMode) setCommentMode(false);
+          if (inspectMode) setInspectMode(false);
+          if (tuneMode) setTuneMode(false);
+          setThemeMode(!themeMode);
+        }
       }
+    ];
 
-    }
+    toolDefs.forEach(t => {
+      const btn = document.createElement('button');
+      btn.id = t.id;
+      btn.className = 'dk-tool';
+      btn.title = t.title;
+      btn.innerHTML = '<svg viewBox="0 0 16 16" fill="none">' + t.icon + '</svg>';
+      btn.addEventListener('click', (e) => { e.stopPropagation(); t.action(); });
+      dkToolbar.appendChild(btn);
+    });
 
-    // Right side: changes panel + send button
-    if (headerRight) {
-      if (!document.getElementById('sidebar-toggle')) {
-        const btn = document.createElement('button');
-        btn.id = 'sidebar-toggle';
-        btn.className = 'comment-toggle';
-        btn.title = 'View changes (Ctrl+A)';
-        btn.innerHTML = '<svg class="comment-icon" viewBox="0 0 16 16" fill="none">' +
-          '<rect x="2.5" y="1.5" width="11" height="13" rx="1" stroke="currentColor" stroke-width="1.25" fill="none"/>' +
-          '<line x1="5" y1="5" x2="11" y2="5" stroke="currentColor" stroke-width="1"/>' +
-          '<line x1="5" y1="8" x2="11" y2="8" stroke="currentColor" stroke-width="1"/>' +
-          '<line x1="5" y1="11" x2="9" y2="11" stroke="currentColor" stroke-width="1"/>' +
-          '</svg>';
-        btn.addEventListener('click', (e) => { e.stopPropagation(); toggleSidebar(); });
-        headerRight.appendChild(btn);
-      }
+    dkToolbar.appendChild(mkDivider());
 
-      if (!document.getElementById('send-annotations')) {
-        const sendBtn = document.createElement('button');
-        sendBtn.id = 'send-annotations';
-        sendBtn.className = 'comment-toggle';
-        sendBtn.title = 'Send to Claude (⇧⌘↵)';
-        sendBtn.disabled = true;
-        sendBtn.style.opacity = '0.4';
-        sendBtn.innerHTML = '<span>Send</span> <svg class="comment-icon" viewBox="0 0 16 16" fill="none">' +
-          '<line x1="2" y1="8" x2="13" y2="8" stroke="currentColor" stroke-width="1.25" stroke-linecap="round"/>' +
-          '<polyline points="9,4 13,8 9,12" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" fill="none"/>' +
-          '</svg>';
-        sendBtn.addEventListener('click', (e) => { e.stopPropagation(); if (!sendBtn.disabled) sendAnnotations(); });
-        headerRight.appendChild(sendBtn);
-      }
-    }
+    // Changes / sidebar toggle (panel-opening)
+    const changesBtn = document.createElement('button');
+    changesBtn.id = 'sidebar-toggle';
+    changesBtn.className = 'dk-tool';
+    changesBtn.title = 'View changes (\u2303A)';
+    changesBtn.innerHTML =
+      '<svg viewBox="0 0 16 16" fill="none">' +
+      '<rect x="2.5" y="1.5" width="11" height="13" rx="1" stroke="currentColor" stroke-width="1.25" fill="none"/>' +
+      '<line x1="5" y1="5" x2="11" y2="5" stroke="currentColor" stroke-width="1"/>' +
+      '<line x1="5" y1="8" x2="11" y2="8" stroke="currentColor" stroke-width="1"/>' +
+      '<line x1="5" y1="11" x2="9" y2="11" stroke="currentColor" stroke-width="1"/>' +
+      '</svg>' +
+      '<span class="dk-badge" id="comment-count-badge"></span>';
+    changesBtn.addEventListener('click', (e) => { e.stopPropagation(); toggleSidebar(); });
+    dkToolbar.appendChild(changesBtn);
+
+    dkToolbar.appendChild(mkDivider());
+
+    // Send button
+    const sendBtn = document.createElement('button');
+    sendBtn.id = 'send-annotations';
+    sendBtn.className = 'dk-send';
+    sendBtn.title = 'Send to Claude (\u21e7\u2318\u23ce)';
+    sendBtn.innerHTML =
+      '<svg viewBox="0 0 16 16" fill="none">' +
+      '<line x1="2" y1="8" x2="13" y2="8" stroke="currentColor" stroke-width="1.25" stroke-linecap="round"/>' +
+      '<polyline points="9,4 13,8 9,12" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" fill="none"/>' +
+      '</svg>';
+    sendBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (sendBtn.classList.contains('ready')) sendAnnotations();
+    });
+    dkToolbar.appendChild(sendBtn);
+
+    document.body.appendChild(dkToolbar);
+
+    // ----- Toolbar drag -----
+    let tbDrag = false, tbSX, tbSY, tbSL, tbST;
+
+    dkToolbar.addEventListener('mousedown', (e) => {
+      if (e.target.closest('.dk-tool') || e.target.closest('.dk-send')) return;
+      tbDrag = true;
+      tbSX = e.clientX; tbSY = e.clientY;
+      tbSL = dkToolbar.offsetLeft; tbST = dkToolbar.offsetTop;
+      dkToolbar.classList.add('dragging');
+      e.preventDefault();
+    });
+
+    document.addEventListener('mousemove', (e) => {
+      if (!tbDrag) return;
+      dkToolbar.style.left = (tbSL + e.clientX - tbSX) + 'px';
+      dkToolbar.style.top = (tbST + e.clientY - tbSY) + 'px';
+      // Keep any open panel next to toolbar while dragging
+      const openPanel = document.querySelector('.dk-panel.open');
+      if (openPanel) positionPanelNextToToolbar(openPanel);
+    });
+
+    document.addEventListener('mouseup', () => {
+      if (tbDrag) { tbDrag = false; dkToolbar.classList.remove('dragging'); }
+    });
 
     updateBadge();
     renderSidebar();
@@ -2370,138 +2630,21 @@
 
     // Start with pins hidden
     document.body.classList.add('annotation-pins-hidden');
-
-    // ===== APP MENU =====
-    let openMenu = null;
-
-    function closeAllMenus() {
-      document.querySelectorAll('.menu-dropdown').forEach(d => d.classList.remove('open'));
-      openMenu = null;
-    }
-
-    function updateMenuState() {
-      const mc = document.getElementById('menu-comment');
-      const mi = document.getElementById('menu-inspect');
-      const mt = document.getElementById('menu-tune');
-      const mu = document.getElementById('menu-undo');
-      const mr = document.getElementById('menu-redo');
-      const ms = document.getElementById('menu-send');
-      const mtc = document.getElementById('menu-toggle-comments');
-      if (mc) mc.classList.toggle('active', commentMode);
-      if (mi) mi.classList.toggle('active', inspectMode);
-      if (mt) mt.classList.toggle('active', tuneMode);
-      if (mu) mu.classList.toggle('disabled', undoStack.length === 0);
-      if (mr) mr.classList.toggle('disabled', redoStack.length === 0);
-      if (ms) ms.classList.toggle('disabled', annotations.length === 0 && tuneChanges.length === 0);
-      if (mtc) mtc.classList.toggle('active', sidebarOpen);
-    }
-
-    document.querySelectorAll('.menu-item[data-menu]').forEach(item => {
-      item.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const menuId = 'menu-' + item.dataset.menu;
-        const dropdown = document.getElementById(menuId);
-        if (!dropdown) return;
-
-        if (openMenu === menuId) {
-          closeAllMenus();
-          return;
-        }
-        closeAllMenus();
-        updateMenuState();
-        dropdown.classList.add('open');
-        openMenu = menuId;
-      });
-
-      // Hover to switch between open menus
-      item.addEventListener('mouseenter', () => {
-        if (openMenu) {
-          const menuId = 'menu-' + item.dataset.menu;
-          const dropdown = document.getElementById(menuId);
-          if (dropdown && openMenu !== menuId) {
-            closeAllMenus();
-            updateMenuState();
-            dropdown.classList.add('open');
-            openMenu = menuId;
-          }
-        }
-      });
-    });
-
-    document.addEventListener('click', (e) => {
-      if (openMenu && !e.target.closest('.app-menu')) {
-        closeAllMenus();
-      }
-    });
-
-    document.querySelectorAll('.menu-dropdown-item').forEach(item => {
-      item.addEventListener('click', (e) => {
-        e.stopPropagation();
-        if (item.classList.contains('disabled')) return;
-
-        const action = item.dataset.action;
-        if (action === 'deselect-mode') {
-          setCommentMode(false);
-          setInspectMode(false);
-          setTuneMode(false);
-        } else if (action === 'comment-mode') {
-          if (inspectMode) setInspectMode(false);
-          if (tuneMode) setTuneMode(false);
-          setCommentMode(!commentMode);
-        } else if (action === 'inspect-mode') {
-          if (commentMode) setCommentMode(false);
-          if (tuneMode) setTuneMode(false);
-          setInspectMode(!inspectMode);
-        } else if (action === 'tune-mode') {
-          if (commentMode) setCommentMode(false);
-          if (inspectMode) setInspectMode(false);
-          setTuneMode(!tuneMode);
-        } else if (action === 'theme-mode') {
-          if (commentMode) setCommentMode(false);
-          if (inspectMode) setInspectMode(false);
-          if (tuneMode) setTuneMode(false);
-          setThemeMode(!themeMode);
-        } else if (action === 'send-comments') {
-          sendAnnotations();
-        } else if (action === 'toggle-comments') {
-          toggleSidebar();
-        } else if (action === 'undo') {
-          if (undoStack.length > 0) {
-            const act = undoStack.pop();
-            if (act.isToken) {
-              redoStack.push({ element: act.element, prop: act.prop, oldValue: act.element.style.getPropertyValue(act.prop) || '', isToken: true });
-              if (act.oldValue) {
-                act.element.style.setProperty(act.prop, act.oldValue);
-              } else {
-                act.element.style.removeProperty(act.prop);
-              }
-            } else {
-              redoStack.push({ element: act.element, prop: act.prop, oldValue: act.element.style[act.prop] || '' });
-              act.element.style[act.prop] = act.oldValue;
-            }
-            showToast('Undo: ' + act.prop);
-          }
-        } else if (action === 'redo') {
-          if (redoStack.length > 0) {
-            const act = redoStack.pop();
-            if (act.isToken) {
-              undoStack.push({ element: act.element, prop: act.prop, oldValue: act.element.style.getPropertyValue(act.prop) || '', isToken: true });
-              if (act.oldValue) {
-                act.element.style.setProperty(act.prop, act.oldValue);
-              } else {
-                act.element.style.removeProperty(act.prop);
-              }
-            } else {
-              undoStack.push({ element: act.element, prop: act.prop, oldValue: act.element.style[act.prop] || '' });
-              act.element.style[act.prop] = act.oldValue;
-            }
-            showToast('Redo: ' + act.prop);
-          }
-        }
-        closeAllMenus();
-      });
-    });
   });
+
+  // Position a floating panel next to the toolbar
+  function positionPanelNextToToolbar(panel) {
+    const dkToolbar = document.getElementById('dk-toolbar');
+    if (!dkToolbar) return;
+    const tr = dkToolbar.getBoundingClientRect();
+    const pw = 300;
+    if (tr.right + pw + 16 > window.innerWidth) {
+      panel.style.left = (tr.left - pw - 12) + 'px';
+    } else {
+      panel.style.left = (tr.right + 12) + 'px';
+    }
+    panel.style.top = tr.top + 'px';
+  }
 
   function connect() {
     ws = new WebSocket(WS_URL);
@@ -2540,7 +2683,7 @@
   document.addEventListener('click', (e) => {
     if (!commentMode) return;
 
-    const ignore = e.target.closest('#dc-header, .indicator-bar, .annotation-pin, .annotation-popover, .annotation-sidebar, #comment-toggle');
+    const ignore = e.target.closest('#dk-toolbar, .dk-panel, .annotation-pin, .annotation-popover, .annotation-sidebar');
     if (ignore) return;
 
     const root = document.getElementById('claude-content');

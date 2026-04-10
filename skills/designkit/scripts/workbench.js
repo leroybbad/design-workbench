@@ -173,19 +173,32 @@ window.DKWorkbench = (function () {
       const controls = document.createElement('div');
       controls.className = 'dk-el-controls';
 
-      // Drag handle (center)
-      const dragBtn = document.createElement('button');
-      dragBtn.className = 'dk-el-btn dk-el-drag';
-      dragBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="5" cy="4" r="1.2" fill="currentColor"/><circle cx="11" cy="4" r="1.2" fill="currentColor"/><circle cx="5" cy="8" r="1.2" fill="currentColor"/><circle cx="11" cy="8" r="1.2" fill="currentColor"/><circle cx="5" cy="12" r="1.2" fill="currentColor"/><circle cx="11" cy="12" r="1.2" fill="currentColor"/></svg>';
-      dragBtn.title = 'Drag to reorder';
-      dragBtn.setAttribute('draggable', 'true');
-      setupElementDrag(dragBtn, el);
-      controls.appendChild(dragBtn);
+      // Move up button
+      const upBtn = document.createElement('button');
+      upBtn.className = 'dk-el-btn dk-el-move';
+      upBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M8 3L3 9h10L8 3z" fill="currentColor"/></svg>';
+      upBtn.title = 'Move up';
+      upBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        moveElement(el, -1);
+      });
+      controls.appendChild(upBtn);
+
+      // Move down button
+      const downBtn = document.createElement('button');
+      downBtn.className = 'dk-el-btn dk-el-move';
+      downBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M8 13L3 7h10L8 13z" fill="currentColor"/></svg>';
+      downBtn.title = 'Move down';
+      downBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        moveElement(el, 1);
+      });
+      controls.appendChild(downBtn);
 
       // Remove button
       const delBtn = document.createElement('button');
       delBtn.className = 'dk-el-btn dk-el-remove';
-      delBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M4 5h8l-.5 8H4.5L4 5z" stroke="currentColor" stroke-width="1.2" fill="none"/><path d="M6 5V3.5a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 .5.5V5" stroke="currentColor" stroke-width="1.2" fill="none"/><line x1="3" y1="5" x2="13" y2="5" stroke="currentColor" stroke-width="1.2"/></svg>';
+      delBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M4 5h8l-.5 8H4.5L4 5z" stroke="currentColor" stroke-width="1.2" fill="none"/><path d="M6 5V3.5a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 .5.5V5" stroke="currentColor" stroke-width="1.2" fill="none"/><line x1="3" y1="5" x2="13" y2="5" stroke="currentColor" stroke-width="1.2"/></svg>';
       delBtn.title = 'Remove';
       delBtn.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -196,8 +209,6 @@ window.DKWorkbench = (function () {
       el.style.position = 'relative';
       el.appendChild(controls);
     });
-
-    setupCanvasDrop();
   }
 
   function hideElementControls() {
@@ -230,130 +241,46 @@ window.DKWorkbench = (function () {
     });
   }
 
-  function setupElementDrag(handle, el) {
-    // Make the element itself draggable (not just the handle button)
-    el.setAttribute('draggable', 'false');
+  function moveElement(el, direction) {
+    const parent = el.parentElement;
+    // Get real siblings (skip injected controls)
+    const siblings = Array.from(parent.children).filter(c => !c.classList.contains('dk-el-controls'));
+    const idx = siblings.indexOf(el);
+    if (idx < 0) return;
 
-    handle.addEventListener('mousedown', () => {
-      el.setAttribute('draggable', 'true');
-    });
-    handle.addEventListener('mouseup', () => {
-      el.setAttribute('draggable', 'false');
-    });
+    const newIdx = idx + direction;
+    if (newIdx < 0 || newIdx >= siblings.length) return;
 
-    el.addEventListener('dragstart', (e) => {
-      if (!el.getAttribute('draggable') || el.getAttribute('draggable') === 'false') {
-        e.preventDefault();
-        return;
-      }
-      e.stopPropagation();
-      e.dataTransfer.effectAllowed = 'move';
-      e.dataTransfer.setData('text/plain', ''); // Required for Firefox
-      window._dragElement = el;
-      window._dragParent = el.parentElement;
-      requestAnimationFrame(() => el.classList.add('dk-section-dragging'));
-    });
-
-    el.addEventListener('dragend', () => {
-      el.classList.remove('dk-section-dragging');
-      el.setAttribute('draggable', 'false');
-      document.querySelectorAll('.dk-drag-over').forEach(d => d.classList.remove('dk-drag-over'));
-      window._dragElement = null;
-      window._dragParent = null;
-    });
-  }
-
-  // Global drag-over / drop on the canvas — finds the nearest sibling to drop before
-  function setupCanvasDrop() {
-    const canvas = document.getElementById('claude-content');
-    if (!canvas || canvas._dkDropSetup) return;
-    canvas._dkDropSetup = true;
-
-    canvas.addEventListener('dragover', (e) => {
-      if (!window._dragElement) return;
-      e.preventDefault();
-      e.dataTransfer.dropEffect = 'move';
-
-      const dragged = window._dragElement;
-      const parent = window._dragParent;
-      if (!parent) return;
-
-      // Find the direct child of parent that we're hovering over
-      const siblings = Array.from(parent.children).filter(c =>
-        c !== dragged && !c.classList.contains('dk-el-controls')
-      );
-      document.querySelectorAll('.dk-drag-over').forEach(d => d.classList.remove('dk-drag-over'));
-
-      let closest = null;
-      let closestDist = Infinity;
-      for (const sib of siblings) {
-        const rect = sib.getBoundingClientRect();
-        const midY = rect.top + rect.height / 2;
-        const dist = Math.abs(e.clientY - midY);
-        if (dist < closestDist) {
-          closestDist = dist;
-          closest = sib;
-        }
-      }
-      if (closest) {
-        const rect = closest.getBoundingClientRect();
-        const midY = rect.top + rect.height / 2;
-        if (e.clientY < midY) {
-          closest.classList.add('dk-drag-over');
-        } else if (closest.nextElementSibling && closest.nextElementSibling !== dragged) {
-          closest.nextElementSibling.classList.add('dk-drag-over');
-        }
-      }
-    });
-
-    canvas.addEventListener('drop', (e) => {
-      e.preventDefault();
-      const dragged = window._dragElement;
-      const parent = window._dragParent;
-      if (!dragged || !parent) return;
-
-      document.querySelectorAll('.dk-drag-over').forEach(d => d.classList.remove('dk-drag-over'));
-
-      // Figure out where to insert based on mouse position
-      const siblings = Array.from(parent.children).filter(c =>
-        c !== dragged && !c.classList.contains('dk-el-controls')
-      );
-      let insertBefore = null;
-      for (const sib of siblings) {
-        const rect = sib.getBoundingClientRect();
-        if (e.clientY < rect.top + rect.height / 2) {
-          insertBefore = sib;
-          break;
-        }
-      }
-
-      const oldNext = dragged.nextElementSibling;
-      if (insertBefore) {
-        parent.insertBefore(dragged, insertBefore);
+    const oldNext = el.nextElementSibling;
+    if (direction < 0) {
+      parent.insertBefore(el, siblings[newIdx]);
+    } else {
+      const after = siblings[newIdx];
+      if (after.nextElementSibling) {
+        parent.insertBefore(el, after.nextElementSibling);
       } else {
-        parent.appendChild(dragged);
+        parent.appendChild(el);
       }
+    }
 
-      hideElementControls();
+    // Refresh controls so they stay on the right elements
+    hideElementControls();
+    showElementControls();
 
-      window.DKUndo.push({
-        type: 'reorder',
-        undo: () => {
-          if (oldNext && oldNext.parentElement === parent) {
-            parent.insertBefore(dragged, oldNext);
-          } else {
-            parent.appendChild(dragged);
-          }
-        },
-        redo: () => {
-          if (insertBefore && insertBefore.parentElement === parent) {
-            parent.insertBefore(dragged, insertBefore);
-          } else {
-            parent.appendChild(dragged);
-          }
-        },
-        description: 'Reorder element'
-      });
+    window.DKUndo.push({
+      type: 'reorder',
+      undo: () => {
+        if (oldNext && oldNext.parentElement === parent) {
+          parent.insertBefore(el, oldNext);
+        } else {
+          parent.appendChild(el);
+        }
+        hideElementControls();
+      },
+      redo: () => {
+        moveElement(el, direction);
+      },
+      description: 'Move element ' + (direction < 0 ? 'up' : 'down')
     });
   }
 

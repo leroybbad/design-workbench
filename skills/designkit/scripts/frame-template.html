@@ -1407,13 +1407,14 @@
     .dk-el-btn:hover {
       transform: scale(1.1);
     }
-    .dk-el-drag {
+    .dk-el-move {
       background: #2a2a2e;
       color: #ccc;
-      cursor: grab;
+      cursor: pointer;
     }
-    .dk-el-drag:active {
-      cursor: grabbing;
+    .dk-el-move:hover {
+      background: #3a3a3e;
+      color: #fff;
     }
     .dk-el-remove {
       background: #dc2626;
@@ -1421,14 +1422,6 @@
     }
     .dk-el-remove:hover {
       background: #ef4444;
-    }
-    [data-section].dk-section-dragging,
-    [data-block].dk-section-dragging {
-      opacity: 0.5;
-      outline: 2px dashed #6366f1 !important;
-    }
-    .dk-drag-over {
-      border-top: 3px solid #6366f1;
     }
 
     /* ===== TEMPLATE PICKER ===== */

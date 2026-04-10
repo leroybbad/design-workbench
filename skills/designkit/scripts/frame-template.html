@@ -206,11 +206,11 @@
     .annotation-popover {
       position: absolute;
       z-index: 1001;
-      background: var(--bg-secondary);
-      border: 1px solid var(--border);
+      background: #1a1a1e;
+      border: 1px solid #3a3a3e;
       border-radius: 10px;
       padding: 0.5rem;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.4);
       min-width: 220px;
       max-width: 320px;
       display: flex;
@@ -218,17 +218,17 @@
       gap: 0.4rem;
     }
     .annotation-popover input {
-      background: var(--bg-primary);
-      border: 1px solid var(--border);
+      background: #2a2a2e;
+      border: 1px solid #3a3a3e;
       border-radius: 6px;
       padding: 0.4rem 0.6rem;
       font-size: 0.85rem;
-      color: var(--text-primary);
+      color: #e5e5e7;
       outline: none;
       width: 100%;
       font-family: inherit;
     }
-    .annotation-popover input:focus { border-color: var(--annotation-new); }
+    .annotation-popover input:focus { border-color: #0a84ff; }
     .annotation-popover .popover-actions {
       display: flex;
       justify-content: space-between;
@@ -236,19 +236,19 @@
     }
     .annotation-popover .popover-hint {
       font-size: 0.65rem;
-      color: var(--text-tertiary);
+      color: #636366;
     }
     .annotation-popover .popover-delete {
       background: none;
       border: none;
-      color: var(--error);
+      color: #ff453a;
       font-size: 0.7rem;
       cursor: pointer;
       padding: 0.15rem 0.3rem;
       border-radius: 4px;
       font-family: inherit;
     }
-    .annotation-popover .popover-delete:hover { background: var(--bg-tertiary); }
+    .annotation-popover .popover-delete:hover { background: #2a2a2e; }
 
     /* ===== ANNOTATION SIDEBAR ===== */
     .annotation-sidebar {

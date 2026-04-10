@@ -91,8 +91,7 @@
     }
     .dk-toolbar.dragging { cursor: grabbing; }
     .dk-toolbar.dragging .dk-tool,
-    .dk-toolbar.dragging .dk-send,
-    .dk-toolbar.dragging .dk-snapshot-nav { pointer-events: none; }
+    .dk-toolbar.dragging .dk-send { pointer-events: none; }
 
     .dk-brand {
       display: flex;
@@ -1185,33 +1184,46 @@
     .mock-button { background: var(--accent); color: white; border: none; padding: 0.5rem 1rem; border-radius: 6px; font-size: 0.85rem; }
     .mock-input { background: var(--bg-primary); border: 1px solid var(--border); border-radius: 6px; padding: 0.5rem; width: 100%; }
 
-    /* ===== SNAPSHOT INDICATOR ===== */
-    .dk-snapshot-indicator {
+    /* ===== SNAPSHOTS PANEL ===== */
+    .dk-snapshots-panel {
+      width: 280px;
+    }
+    .dk-snap-info {
+      background: rgba(99,102,241,0.08);
+      border: 1px solid rgba(99,102,241,0.15);
+      border-radius: 8px;
+      padding: 10px 12px;
+      margin-bottom: 12px;
+      font-size: 12px;
+      color: #d0d0d0;
+      line-height: 1.5;
+    }
+    .dk-snap-status {
+      font-size: 18px;
+      font-weight: 600;
+      color: #e0e0e0;
+      text-align: center;
+      padding: 8px 0 12px;
+    }
+    .dk-snap-nav {
       display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 2px;
-      padding: 2px 0;
-      font-size: 9px;
-      color: #888;
-      font-variant-numeric: tabular-nums;
-      max-width: 100%;
+      gap: 8px;
     }
-    .dk-snapshot-nav {
-      background: none;
-      border: none;
-      color: #666;
+    .dk-snap-btn {
+      flex: 1;
+      padding: 8px 12px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 6px;
+      color: #ccc;
+      font-size: 12px;
       cursor: pointer;
-      padding: 1px 2px;
-      font-size: 9px;
-      border-radius: 3px;
-      line-height: 1;
+      transition: background 0.15s;
     }
-    .dk-snapshot-nav:hover:not(:disabled) {
-      background: rgba(255,255,255,0.08);
-      color: #aaa;
+    .dk-snap-btn:hover:not(:disabled) {
+      background: rgba(255,255,255,0.12);
     }
-    .dk-snapshot-nav:disabled {
+    .dk-snap-btn:disabled {
       opacity: 0.3;
       cursor: default;
     }
@@ -1333,9 +1345,8 @@
       transition: outline 0.15s;
     }
 
-    /* ===== SLOT & SECTION HINTS ===== */
-    [data-slot]:empty,
-    [data-slot]:not(:has(*:not(.dk-el-controls))) {
+    /* ===== SLOT HINTS (empty slots only) ===== */
+    [data-slot].dk-slot-empty {
       min-height: 60px;
       border: 2px dashed rgba(99,102,241,0.25);
       border-radius: 8px;
@@ -1348,9 +1359,8 @@
       );
       position: relative;
     }
-    [data-slot]:empty::after,
-    [data-slot]:not(:has(*:not(.dk-el-controls)))::after {
-      content: 'Drop blocks here (' attr(data-slot) ')';
+    [data-slot].dk-slot-empty::after {
+      content: 'Drop blocks here';
       position: absolute;
       top: 50%;
       left: 50%;
@@ -1359,9 +1369,6 @@
       color: rgba(99,102,241,0.45);
       pointer-events: none;
       white-space: nowrap;
-    }
-    body.dk-controls-visible [data-section] {
-      min-height: 40px;
     }
 
     /* ===== ELEMENT CONTROLS (Alt-hold overlay) ===== */

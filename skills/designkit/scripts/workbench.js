@@ -420,13 +420,28 @@ window.DKWorkbench = (function () {
     document.body.appendChild(overlay);
   }
 
+  // ===== SLOT EMPTY HINTS =====
+
+  function updateSlotHints() {
+    document.querySelectorAll('[data-slot]').forEach(slot => {
+      const hasContent = Array.from(slot.children).some(c => !c.classList.contains('dk-el-controls'));
+      slot.classList.toggle('dk-slot-empty', !hasContent);
+    });
+  }
+
   // ===== INIT =====
 
   function init() {
     injectSectionControls();
+    updateSlotHints();
+
+    // Watch for DOM changes to update slot hints
+    const canvas = document.getElementById('claude-content');
+    if (canvas) {
+      new MutationObserver(updateSlotHints).observe(canvas, { childList: true, subtree: true });
+    }
 
     // Check if this is a fresh session (no content on canvas)
-    const canvas = document.getElementById('claude-content');
     const hasContent = canvas && canvas.querySelector('[data-section]');
     if (!hasContent) {
       showTemplatePicker();

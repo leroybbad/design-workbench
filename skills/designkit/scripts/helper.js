@@ -249,13 +249,113 @@
     showToast('Saved');
   }
 
+  let snapshotPointer = { current: 0, total: 0 };
+
   function updateSnapshotIndicator(pointer) {
+    snapshotPointer = pointer;
+    // Update panel if open
     const label = document.getElementById('snap-label');
     if (label) label.textContent = pointer.current + ' / ' + pointer.total;
     const prev = document.getElementById('snap-prev');
     const next = document.getElementById('snap-next');
     if (prev) prev.disabled = pointer.current <= 1;
     if (next) next.disabled = pointer.current >= pointer.total;
+    // Update toolbar badge
+    const badge = document.getElementById('snapshots-toggle');
+    if (badge && pointer.total > 0) {
+      badge.classList.add('has-data');
+    }
+  }
+
+  function toggleSnapshotsPanel() {
+    let panel = document.getElementById('dk-snapshots-panel');
+    if (panel) {
+      const visible = panel.style.display !== 'none';
+      panel.style.display = visible ? 'none' : 'flex';
+      panel.classList.toggle('open', !visible);
+      if (!visible) renderSnapshotsPanel(panel);
+      return;
+    }
+
+    panel = document.createElement('div');
+    panel.id = 'dk-snapshots-panel';
+    panel.className = 'dk-panel dk-snapshots-panel open';
+    panel.style.display = 'flex';
+
+    const header = document.createElement('div');
+    header.className = 'dk-panel-header';
+    header.innerHTML = '<span class="dk-panel-title">Snapshots</span>';
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'dk-panel-close';
+    closeBtn.textContent = '\u00d7';
+    closeBtn.addEventListener('click', () => {
+      panel.style.display = 'none';
+      panel.classList.remove('open');
+    });
+    header.appendChild(closeBtn);
+    panel.appendChild(header);
+
+    const body = document.createElement('div');
+    body.className = 'dk-snapshots-body';
+    body.style.padding = '12px';
+    body.style.overflowY = 'auto';
+    body.style.flex = '1';
+    body.style.minHeight = '0';
+    panel.appendChild(body);
+
+    document.body.appendChild(panel);
+    positionPanelNextToToolbar(panel);
+    renderSnapshotsPanel(panel);
+  }
+
+  function renderSnapshotsPanel(panel) {
+    const body = panel.querySelector('.dk-snapshots-body');
+    if (!body) return;
+    const p = snapshotPointer;
+
+    body.innerHTML = '';
+
+    // Info box
+    const info = document.createElement('div');
+    info.className = 'dk-snap-info';
+    info.innerHTML = '<strong>Claude builds from the latest snapshot.</strong><br>'
+      + '<span style="color:#999;font-size:11px;">When you save (\u2318S), the canvas HTML is written to disk. '
+      + 'Claude reads this file to make surgical edits — it patches your layout, not rebuild from scratch.</span>';
+    body.appendChild(info);
+
+    // Current position
+    const status = document.createElement('div');
+    status.className = 'dk-snap-status';
+    if (p.total === 0) {
+      status.innerHTML = '<span style="color:#888;">No snapshots yet. Press \u2318S to save.</span>';
+    } else {
+      status.innerHTML = '<span id="snap-label" style="font-variant-numeric:tabular-nums;">' + p.current + ' / ' + p.total + '</span>';
+    }
+    body.appendChild(status);
+
+    // Nav buttons
+    if (p.total > 0) {
+      const nav = document.createElement('div');
+      nav.className = 'dk-snap-nav';
+
+      const prevBtn = document.createElement('button');
+      prevBtn.id = 'snap-prev';
+      prevBtn.className = 'dk-snap-btn';
+      prevBtn.textContent = '\u25C0 Previous';
+      prevBtn.disabled = p.current <= 1;
+      prevBtn.addEventListener('click', () => sendEvent({ type: 'snapshot-undo' }));
+
+      const nextBtn = document.createElement('button');
+      nextBtn.id = 'snap-next';
+      nextBtn.className = 'dk-snap-btn';
+      nextBtn.textContent = 'Next \u25B6';
+      nextBtn.disabled = p.current >= p.total;
+      nextBtn.addEventListener('click', () => sendEvent({ type: 'snapshot-redo' }));
+
+      nav.appendChild(prevBtn);
+      nav.appendChild(nextBtn);
+      body.appendChild(nav);
+    }
   }
 
   function setTuneMode(active) {
@@ -2686,6 +2786,23 @@
     changesBtn.addEventListener('click', (e) => { e.stopPropagation(); toggleSidebar(); });
     dkToolbar.appendChild(changesBtn);
 
+    // Snapshots button
+    const snapshotsBtn = document.createElement('button');
+    snapshotsBtn.id = 'snapshots-toggle';
+    snapshotsBtn.className = 'dk-tool';
+    snapshotsBtn.title = 'Snapshots';
+    snapshotsBtn.innerHTML =
+      '<svg viewBox="0 0 16 16" fill="none">' +
+      '<circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.25" fill="none"/>' +
+      '<line x1="8" y1="4" x2="8" y2="8" stroke="currentColor" stroke-width="1.25" stroke-linecap="round"/>' +
+      '<line x1="8" y1="8" x2="11" y2="10" stroke="currentColor" stroke-width="1.25" stroke-linecap="round"/>' +
+      '</svg>';
+    snapshotsBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleSnapshotsPanel();
+    });
+    dkToolbar.appendChild(snapshotsBtn);
+
     dkToolbar.appendChild(mkDivider());
 
     // Save button (replaces Send)
@@ -2722,30 +2839,13 @@
     });
     dkToolbar.appendChild(sendBtn);
 
-    // Snapshot indicator
-    const snapIndicator = document.createElement('div');
-    snapIndicator.id = 'snapshot-indicator';
-    snapIndicator.className = 'dk-snapshot-indicator';
-    snapIndicator.innerHTML = '<button class="dk-snapshot-nav" id="snap-prev" title="Previous save point" disabled>\u25C0</button>'
-      + '<span id="snap-label">\u2014</span>'
-      + '<button class="dk-snapshot-nav" id="snap-next" title="Next save point" disabled>\u25B6</button>';
-    dkToolbar.appendChild(snapIndicator);
-
     document.body.appendChild(dkToolbar);
-
-    // Wire snapshot nav after toolbar is in the DOM
-    document.getElementById('snap-prev').addEventListener('click', () => {
-      sendEvent({ type: 'snapshot-undo' });
-    });
-    document.getElementById('snap-next').addEventListener('click', () => {
-      sendEvent({ type: 'snapshot-redo' });
-    });
 
     // ----- Toolbar drag -----
     let tbDrag = false, tbSX, tbSY, tbSL, tbST;
 
     dkToolbar.addEventListener('mousedown', (e) => {
-      if (e.target.closest('.dk-tool') || e.target.closest('.dk-send') || e.target.closest('.dk-snapshot-nav')) return;
+      if (e.target.closest('.dk-tool') || e.target.closest('.dk-send')) return;
       tbDrag = true;
       tbSX = e.clientX; tbSY = e.clientY;
       tbSL = dkToolbar.offsetLeft; tbST = dkToolbar.offsetTop;

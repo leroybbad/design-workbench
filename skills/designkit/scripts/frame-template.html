@@ -90,7 +90,9 @@
       cursor: grab;
     }
     .dk-toolbar.dragging { cursor: grabbing; }
-    .dk-toolbar.dragging .dk-tool { pointer-events: none; }
+    .dk-toolbar.dragging .dk-tool,
+    .dk-toolbar.dragging .dk-send,
+    .dk-toolbar.dragging .dk-snapshot-nav { pointer-events: none; }
 
     .dk-brand {
       display: flex;

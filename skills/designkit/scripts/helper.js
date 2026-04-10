@@ -212,6 +212,9 @@
 
     const body = document.createElement('div');
     body.style.padding = '12px';
+    body.style.overflowY = 'auto';
+    body.style.flex = '1';
+    body.style.minHeight = '0';
     panel.appendChild(body);
 
     document.body.appendChild(panel);
@@ -2742,7 +2745,7 @@
     let tbDrag = false, tbSX, tbSY, tbSL, tbST;
 
     dkToolbar.addEventListener('mousedown', (e) => {
-      if (e.target.closest('.dk-tool') || e.target.closest('.dk-send')) return;
+      if (e.target.closest('.dk-tool') || e.target.closest('.dk-send') || e.target.closest('.dk-snapshot-nav')) return;
       tbDrag = true;
       tbSX = e.clientX; tbSY = e.clientY;
       tbSL = dkToolbar.offsetLeft; tbST = dkToolbar.offsetTop;

@@ -2866,6 +2866,37 @@
       if (tbDrag) { tbDrag = false; dkToolbar.classList.remove('dragging'); }
     });
 
+    // ----- Panel drag (any .dk-panel-header) -----
+    let pnDrag = false, pnPanel = null, pnSX, pnSY, pnSL, pnST;
+
+    document.addEventListener('mousedown', (e) => {
+      const header = e.target.closest('.dk-panel-header');
+      if (!header) return;
+      if (e.target.closest('.dk-panel-close')) return;
+      pnPanel = header.closest('.dk-panel');
+      if (!pnPanel) return;
+      pnDrag = true;
+      pnSX = e.clientX; pnSY = e.clientY;
+      pnSL = pnPanel.offsetLeft; pnST = pnPanel.offsetTop;
+      header.classList.add('dragging');
+      e.preventDefault();
+    });
+
+    document.addEventListener('mousemove', (e) => {
+      if (!pnDrag || !pnPanel) return;
+      pnPanel.style.left = (pnSL + e.clientX - pnSX) + 'px';
+      pnPanel.style.top = (pnST + e.clientY - pnSY) + 'px';
+    });
+
+    document.addEventListener('mouseup', () => {
+      if (pnDrag && pnPanel) {
+        const header = pnPanel.querySelector('.dk-panel-header');
+        if (header) header.classList.remove('dragging');
+        pnDrag = false;
+        pnPanel = null;
+      }
+    });
+
     updateBadge();
     renderSidebar();
     applyStoredTheme();

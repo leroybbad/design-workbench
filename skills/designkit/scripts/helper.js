@@ -224,6 +224,8 @@
       window.DKCatalog.load().then(() => {
         window.DKCatalog.renderPanel(body, (block) => {
           enterPlacementMode(block);
+        }, () => {
+          exitPlacementMode();
         });
       });
     }

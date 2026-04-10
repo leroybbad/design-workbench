@@ -4,6 +4,7 @@ window.DKCatalog = (function () {
   let blocks = [];
   let selectedBlock = null;
   let onSelect = null;
+  let onDeselect = null;
 
   async function load() {
     try {
@@ -49,8 +50,9 @@ window.DKCatalog = (function () {
     return d.innerHTML;
   }
 
-  function renderPanel(container, selectCallback) {
+  function renderPanel(container, selectCallback, deselectCallback) {
     onSelect = selectCallback;
+    onDeselect = deselectCallback || null;
     container.innerHTML = '';
 
     // Search input
@@ -97,10 +99,17 @@ window.DKCatalog = (function () {
         item.innerHTML = '<div class="dk-block-item-name">' + escapeHtml(block.name) + '</div>'
           + (block.description ? '<div class="dk-block-item-desc">' + escapeHtml(block.description) + '</div>' : '');
         item.addEventListener('click', () => {
-          selectedBlock = block;
-          container.querySelectorAll('.dk-block-item').forEach(el => el.classList.remove('selected'));
-          item.classList.add('selected');
-          if (onSelect) onSelect(block);
+          if (selectedBlock && selectedBlock.file === block.file) {
+            // Toggle off — deselect
+            selectedBlock = null;
+            item.classList.remove('selected');
+            if (onDeselect) onDeselect();
+          } else {
+            selectedBlock = block;
+            container.querySelectorAll('.dk-block-item').forEach(el => el.classList.remove('selected'));
+            item.classList.add('selected');
+            if (onSelect) onSelect(block);
+          }
         });
         list.appendChild(item);
       });

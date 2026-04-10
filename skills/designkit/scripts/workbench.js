@@ -104,8 +104,9 @@ window.DKWorkbench = (function () {
       insertIntoSlot(content, placementTarget.container);
     }
 
-    exitPlacementMode();
-    if (window.DKCatalog) window.DKCatalog.clearSelection();
+    // Stay in placement mode — user can keep clicking to place more
+    // Clear the target so the next hover recalculates
+    placementTarget = null;
   }
 
   function insertSection(html, afterSection) {

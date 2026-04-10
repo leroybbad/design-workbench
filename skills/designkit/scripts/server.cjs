@@ -273,7 +273,13 @@ function handleRequest(req, res) {
         ? extractContent(fs.readFileSync(screenFile, 'utf-8'))
         : null;
 
-    let html = content ? wrapInFrame(content) : WAITING_PAGE;
+    if (!content) {
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+      res.end(WAITING_PAGE);
+      return;
+    }
+
+    let html = wrapInFrame(content);
 
     const allScripts = getThemeDataInjection() + '\n' + getWorkbenchScripts() + '\n' + getHelperInjection();
     if (html.includes('</body>')) {

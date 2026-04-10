@@ -291,21 +291,18 @@ window.DKWorkbench = (function () {
     }
   }
 
-  // Alt key listeners
+  // Alt key toggle — press Alt to show controls, press again or Escape to hide
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Alt' && !e.repeat) {
       e.preventDefault();
-      showElementControls();
+      if (controlsVisible) {
+        hideElementControls();
+      } else {
+        showElementControls();
+      }
     }
-  });
-  document.addEventListener('keyup', (e) => {
-    if (e.key === 'Alt') {
-      // Delay hide slightly so click on button can register
-      setTimeout(() => {
-        if (!document.querySelector('.dk-el-btn:hover')) {
-          hideElementControls();
-        }
-      }, 150);
+    if (e.key === 'Escape' && controlsVisible) {
+      hideElementControls();
     }
   });
 

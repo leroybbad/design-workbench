@@ -16,8 +16,7 @@
   let tuneOriginalStyles = {};
   let tuneChanges = [];
   let tuneStyleObserver = null;
-  let undoStack = []; // {element, prop, oldValue}
-  let redoStack = [];
+  let blocksMode = false;
   let themeMode = false;
   let themePanel = null;
   const THEME_KEY = 'theme-state-' + window.location.port;
@@ -145,6 +144,117 @@
     }
   }
 
+  // Bridge: push Tune-style undo entries into the unified DKUndo stack
+  function pushTuneUndo(entry) {
+    if (!window.DKUndo) return;
+    const el = entry.element;
+    const prop = entry.prop;
+    const oldVal = entry.oldValue;
+    const isToken = !!entry.isToken;
+    window.DKUndo.push({
+      type: 'tune',
+      undo: () => {
+        const curVal = isToken ? el.style.getPropertyValue(prop) || '' : el.style[prop] || '';
+        entry._redoValue = curVal;
+        if (isToken) {
+          if (oldVal) el.style.setProperty(prop, oldVal); else el.style.removeProperty(prop);
+        } else {
+          el.style[prop] = oldVal;
+        }
+      },
+      redo: () => {
+        const reVal = entry._redoValue || '';
+        if (isToken) {
+          if (reVal) el.style.setProperty(prop, reVal); else el.style.removeProperty(prop);
+        } else {
+          el.style[prop] = reVal;
+        }
+      },
+      description: 'Tune: ' + prop
+    });
+  }
+
+  function setBlocksMode(active) {
+    if (active) {
+      setCommentMode(false);
+      setInspectMode(false);
+      setTuneMode(false);
+      setThemeMode(false);
+    }
+    blocksMode = active;
+    document.body.classList.toggle('blocks-mode', active);
+    const btn = document.getElementById('blocks-toggle');
+    if (btn) btn.classList.toggle('active', active);
+    if (active) {
+      openBlocksPanel();
+    } else {
+      closeBlocksPanel();
+    }
+  }
+
+  function openBlocksPanel() {
+    let panel = document.getElementById('dk-blocks-panel');
+    if (panel) { panel.style.display = 'block'; panel.classList.add('open'); return; }
+
+    panel = document.createElement('div');
+    panel.id = 'dk-blocks-panel';
+    panel.className = 'dk-panel dk-blocks-panel open';
+
+    const header = document.createElement('div');
+    header.className = 'dk-panel-header';
+    header.innerHTML = '<span class="dk-panel-title">Blocks</span>';
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'dk-panel-close';
+    closeBtn.textContent = '\u00d7';
+    closeBtn.addEventListener('click', () => setBlocksMode(false));
+    header.appendChild(closeBtn);
+    panel.appendChild(header);
+
+    const body = document.createElement('div');
+    body.style.padding = '12px';
+    panel.appendChild(body);
+
+    document.body.appendChild(panel);
+    positionPanelNextToToolbar(panel);
+
+    if (window.DKCatalog) {
+      window.DKCatalog.load().then(() => {
+        window.DKCatalog.renderPanel(body, (block) => {
+          enterPlacementMode(block);
+        });
+      });
+    }
+  }
+
+  function closeBlocksPanel() {
+    const panel = document.getElementById('dk-blocks-panel');
+    if (panel) { panel.style.display = 'none'; panel.classList.remove('open'); }
+    if (typeof exitPlacementMode === 'function') exitPlacementMode();
+  }
+
+  // ===== SAVE & SNAPSHOT =====
+  function saveCanvas() {
+    const canvas = document.getElementById('claude-content');
+    if (!canvas) return;
+    const clone = canvas.cloneNode(true);
+    clone.querySelectorAll('.dk-section-controls, .dk-placement-indicator, .dk-slot-highlight, .dk-placement-line').forEach(el => el.remove());
+    clone.querySelectorAll('[data-section]').forEach(s => {
+      s.classList.remove('dk-section-hover', 'dk-section-selected', 'dk-section-dragging', 'dk-drag-over');
+    });
+    const html = clone.innerHTML;
+    sendEvent({ type: 'save', html: html });
+    showToast('Saved');
+  }
+
+  function updateSnapshotIndicator(pointer) {
+    const label = document.getElementById('snap-label');
+    if (label) label.textContent = pointer.current + ' / ' + pointer.total;
+    const prev = document.getElementById('snap-prev');
+    const next = document.getElementById('snap-next');
+    if (prev) prev.disabled = pointer.current <= 1;
+    if (next) next.disabled = pointer.current >= pointer.total;
+  }
+
   function setTuneMode(active) {
     tuneMode = active;
     document.body.classList.toggle('tune-mode', active);
@@ -188,12 +298,13 @@
       if (sidebarOpen) {
         e.preventDefault();
         toggleSidebar(false);
-      } else if (commentMode || inspectMode || tuneMode || themeMode) {
+      } else if (commentMode || inspectMode || tuneMode || themeMode || blocksMode) {
         e.preventDefault();
         setCommentMode(false);
         setInspectMode(false);
         setTuneMode(false);
         setThemeMode(false);
+        setBlocksMode(false);
       }
     }
     if (e.ctrlKey && e.key === 'a' && !e.metaKey && !e.shiftKey) {
@@ -205,40 +316,24 @@
       sendAnnotations();
     }
     if ((e.metaKey || e.ctrlKey) && e.key === 'z' && !e.shiftKey) {
-      if (undoStack.length > 0) {
-        e.preventDefault();
-        const action = undoStack.pop();
-        if (action.isToken) {
-          redoStack.push({ element: action.element, prop: action.prop, oldValue: action.element.style.getPropertyValue(action.prop) || '', isToken: true });
-          if (action.oldValue) {
-            action.element.style.setProperty(action.prop, action.oldValue);
-          } else {
-            action.element.style.removeProperty(action.prop);
-          }
-        } else {
-          redoStack.push({ element: action.element, prop: action.prop, oldValue: action.element.style[action.prop] || '' });
-          action.element.style[action.prop] = action.oldValue;
-        }
-        showToast('Undo: ' + action.prop);
+      e.preventDefault();
+      if (window.DKUndo && window.DKUndo.undo()) {
+        showToast('Undo');
       }
     }
     if ((e.metaKey || e.ctrlKey) && e.key === 'z' && e.shiftKey) {
-      if (redoStack.length > 0) {
-        e.preventDefault();
-        const action = redoStack.pop();
-        if (action.isToken) {
-          undoStack.push({ element: action.element, prop: action.prop, oldValue: action.element.style.getPropertyValue(action.prop) || '', isToken: true });
-          if (action.oldValue) {
-            action.element.style.setProperty(action.prop, action.oldValue);
-          } else {
-            action.element.style.removeProperty(action.prop);
-          }
-        } else {
-          undoStack.push({ element: action.element, prop: action.prop, oldValue: action.element.style[action.prop] || '' });
-          action.element.style[action.prop] = action.oldValue;
-        }
-        showToast('Redo: ' + action.prop);
+      e.preventDefault();
+      if (window.DKUndo && window.DKUndo.redo()) {
+        showToast('Redo');
       }
+    }
+    if ((e.metaKey || e.ctrlKey) && e.key === 's') {
+      e.preventDefault();
+      saveCanvas();
+    }
+    if (e.ctrlKey && e.key === 'b') {
+      e.preventDefault();
+      setBlocksMode(!blocksMode);
     }
   });
 
@@ -917,7 +1012,7 @@
             const oldVal = tuneTarget.style[t.prop] || '';
             tuneTarget.style[t.prop] = newVal;
             btn.classList.toggle('active');
-            undoStack.push({ element: tuneTarget, prop: t.prop, oldValue: oldVal });
+            pushTuneUndo({ element: tuneTarget, prop: t.prop, oldValue: oldVal });
             redoStack = [];
           });
           toggleRow.appendChild(btn);
@@ -952,7 +1047,7 @@
             tuneTarget.style.textAlign = a.value;
             alignRow.querySelectorAll('.tune-text-toggle').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
-            undoStack.push({ element: tuneTarget, prop: 'textAlign', oldValue: oldVal });
+            pushTuneUndo({ element: tuneTarget, prop: 'textAlign', oldValue: oldVal });
             redoStack = [];
           });
           alignRow.appendChild(btn);
@@ -987,7 +1082,7 @@
             tuneTarget.style.textTransform = t.value;
             transformRow.querySelectorAll('.tune-text-toggle').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
-            undoStack.push({ element: tuneTarget, prop: 'textTransform', oldValue: oldVal });
+            pushTuneUndo({ element: tuneTarget, prop: 'textTransform', oldValue: oldVal });
             redoStack = [];
           });
           transformRow.appendChild(btn);
@@ -1200,7 +1295,7 @@
           const shadowVal = preset.adapted === 'none' ? 'none' : preset.adapted;
           tuneTarget.style.boxShadow = shadowVal;
           applyToMatching('boxShadow', shadowVal);
-          undoStack.push({ element: tuneTarget, prop: 'boxShadow', oldValue: oldVal });
+          pushTuneUndo({ element: tuneTarget, prop: 'boxShadow', oldValue: oldVal });
           redoStack = [];
           presetGrid.querySelectorAll('.shadow-swatch').forEach(s => s.classList.remove('active'));
           swatch.classList.add('active');
@@ -1456,9 +1551,9 @@
       applyValue(parseFloat(input.value) || 0);
       // Push to undo
       if (tokenInfo) {
-        undoStack.push({ element: document.documentElement, prop: tokenInfo.token, oldValue: beforeEdit, isToken: true });
+        pushTuneUndo({ element: document.documentElement, prop: tokenInfo.token, oldValue: beforeEdit, isToken: true });
       } else {
-        undoStack.push({ element: tuneTarget, prop: prop, oldValue: beforeEdit });
+        pushTuneUndo({ element: tuneTarget, prop: prop, oldValue: beforeEdit });
       }
       redoStack = [];
     });
@@ -1529,7 +1624,7 @@
     collapsedInput.addEventListener('change', () => {
       const nv = parseFloat(collapsedInput.value) || 0;
       applyAll(nv);
-      undoStack.push({ element: tuneTarget, prop: prop, oldValue: beforeEditCollapsed });
+      pushTuneUndo({ element: tuneTarget, prop: prop, oldValue: beforeEditCollapsed });
       redoStack = [];
     });
 
@@ -1572,7 +1667,7 @@
       input.addEventListener('change', () => {
         const nv = parseFloat(input.value) || 0;
         applySide(i, nv);
-        undoStack.push({ element: tuneTarget, prop: cssProp, oldValue: beforeEdit });
+        pushTuneUndo({ element: tuneTarget, prop: cssProp, oldValue: beforeEdit });
         redoStack = [];
       });
 
@@ -1678,9 +1773,9 @@
     });
     slider.addEventListener('change', () => {
       if (tokenInfo) {
-        undoStack.push({ element: document.documentElement, prop: tokenInfo.token, oldValue: beforeDrag, isToken: true });
+        pushTuneUndo({ element: document.documentElement, prop: tokenInfo.token, oldValue: beforeDrag, isToken: true });
       } else {
-        undoStack.push({ element: tuneTarget, prop: prop, oldValue: beforeDrag });
+        pushTuneUndo({ element: tuneTarget, prop: prop, oldValue: beforeDrag });
       }
       redoStack = [];
     });
@@ -1736,9 +1831,9 @@
     });
     picker.addEventListener('change', () => {
       if (tokenInfo) {
-        undoStack.push({ element: document.documentElement, prop: tokenInfo.token, oldValue: beforeColor, isToken: true });
+        pushTuneUndo({ element: document.documentElement, prop: tokenInfo.token, oldValue: beforeColor, isToken: true });
       } else {
-        undoStack.push({ element: tuneTarget, prop: prop, oldValue: beforeColor });
+        pushTuneUndo({ element: tuneTarget, prop: prop, oldValue: beforeColor });
       }
       redoStack = [];
     });
@@ -2039,7 +2134,7 @@
       if (cc && palette.tokens) {
         Object.entries(palette.tokens).forEach(([key, value]) => {
           const oldVal = cc.style.getPropertyValue(key) || '';
-          undoStack.push({ element: cc, prop: key, oldValue: oldVal, isToken: true });
+          pushTuneUndo({ element: cc, prop: key, oldValue: oldVal, isToken: true });
         });
         redoStack = [];
       }
@@ -2503,6 +2598,15 @@
     // Tool definitions — mode-only tools do not open a panel
     const toolDefs = [
       {
+        id: 'blocks-toggle',
+        title: 'Blocks (\u2303B)',
+        icon: '<rect x="2" y="2" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.1" fill="none"/><rect x="9" y="2" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.1" fill="none"/><rect x="2" y="9" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.1" fill="none"/><rect x="9" y="9" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.1" fill="none"/>',
+        panel: true,
+        action: () => {
+          setBlocksMode(!blocksMode);
+        }
+      },
+      {
         id: 'comment-toggle',
         title: 'Comment (\u2303C)',
         icon: '<path d="M3.5 1.5h9c.55 0 1 .45 1 1v7c0 .55-.45 1-1 1H5.5L2.5 13.5V2.5c0-.55.45-1 1-1z" stroke="currentColor" stroke-width="1.25" fill="none"/>',
@@ -2581,7 +2685,25 @@
 
     dkToolbar.appendChild(mkDivider());
 
-    // Send button
+    // Save button (replaces Send)
+    const saveBtn = document.createElement('button');
+    saveBtn.id = 'save-canvas';
+    saveBtn.className = 'dk-send ready';
+    saveBtn.title = 'Save snapshot (\u2318S)';
+    saveBtn.innerHTML =
+      '<svg viewBox="0 0 16 16" fill="none">' +
+      '<path d="M3 2h8l3 3v8a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1z" stroke="currentColor" stroke-width="1.25" fill="none"/>' +
+      '<rect x="5" y="8" width="6" height="4" rx="0.5" stroke="currentColor" stroke-width="1" fill="none"/>' +
+      '<line x1="5" y1="2" x2="5" y2="5" stroke="currentColor" stroke-width="1"/>' +
+      '<line x1="10" y1="2" x2="10" y2="5" stroke="currentColor" stroke-width="1"/>' +
+      '</svg>';
+    saveBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      saveCanvas();
+    });
+    dkToolbar.appendChild(saveBtn);
+
+    // Send button (for annotations — smaller, secondary)
     const sendBtn = document.createElement('button');
     sendBtn.id = 'send-annotations';
     sendBtn.className = 'dk-send';
@@ -2597,7 +2719,24 @@
     });
     dkToolbar.appendChild(sendBtn);
 
+    // Snapshot indicator
+    const snapIndicator = document.createElement('div');
+    snapIndicator.id = 'snapshot-indicator';
+    snapIndicator.className = 'dk-snapshot-indicator';
+    snapIndicator.innerHTML = '<button class="dk-snapshot-nav" id="snap-prev" title="Previous save point" disabled>\u25C0</button>'
+      + '<span id="snap-label">\u2014</span>'
+      + '<button class="dk-snapshot-nav" id="snap-next" title="Next save point" disabled>\u25B6</button>';
+    dkToolbar.appendChild(snapIndicator);
+
     document.body.appendChild(dkToolbar);
+
+    // Wire snapshot nav after toolbar is in the DOM
+    document.getElementById('snap-prev').addEventListener('click', () => {
+      sendEvent({ type: 'snapshot-undo' });
+    });
+    document.getElementById('snap-next').addEventListener('click', () => {
+      sendEvent({ type: 'snapshot-redo' });
+    });
 
     // ----- Toolbar drag -----
     let tbDrag = false, tbSX, tbSY, tbSL, tbST;
@@ -2628,6 +2767,11 @@
     renderSidebar();
     applyStoredTheme();
 
+    // Fetch initial snapshot pointer
+    fetch('/snapshot-pointer').then(r => r.json()).then(pointer => {
+      if (pointer.current > 0) updateSnapshotIndicator(pointer);
+    }).catch(() => {});
+
     // Start with pins hidden
     document.body.classList.add('annotation-pins-hidden');
   });
@@ -2656,6 +2800,17 @@
 
     ws.onmessage = (msg) => {
       const data = JSON.parse(msg.data);
+      if (data.type === 'save-ok') {
+        updateSnapshotIndicator(data.pointer);
+        return;
+      }
+      if (data.type === 'snapshot-load') {
+        document.getElementById('claude-content').innerHTML = data.html;
+        updateSnapshotIndicator(data.pointer);
+        if (window.DKUndo) window.DKUndo.clear();
+        if (window.DKWorkbench) window.DKWorkbench.injectSectionControls();
+        return;
+      }
       if (data.type === 'reload') {
         // Clear annotations — each screen is a clean slate
         annotations = [];

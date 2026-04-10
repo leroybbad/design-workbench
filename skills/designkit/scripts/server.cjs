@@ -79,6 +79,8 @@ const URL_HOST = process.env.DESIGNKIT_URL_HOST || (HOST === '127.0.0.1' ? 'loca
 const SESSION_DIR = process.env.DESIGNKIT_DIR || '/tmp/designkit';
 const CONTENT_DIR = path.join(SESSION_DIR, 'content');
 const STATE_DIR = path.join(SESSION_DIR, 'state');
+const SNAPSHOT_DIR = path.join(SESSION_DIR, 'snapshots');
+const CATALOG_DIR = process.env.DESIGNKIT_CATALOG || path.join(path.dirname(__dirname), 'catalog');
 let ownerPid = process.env.DESIGNKIT_OWNER_PID ? Number(process.env.DESIGNKIT_OWNER_PID) : null;
 
 const MIME_TYPES = {
@@ -86,6 +88,90 @@ const MIME_TYPES = {
   '.json': 'application/json', '.png': 'image/png', '.jpg': 'image/jpeg',
   '.jpeg': 'image/jpeg', '.gif': 'image/gif', '.svg': 'image/svg+xml'
 };
+
+// ========== Snapshot System ==========
+
+const POINTER_FILE = path.join(SNAPSHOT_DIR, 'pointer.json');
+
+function readPointer() {
+  try {
+    return JSON.parse(fs.readFileSync(POINTER_FILE, 'utf8'));
+  } catch {
+    return { current: 0, total: 0 };
+  }
+}
+
+function writePointer(pointer) {
+  fs.writeFileSync(POINTER_FILE, JSON.stringify(pointer));
+}
+
+function saveSnapshot(html) {
+  const pointer = readPointer();
+  const next = pointer.current + 1;
+  const filename = String(next).padStart(3, '0') + '.html';
+
+  // Truncate forward history if we branched
+  if (pointer.current < pointer.total) {
+    for (let i = pointer.current + 1; i <= pointer.total; i++) {
+      const old = path.join(SNAPSHOT_DIR, String(i).padStart(3, '0') + '.html');
+      try { fs.unlinkSync(old); } catch {}
+    }
+  }
+
+  fs.writeFileSync(path.join(SNAPSHOT_DIR, filename), html);
+  writePointer({ current: next, total: next });
+  return { current: next, total: next };
+}
+
+function getCurrentSnapshot() {
+  const pointer = readPointer();
+  if (pointer.current === 0) return null;
+  const filename = String(pointer.current).padStart(3, '0') + '.html';
+  try {
+    return fs.readFileSync(path.join(SNAPSHOT_DIR, filename), 'utf8');
+  } catch {
+    return null;
+  }
+}
+
+function snapshotUndo() {
+  const pointer = readPointer();
+  if (pointer.current <= 1) return null;
+  pointer.current -= 1;
+  writePointer(pointer);
+  return { html: getCurrentSnapshot(), pointer };
+}
+
+function snapshotRedo() {
+  const pointer = readPointer();
+  if (pointer.current >= pointer.total) return null;
+  pointer.current += 1;
+  writePointer(pointer);
+  return { html: getCurrentSnapshot(), pointer };
+}
+
+// ========== Catalog Helpers ==========
+
+function readManifest() {
+  const manifestPath = path.join(CATALOG_DIR, 'manifest.json');
+  try {
+    return JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+  } catch {
+    return { blocks: [], templates: [] };
+  }
+}
+
+function parseBlockFrontmatter(html) {
+  const match = html.match(/^<!--\s*\n([\s\S]*?)\n-->/);
+  if (!match) return { meta: {}, content: html };
+  const meta = {};
+  match[1].split('\n').forEach(line => {
+    const [key, ...rest] = line.split(':');
+    if (key && rest.length) meta[key.trim()] = rest.join(':').trim();
+  });
+  const content = html.slice(match[0].length).trim();
+  return { meta, content };
+}
 
 // ========== Templates and Constants ==========
 
@@ -100,6 +186,18 @@ h1 { color: #333; } p { color: #666; }</style>
 
 function getFrameTemplate() {
   return fs.readFileSync(path.join(__dirname, 'frame-template.html'), 'utf-8');
+}
+
+function getWorkbenchScripts() {
+  const scripts = ['undo.js', 'catalog.js', 'workbench.js'];
+  let injection = '';
+  for (const name of scripts) {
+    const fp = path.join(__dirname, name);
+    if (fs.existsSync(fp)) {
+      injection += '<script>\n' + fs.readFileSync(fp, 'utf-8') + '\n</script>\n';
+    }
+  }
+  return injection;
 }
 
 function getHelperInjection() {
@@ -163,22 +261,98 @@ function getNewestScreen() {
 
 function handleRequest(req, res) {
   touchActivity();
-  if (req.method === 'GET' && req.url === '/') {
-    const screenFile = getNewestScreen();
-    let html = screenFile
-      ? wrapInFrame(extractContent(fs.readFileSync(screenFile, 'utf-8')))
-      : WAITING_PAGE;
+  const reqUrl = req.url.split('?')[0];
 
+  if (req.method === 'GET' && reqUrl === '/') {
+    // Serve current snapshot if one exists, otherwise fall back to newest screen
+    const snapshot = getCurrentSnapshot();
+    const screenFile = snapshot ? null : getNewestScreen();
+    let content = snapshot
+      ? snapshot
+      : screenFile
+        ? extractContent(fs.readFileSync(screenFile, 'utf-8'))
+        : null;
+
+    let html = content ? wrapInFrame(content) : WAITING_PAGE;
+
+    const allScripts = getThemeDataInjection() + '\n' + getWorkbenchScripts() + '\n' + getHelperInjection();
     if (html.includes('</body>')) {
-      html = html.replace('</body>', getThemeDataInjection() + '\n' + getHelperInjection() + '\n</body>');
+      html = html.replace('</body>', allScripts + '\n</body>');
     } else {
-      html += getThemeDataInjection() + '\n' + getHelperInjection();
+      html += allScripts;
     }
 
     res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
     res.end(html);
-  } else if (req.method === 'GET' && req.url.startsWith('/files/')) {
-    const fileName = req.url.slice(7);
+    return;
+  }
+
+  // GET /catalog — returns manifest with all blocks and templates
+  if (req.method === 'GET' && reqUrl === '/catalog') {
+    const manifest = readManifest();
+    res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+    res.end(JSON.stringify(manifest));
+    return;
+  }
+
+  // GET /catalog/blocks/:name — returns a single block's HTML + metadata
+  const blockMatch = reqUrl.match(/^\/catalog\/blocks\/(.+)$/);
+  if (req.method === 'GET' && blockMatch) {
+    const blockFile = path.join(CATALOG_DIR, 'blocks', decodeURIComponent(blockMatch[1]));
+    try {
+      const html = fs.readFileSync(blockFile, 'utf8');
+      const { meta, content } = parseBlockFrontmatter(html);
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ meta, content }));
+    } catch {
+      res.writeHead(404);
+      res.end('Block not found');
+    }
+    return;
+  }
+
+  // GET /templates — list available templates
+  if (req.method === 'GET' && reqUrl === '/templates') {
+    const tplDir = path.join(CATALOG_DIR, 'templates');
+    try {
+      const files = fs.readdirSync(tplDir).filter(f => f.endsWith('.html'));
+      const templates = files.map(f => ({
+        file: f,
+        name: f.replace('.html', '').replace(/[-_]/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
+      }));
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify(templates));
+    } catch {
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end('[]');
+    }
+    return;
+  }
+
+  // GET /templates/:name — returns a page template HTML
+  const templateMatch = reqUrl.match(/^\/templates\/(.+)$/);
+  if (req.method === 'GET' && templateMatch) {
+    const tplFile = path.join(CATALOG_DIR, 'templates', decodeURIComponent(templateMatch[1]));
+    try {
+      const html = fs.readFileSync(tplFile, 'utf8');
+      res.writeHead(200, { 'Content-Type': 'text/html' });
+      res.end(html);
+    } catch {
+      res.writeHead(404);
+      res.end('Template not found');
+    }
+    return;
+  }
+
+  // GET /snapshot-pointer — returns current snapshot pointer
+  if (req.method === 'GET' && reqUrl === '/snapshot-pointer') {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify(readPointer()));
+    return;
+  }
+
+  if (req.method === 'GET' && reqUrl.startsWith('/files/')) {
+    const fileName = reqUrl.slice(7);
     const filePath = path.join(CONTENT_DIR, path.basename(fileName));
     if (!fs.existsSync(filePath)) {
       res.writeHead(404);
@@ -189,10 +363,11 @@ function handleRequest(req, res) {
     const contentType = MIME_TYPES[ext] || 'application/octet-stream';
     res.writeHead(200, { 'Content-Type': contentType });
     res.end(fs.readFileSync(filePath));
-  } else {
-    res.writeHead(404);
-    res.end('Not found');
+    return;
   }
+
+  res.writeHead(404);
+  res.end('Not found');
 }
 
 // ========== WebSocket Connection Handling ==========
@@ -230,7 +405,7 @@ function handleUpgrade(req, socket) {
 
       switch (result.opcode) {
         case OPCODES.TEXT:
-          handleMessage(result.payload.toString());
+          handleMessage(result.payload.toString(), socket);
           break;
         case OPCODES.CLOSE:
           socket.end(encodeFrame(OPCODES.CLOSE, Buffer.alloc(0)));
@@ -256,7 +431,12 @@ function handleUpgrade(req, socket) {
   socket.on('error', () => clients.delete(socket));
 }
 
-function handleMessage(text) {
+function sendToClient(socket, msg) {
+  const payload = typeof msg === 'string' ? msg : JSON.stringify(msg);
+  try { socket.write(encodeFrame(OPCODES.TEXT, Buffer.from(payload))); } catch {}
+}
+
+function handleMessage(text, senderSocket) {
   let event;
   try {
     event = JSON.parse(text);
@@ -265,7 +445,38 @@ function handleMessage(text) {
     return;
   }
   touchActivity();
-  console.log(JSON.stringify({ source: 'user-event', ...event }));
+  console.log(JSON.stringify({ source: 'user-event', type: event.type }));
+
+  // Snapshot save
+  if (event.type === 'save') {
+    const pointer = saveSnapshot(event.html);
+    // Write to CONTENT_DIR too so GET / serves the latest
+    const contentFile = path.join(CONTENT_DIR, 'canvas.html');
+    fs.writeFileSync(contentFile, event.html);
+    if (senderSocket) sendToClient(senderSocket, JSON.stringify({ type: 'save-ok', pointer }));
+    return;
+  }
+
+  // Snapshot undo
+  if (event.type === 'snapshot-undo') {
+    const result = snapshotUndo();
+    if (result) {
+      fs.writeFileSync(path.join(CONTENT_DIR, 'canvas.html'), result.html);
+      broadcast({ type: 'snapshot-load', html: result.html, pointer: result.pointer });
+    }
+    return;
+  }
+
+  // Snapshot redo
+  if (event.type === 'snapshot-redo') {
+    const result = snapshotRedo();
+    if (result) {
+      fs.writeFileSync(path.join(CONTENT_DIR, 'canvas.html'), result.html);
+      broadcast({ type: 'snapshot-load', html: result.html, pointer: result.pointer });
+    }
+    return;
+  }
+
   if (event.choice) {
     const eventsFile = path.join(STATE_DIR, 'events');
     fs.appendFileSync(eventsFile, JSON.stringify(event) + '\n');
@@ -303,6 +514,7 @@ const debounceTimers = new Map();
 function startServer() {
   if (!fs.existsSync(CONTENT_DIR)) fs.mkdirSync(CONTENT_DIR, { recursive: true });
   if (!fs.existsSync(STATE_DIR)) fs.mkdirSync(STATE_DIR, { recursive: true });
+  fs.mkdirSync(SNAPSHOT_DIR, { recursive: true });
 
   // Track known files to distinguish new screens from updates.
   // macOS fs.watch reports 'rename' for both new files and overwrites,
@@ -339,6 +551,19 @@ function startServer() {
   });
   watcher.on('error', (err) => console.error('fs.watch error:', err.message));
 
+  // Watch snapshots directory for external writes (from Claude)
+  const snapshotWatcher = fs.watch(SNAPSHOT_DIR, (eventType, filename) => {
+    if (filename && filename.endsWith('.html') && eventType === 'rename') {
+      const num = parseInt(filename.replace('.html', ''), 10);
+      const pointer = readPointer();
+      if (num > pointer.total) {
+        writePointer({ current: num, total: num });
+        broadcast({ type: 'reload' });
+      }
+    }
+  });
+  snapshotWatcher.on('error', () => {});
+
   function shutdown(reason) {
     console.log(JSON.stringify({ type: 'server-stopped', reason }));
     const infoFile = path.join(STATE_DIR, 'server-info');
@@ -348,6 +573,7 @@ function startServer() {
       JSON.stringify({ reason, timestamp: Date.now() }) + '\n'
     );
     watcher.close();
+    snapshotWatcher.close();
     clearInterval(lifecycleCheck);
     server.close(() => process.exit(0));
   }

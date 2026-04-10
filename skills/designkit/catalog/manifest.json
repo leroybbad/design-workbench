@@ -1,0 +1,50 @@
+{
+  "blocks": [
+    {
+      "file": "data-table.html",
+      "name": "Data Table",
+      "category": "Sections",
+      "description": "Simple data table with header and rows",
+      "slots": "none",
+      "variants": ""
+    },
+    {
+      "file": "footer.html",
+      "name": "Footer",
+      "category": "Sections",
+      "description": "Simple page footer with copyright",
+      "slots": "none",
+      "variants": ""
+    },
+    {
+      "file": "hero-section.html",
+      "name": "Hero Section",
+      "category": "Sections",
+      "description": "Full-width hero with heading and CTA",
+      "slots": "none",
+      "variants": ""
+    },
+    {
+      "file": "metric-card.html",
+      "name": "Metric Card",
+      "category": "Cards",
+      "description": "KPI display with label, value, and trend indicator",
+      "slots": "none",
+      "variants": ""
+    },
+    {
+      "file": "nav-bar.html",
+      "name": "Navigation Bar",
+      "category": "Navigation",
+      "description": "Horizontal navigation bar with logo and links",
+      "slots": "none",
+      "variants": ""
+    }
+  ],
+  "templates": [
+    {
+      "file": "_blank.html",
+      "name": " Blank"
+    }
+  ]
+}

@@ -1182,6 +1182,252 @@
     .mock-content { padding: 1.5rem; flex: 1; }
     .mock-button { background: var(--accent); color: white; border: none; padding: 0.5rem 1rem; border-radius: 6px; font-size: 0.85rem; }
     .mock-input { background: var(--bg-primary); border: 1px solid var(--border); border-radius: 6px; padding: 0.5rem; width: 100%; }
+
+    /* ===== SNAPSHOT INDICATOR ===== */
+    .dk-snapshot-indicator {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 8px;
+      font-size: 11px;
+      color: #888;
+      font-variant-numeric: tabular-nums;
+    }
+    .dk-snapshot-nav {
+      background: none;
+      border: none;
+      color: #666;
+      cursor: pointer;
+      padding: 2px 4px;
+      font-size: 12px;
+      border-radius: 3px;
+    }
+    .dk-snapshot-nav:hover:not(:disabled) {
+      background: rgba(255,255,255,0.08);
+      color: #aaa;
+    }
+    .dk-snapshot-nav:disabled {
+      opacity: 0.3;
+      cursor: default;
+    }
+
+    /* ===== BLOCKS PANEL ===== */
+    .dk-blocks-panel {
+      width: 280px;
+      max-height: 70vh;
+      overflow-y: auto;
+    }
+    .dk-blocks-search {
+      width: 100%;
+      padding: 6px 10px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 6px;
+      color: #e0e0e0;
+      font-size: 12px;
+      outline: none;
+      margin-bottom: 8px;
+      box-sizing: border-box;
+    }
+    .dk-blocks-search:focus {
+      border-color: rgba(255,255,255,0.2);
+    }
+    .dk-blocks-category {
+      margin-bottom: 12px;
+    }
+    .dk-blocks-category-title {
+      font-size: 11px;
+      font-weight: 600;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 4px 0;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      user-select: none;
+    }
+    .dk-blocks-category-title::before {
+      content: '\25BE';
+      font-size: 9px;
+      transition: transform 0.15s;
+    }
+    .dk-blocks-category.collapsed .dk-blocks-category-title::before {
+      transform: rotate(-90deg);
+    }
+    .dk-blocks-category.collapsed .dk-blocks-list {
+      display: none;
+    }
+    .dk-blocks-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .dk-block-item {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 6px;
+      padding: 8px;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .dk-block-item:hover {
+      background: rgba(255,255,255,0.08);
+      border-color: rgba(255,255,255,0.15);
+    }
+    .dk-block-item.selected {
+      border-color: #6366f1;
+      background: rgba(99,102,241,0.1);
+    }
+    .dk-block-item-name {
+      font-size: 12px;
+      font-weight: 500;
+      color: #d0d0d0;
+      margin-bottom: 2px;
+    }
+    .dk-block-item-desc {
+      font-size: 10px;
+      color: #777;
+    }
+
+    /* ===== PLACEMENT MODE ===== */
+    .dk-placement-line {
+      position: absolute;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: #6366f1;
+      pointer-events: none;
+      z-index: 9999;
+      border-radius: 2px;
+      box-shadow: 0 0 8px rgba(99,102,241,0.4);
+      transition: top 0.1s ease;
+    }
+    .dk-slot-highlight {
+      outline: 2px dashed #6366f1;
+      outline-offset: 2px;
+      position: relative;
+    }
+    .dk-slot-highlight::after {
+      content: attr(data-slot);
+      position: absolute;
+      top: -18px;
+      left: 8px;
+      font-size: 10px;
+      color: #6366f1;
+      background: #1a1a1e;
+      padding: 1px 6px;
+      border-radius: 3px;
+      pointer-events: none;
+    }
+    body.placement-mode #claude-content {
+      cursor: crosshair;
+    }
+    body.placement-mode [data-section] {
+      transition: outline 0.15s;
+    }
+
+    /* ===== SECTION CONTROLS ===== */
+    [data-section] {
+      position: relative;
+    }
+    .dk-section-controls {
+      position: absolute;
+      top: 4px;
+      left: -36px;
+      display: none;
+      flex-direction: column;
+      gap: 4px;
+      z-index: 100;
+    }
+    [data-section]:hover > .dk-section-controls,
+    [data-section].dk-section-dragging > .dk-section-controls {
+      display: flex;
+    }
+    .dk-section-btn {
+      width: 24px;
+      height: 24px;
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 4px;
+      background: #2a2a2e;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      color: #999;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+    .dk-section-btn:hover {
+      background: #3a3a3e;
+      color: #ddd;
+    }
+    .dk-section-btn.dk-drag-handle {
+      cursor: grab;
+    }
+    .dk-section-btn.dk-drag-handle:active {
+      cursor: grabbing;
+    }
+    [data-section].dk-section-dragging {
+      opacity: 0.5;
+      outline: 2px dashed #6366f1;
+    }
+    [data-section].dk-drag-over {
+      border-top: 3px solid #6366f1;
+    }
+
+    /* ===== TEMPLATE PICKER ===== */
+    .dk-template-picker {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0,0,0,0.6);
+      z-index: 10000;
+    }
+    .dk-template-picker-inner {
+      background: #1a1a1e;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 12px;
+      padding: 32px;
+      max-width: 600px;
+      width: 90%;
+    }
+    .dk-template-picker h2 {
+      color: #e0e0e0;
+      font-size: 18px;
+      margin: 0 0 8px;
+    }
+    .dk-template-picker p {
+      color: #888;
+      font-size: 13px;
+      margin: 0 0 20px;
+    }
+    .dk-template-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 12px;
+    }
+    .dk-template-option {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 8px;
+      padding: 16px;
+      cursor: pointer;
+      text-align: center;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .dk-template-option:hover {
+      background: rgba(255,255,255,0.08);
+      border-color: #6366f1;
+    }
+    .dk-template-option-name {
+      color: #d0d0d0;
+      font-size: 13px;
+      font-weight: 500;
+    }
   </style>
 </head>
 <body>

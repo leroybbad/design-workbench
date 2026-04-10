@@ -2490,10 +2490,10 @@
     dkToolbar.className = 'dk-toolbar';
     dkToolbar.id = 'dk-toolbar';
 
-    // Brand mark
+    // Brand mark — gradient pill
     const brand = document.createElement('div');
     brand.className = 'dk-brand';
-    brand.innerHTML = '<span class="dk-brand-d">D</span><span class="dk-brand-k">K</span>';
+    brand.innerHTML = '<span class="dk-brand-pill">dkit</span>';
     dkToolbar.appendChild(brand);
 
     const mkDivider = () => { const d = document.createElement('div'); d.className = 'dk-divider'; return d; };

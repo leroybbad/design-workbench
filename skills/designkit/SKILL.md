@@ -220,29 +220,85 @@ The Design Companion also supports a **workbench mode** where designers compose 
 
 - **Ctrl+B** — Blocks panel (browse and insert catalog blocks)
 - **Cmd+S** — Save snapshot
-- **◀ / ▶** in the toolbar — Navigate between save points
+- **Alt** — Toggle move/remove controls on placed blocks
+- **Escape** — Exit placement mode, close panels, hide controls
 
 ### Block Catalog
 
 The workbench serves blocks from `catalog/` (relative to the skill directory). Run the prep script to generate a catalog from a component library:
 
 ```bash
-node skills/designkit/scripts/prep.cjs --source <component-dir> --output skills/designkit/catalog [--tokens <css-file>]
+node skills/designkit/scripts/prep.cjs --source <component-dir> --output skills/designkit/catalog [--tokens <css-file>] [--repo <project-root>]
 ```
 
-This generates `catalog/blocks/`, `catalog/templates/`, and `catalog/manifest.json`.
+This generates `catalog/blocks/`, `catalog/templates/`, `catalog/manifest.json`, and optionally `repo-context.json` when `--repo` is provided.
+
+The `--repo` flag inspects the project's `package.json` to detect frameworks (Next.js, React, Vue, Svelte), styling systems (Tailwind, Emotion, Framer Motion), component libraries (Radix, Lucide, MUI), and CSS tokens. This context informs Claude's edits.
+
+### Two-Layer Artifact Model
+
+Every block and canvas state has two layers — handle them differently:
+
+**Design system layer (match precisely):** Colors, gradients, shadows, border radii, spacing values, font sizes, font weights, letter-spacing, line-height, background effects, opacity, hover/transition states, layout structure. These MUST use CSS custom properties (tokens) so the Tune panel can adjust them globally. Never approximate — if the design says `--radius-md: 10px`, don't round to `12px`.
+
+**Content layer (adapt freely):** Headings, body text, labels, placeholder data, button copy, image URLs, testimonial quotes. This is illustrative — replace with the user's actual content. Don't treat sample copy as sacred.
+
+When generating or editing blocks, always separate these layers. Tokens define the visual system. Content fills the structure.
 
 ### Surgical Edits
 
 When the workbench is running and the user asks Claude to make changes:
 
+**Step 1 — Build a design brief** (internal, not shown to user):
+Before touching HTML, write yourself a brief covering:
+- What the user asked for and why
+- The current canvas structure (sections, slots, blocks in use)
+- Active tokens from `catalog/tokens.css`
+- Repo context from `catalog/repo-context.json` if available (frameworks, styling, component libraries)
+- Constraints: what to preserve vs. what to change
+
+This brief costs nothing — it's your internal reasoning. It prevents drift and ensures edits stay coherent with the existing design.
+
+**Step 2 — Make the edit:**
 1. Read the current canvas state from the latest snapshot: `$SESSION_DIR/snapshots/NNN.html` (check `pointer.json` for the current number)
-2. Read the token sheet from `catalog/tokens.css`
-3. Read `catalog/manifest.json` to know what blocks exist
-4. Make the requested HTML edit as a **fragment** — do NOT regenerate the entire page
-5. Write the modified HTML as the next snapshot file (increment the snapshot counter, e.g. `004.html`)
-6. Update `pointer.json` to `{ "current": 4, "total": 4 }`
-7. The server will detect the new file and broadcast a reload to the browser
+2. Read `catalog/tokens.css` and `catalog/manifest.json`
+3. Make the requested HTML edit as a **fragment** — do NOT regenerate the entire page
+4. Write the modified HTML as the next snapshot file (increment the snapshot counter, e.g. `004.html`)
+5. Update `pointer.json` to `{ "current": 4, "total": 4 }`
+6. The server will detect the new file and broadcast a reload to the browser
+
+### Art Direction Rules
+
+When generating layouts, sections, or new blocks — be a designer, not a template engine.
+
+**Composition over repetition.** Don't generate three identical cards when you could create visual rhythm — vary sizes, emphasis, or content density across a grid. A dashboard isn't three equal boxes; it's a hero metric, supporting stats, and a detail table with intentional hierarchy.
+
+**Intentional whitespace.** Every gap should be a deliberate rhythm. If you're adding padding, it should relate to the spacing scale. Random large gaps between sections feel accidental. Tight, considered spacing feels designed.
+
+**Visual weight distribution.** Think about where the eye goes. A section with all elements the same size has no focal point. Use size, color, and density to create a clear reading order.
+
+**Avoid AI tells:**
+- No emoji icons — use Lucide (`<i class="lucide-chart-bar"></i>`)
+- No massive page headers eating 1/3 of the viewport
+- Body text at 16px minimum (`--font-base: 1rem`)
+- Consistent text hierarchy — don't mix 11px and 16px accidentally
+- Dense layouts should actually be dense, not three items with padding
+
+**When the user's intent is vague**, bias toward:
+- Asymmetric layouts over symmetric grids
+- One strong focal point per section
+- Content-first density (fill the space with useful structure)
+- Dark-on-light for content, color accents for actions and emphasis
+
+### Reference URL Modes
+
+When the user provides a URL as a starting point, ask which mode they want:
+
+- **Clone** — near-1:1 recreation of the referenced design. Faithfully reproduce layout, spacing, colors, typography. Content can be adapted but structure stays.
+- **Enhance** — take the reference as a base and improve it. Modernize dated patterns, fix spacing issues, upgrade typography, add polish. Keep the content intent and overall structure.
+- **Inspire** — use the reference as a mood board. Extract the vibe, color sensibility, and layout philosophy, then create something original that shares the same design DNA.
+
+If the user just mentions a URL as context without requesting a specific mode, don't assume one — ask.
 
 ### Save to Catalog
 
@@ -250,9 +306,28 @@ When the user says "save this as a block" or "add this to the catalog":
 
 1. Extract the selected section/element HTML
 2. Add YAML frontmatter in an HTML comment (ask user for name and category if not obvious)
-3. Write to `catalog/blocks/<name>.html`
-4. Re-run: `node skills/designkit/scripts/prep.cjs --source catalog/blocks --output catalog`
-5. The blocks panel will show the new block on next refresh
+3. Ensure the design system layer uses tokens and the content layer is clearly sample data
+4. Write to `catalog/blocks/<name>.html`
+5. Re-run: `node skills/designkit/scripts/prep.cjs --source catalog/blocks --output catalog`
+6. The blocks panel will show the new block on next refresh
+
+### Adoption Brief
+
+When the user is done composing and wants to integrate the design into their real codebase, generate an adoption brief:
+
+1. Read the latest snapshot HTML
+2. Read `catalog/repo-context.json` if available
+3. Analyze the canvas: count sections, identify component patterns, list tokens used
+4. Write a structured brief covering:
+   - **Target route/file** — where this page should live in the codebase (match against detected routes)
+   - **Component decomposition** — which sections should become separate components
+   - **Token mapping** — which CSS custom properties to define in the project's token system (Tailwind config, CSS variables, etc.)
+   - **Framework adaptation** — how to port from raw HTML to the project's framework (React components, Vue SFCs, etc.)
+   - **Content slots** — which parts are sample content that the developer needs to replace with real data
+   - **Warnings** — forms needing validation, interactions needing JS, accessibility gaps
+5. Save to `$SESSION_DIR/adoption.md`
+
+This turns a visual composition into an actionable dev ticket.
 
 ### Canvas Document Format
 
@@ -260,5 +335,5 @@ The canvas uses standard HTML with data attributes:
 
 - `data-canvas` — root container (on `<main>`)
 - `data-section` + `data-section-id` — top-level reorderable units
-- `data-slot` — containers that accept child blocks
+- `data-slot` — containers that accept child blocks (layout grids, stacks, etc.)
 - `data-block` — identifies which catalog block was inserted

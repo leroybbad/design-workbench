@@ -1,6 +1,14 @@
 {
   "blocks": [
     {
+      "file": "_blank.html",
+      "name": "Empty Section",
+      "category": "Sections",
+      "description": "A blank section to fill with custom content",
+      "slots": "content",
+      "variants": ""
+    },
+    {
       "file": "data-table.html",
       "name": "Data Table",
       "category": "Sections",
@@ -9,11 +17,43 @@
       "variants": ""
     },
     {
+      "file": "flex-row.html",
+      "name": "Flex Row",
+      "category": "Layouts",
+      "description": "Horizontal flex row — items size to content, wraps on small screens",
+      "slots": "content",
+      "variants": ""
+    },
+    {
       "file": "footer.html",
       "name": "Footer",
       "category": "Sections",
       "description": "Simple page footer with copyright",
       "slots": "none",
+      "variants": ""
+    },
+    {
+      "file": "grid-2-col.html",
+      "name": "2-Column Grid",
+      "category": "Layouts",
+      "description": "Equal two-column grid layout with slots",
+      "slots": "col-1, col-2",
+      "variants": ""
+    },
+    {
+      "file": "grid-3-col.html",
+      "name": "3-Column Grid",
+      "category": "Layouts",
+      "description": "Three equal columns with slots",
+      "slots": "col-1, col-2, col-3",
+      "variants": ""
+    },
+    {
+      "file": "grid-4-col.html",
+      "name": "4-Column Grid",
+      "category": "Layouts",
+      "description": "Four equal columns — good for stats, small cards",
+      "slots": "col-1, col-2, col-3, col-4",
       "variants": ""
     },
     {
@@ -39,12 +79,40 @@
       "description": "Horizontal navigation bar with logo and links",
       "slots": "none",
       "variants": ""
+    },
+    {
+      "file": "sidebar-layout.html",
+      "name": "Sidebar + Main",
+      "category": "Layouts",
+      "description": "Narrow sidebar with wide main content area",
+      "slots": "sidebar, main",
+      "variants": ""
+    },
+    {
+      "file": "split-60-40.html",
+      "name": "60/40 Split",
+      "category": "Layouts",
+      "description": "Wider left column with narrower right — content + aside",
+      "slots": "primary, secondary",
+      "variants": ""
+    },
+    {
+      "file": "stack.html",
+      "name": "Vertical Stack",
+      "category": "Layouts",
+      "description": "Full-width stacked layout with gap between items",
+      "slots": "content",
+      "variants": ""
     }
   ],
   "templates": [
     {
       "file": "_blank.html",
       "name": " Blank"
+    },
+    {
+      "file": "dashboard.html",
+      "name": "Dashboard"
     }
   ]
 }

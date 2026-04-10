@@ -1,0 +1,10 @@
+<!--
+name: Sidebar + Main
+category: Layouts
+description: Narrow sidebar with wide main content area
+slots: sidebar, main
+-->
+<div class="layout-sidebar" data-block="sidebar-layout" style="display: grid; grid-template-columns: 260px 1fr; gap: 0; min-height: 400px;">
+  <div data-slot="sidebar" style="padding: 1rem; border-right: 1px solid var(--color-border, #e5e7eb); background: var(--color-surface, #fff);"></div>
+  <div data-slot="main" style="padding: 1.5rem;"></div>
+</div>

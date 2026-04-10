@@ -196,6 +196,8 @@ window.DKWorkbench = (function () {
       el.style.position = 'relative';
       el.appendChild(controls);
     });
+
+    setupCanvasDrop();
   }
 
   function hideElementControls() {
@@ -229,66 +231,130 @@ window.DKWorkbench = (function () {
   }
 
   function setupElementDrag(handle, el) {
-    handle.addEventListener('dragstart', (e) => {
+    // Make the element itself draggable (not just the handle button)
+    el.setAttribute('draggable', 'false');
+
+    handle.addEventListener('mousedown', () => {
+      el.setAttribute('draggable', 'true');
+    });
+    handle.addEventListener('mouseup', () => {
+      el.setAttribute('draggable', 'false');
+    });
+
+    el.addEventListener('dragstart', (e) => {
+      if (!el.getAttribute('draggable') || el.getAttribute('draggable') === 'false') {
+        e.preventDefault();
+        return;
+      }
       e.stopPropagation();
       e.dataTransfer.effectAllowed = 'move';
-      el.classList.add('dk-section-dragging');
+      e.dataTransfer.setData('text/plain', ''); // Required for Firefox
       window._dragElement = el;
+      window._dragParent = el.parentElement;
+      requestAnimationFrame(() => el.classList.add('dk-section-dragging'));
     });
 
-    handle.addEventListener('dragend', () => {
+    el.addEventListener('dragend', () => {
       el.classList.remove('dk-section-dragging');
+      el.setAttribute('draggable', 'false');
       document.querySelectorAll('.dk-drag-over').forEach(d => d.classList.remove('dk-drag-over'));
       window._dragElement = null;
+      window._dragParent = null;
+    });
+  }
+
+  // Global drag-over / drop on the canvas — finds the nearest sibling to drop before
+  function setupCanvasDrop() {
+    const canvas = document.getElementById('claude-content');
+    if (!canvas || canvas._dkDropSetup) return;
+    canvas._dkDropSetup = true;
+
+    canvas.addEventListener('dragover', (e) => {
+      if (!window._dragElement) return;
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+
+      const dragged = window._dragElement;
+      const parent = window._dragParent;
+      if (!parent) return;
+
+      // Find the direct child of parent that we're hovering over
+      const siblings = Array.from(parent.children).filter(c =>
+        c !== dragged && !c.classList.contains('dk-el-controls')
+      );
+      document.querySelectorAll('.dk-drag-over').forEach(d => d.classList.remove('dk-drag-over'));
+
+      let closest = null;
+      let closestDist = Infinity;
+      for (const sib of siblings) {
+        const rect = sib.getBoundingClientRect();
+        const midY = rect.top + rect.height / 2;
+        const dist = Math.abs(e.clientY - midY);
+        if (dist < closestDist) {
+          closestDist = dist;
+          closest = sib;
+        }
+      }
+      if (closest) {
+        const rect = closest.getBoundingClientRect();
+        const midY = rect.top + rect.height / 2;
+        if (e.clientY < midY) {
+          closest.classList.add('dk-drag-over');
+        } else if (closest.nextElementSibling && closest.nextElementSibling !== dragged) {
+          closest.nextElementSibling.classList.add('dk-drag-over');
+        }
+      }
     });
 
-    // Drop targets: siblings of the same parent
-    const parent = el.parentElement;
-    if (!parent._dkDropSetup) {
-      parent._dkDropSetup = true;
-      parent.addEventListener('dragover', (e) => {
-        if (!window._dragElement) return;
-        e.preventDefault();
-        e.dataTransfer.dropEffect = 'move';
-        // Find which child we're over
-        const target = e.target.closest('[data-section], [data-block]');
-        if (target && target !== window._dragElement && target.parentElement === parent) {
-          document.querySelectorAll('.dk-drag-over').forEach(d => d.classList.remove('dk-drag-over'));
-          target.classList.add('dk-drag-over');
+    canvas.addEventListener('drop', (e) => {
+      e.preventDefault();
+      const dragged = window._dragElement;
+      const parent = window._dragParent;
+      if (!dragged || !parent) return;
+
+      document.querySelectorAll('.dk-drag-over').forEach(d => d.classList.remove('dk-drag-over'));
+
+      // Figure out where to insert based on mouse position
+      const siblings = Array.from(parent.children).filter(c =>
+        c !== dragged && !c.classList.contains('dk-el-controls')
+      );
+      let insertBefore = null;
+      for (const sib of siblings) {
+        const rect = sib.getBoundingClientRect();
+        if (e.clientY < rect.top + rect.height / 2) {
+          insertBefore = sib;
+          break;
         }
-      });
-      parent.addEventListener('dragleave', (e) => {
-        const target = e.target.closest('[data-section], [data-block]');
-        if (target) target.classList.remove('dk-drag-over');
-      });
-      parent.addEventListener('drop', (e) => {
-        e.preventDefault();
-        const dragged = window._dragElement;
-        if (!dragged) return;
-        const target = e.target.closest('[data-section], [data-block]');
-        if (!target || target === dragged || target.parentElement !== parent) return;
-        target.classList.remove('dk-drag-over');
+      }
 
-        const oldNext = dragged.nextElementSibling;
-        parent.insertBefore(dragged, target);
-        hideElementControls();
+      const oldNext = dragged.nextElementSibling;
+      if (insertBefore) {
+        parent.insertBefore(dragged, insertBefore);
+      } else {
+        parent.appendChild(dragged);
+      }
 
-        window.DKUndo.push({
-          type: 'reorder',
-          undo: () => {
-            if (oldNext && oldNext.parentElement === parent) {
-              parent.insertBefore(dragged, oldNext);
-            } else {
-              parent.appendChild(dragged);
-            }
-          },
-          redo: () => {
-            parent.insertBefore(dragged, target);
-          },
-          description: 'Reorder element'
-        });
+      hideElementControls();
+
+      window.DKUndo.push({
+        type: 'reorder',
+        undo: () => {
+          if (oldNext && oldNext.parentElement === parent) {
+            parent.insertBefore(dragged, oldNext);
+          } else {
+            parent.appendChild(dragged);
+          }
+        },
+        redo: () => {
+          if (insertBefore && insertBefore.parentElement === parent) {
+            parent.insertBefore(dragged, insertBefore);
+          } else {
+            parent.appendChild(dragged);
+          }
+        },
+        description: 'Reorder element'
       });
-    }
+    });
   }
 
   // Alt key toggle — press Alt to show controls, press again or Escape to hide

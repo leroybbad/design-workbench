@@ -1189,20 +1189,23 @@
     .dk-snapshot-indicator {
       display: flex;
       align-items: center;
-      gap: 4px;
-      padding: 4px 8px;
-      font-size: 11px;
+      justify-content: center;
+      gap: 2px;
+      padding: 2px 0;
+      font-size: 9px;
       color: #888;
       font-variant-numeric: tabular-nums;
+      max-width: 100%;
     }
     .dk-snapshot-nav {
       background: none;
       border: none;
       color: #666;
       cursor: pointer;
-      padding: 2px 4px;
-      font-size: 12px;
+      padding: 1px 2px;
+      font-size: 9px;
       border-radius: 3px;
+      line-height: 1;
     }
     .dk-snapshot-nav:hover:not(:disabled) {
       background: rgba(255,255,255,0.08);
@@ -1328,6 +1331,37 @@
     }
     body.placement-mode [data-section] {
       transition: outline 0.15s;
+    }
+
+    /* ===== SLOT & SECTION HINTS ===== */
+    [data-slot]:empty,
+    [data-slot]:not(:has(*:not(.dk-el-controls))) {
+      min-height: 60px;
+      border: 2px dashed rgba(99,102,241,0.25);
+      border-radius: 8px;
+      background: repeating-linear-gradient(
+        -45deg,
+        transparent,
+        transparent 8px,
+        rgba(99,102,241,0.03) 8px,
+        rgba(99,102,241,0.03) 16px
+      );
+      position: relative;
+    }
+    [data-slot]:empty::after,
+    [data-slot]:not(:has(*:not(.dk-el-controls)))::after {
+      content: 'Drop blocks here (' attr(data-slot) ')';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 11px;
+      color: rgba(99,102,241,0.45);
+      pointer-events: none;
+      white-space: nowrap;
+    }
+    body.dk-controls-visible [data-section] {
+      min-height: 40px;
     }
 
     /* ===== ELEMENT CONTROLS (Alt-hold overlay) ===== */

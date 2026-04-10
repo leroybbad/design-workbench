@@ -1330,52 +1330,63 @@
       transition: outline 0.15s;
     }
 
-    /* ===== SECTION CONTROLS ===== */
-    [data-section] {
-      position: relative;
-    }
-    .dk-section-controls {
+    /* ===== ELEMENT CONTROLS (Alt-hold overlay) ===== */
+    .dk-el-controls {
       position: absolute;
       top: 4px;
-      left: -36px;
-      display: none;
-      flex-direction: column;
-      gap: 4px;
-      z-index: 100;
-    }
-    [data-section]:hover > .dk-section-controls,
-    [data-section].dk-section-dragging > .dk-section-controls {
+      right: 4px;
       display: flex;
+      gap: 4px;
+      z-index: 200;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.12s;
     }
-    .dk-section-btn {
-      width: 24px;
-      height: 24px;
-      border: 1px solid rgba(255,255,255,0.15);
-      border-radius: 4px;
-      background: #2a2a2e;
-      cursor: pointer;
+    body.dk-controls-visible .dk-el-controls {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    body.dk-controls-visible [data-section],
+    body.dk-controls-visible [data-block] {
+      outline: 1px dashed rgba(99,102,241,0.35);
+      outline-offset: -1px;
+    }
+    .dk-el-btn {
+      width: 28px;
+      height: 28px;
+      border: none;
+      border-radius: 6px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 12px;
-      color: #999;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+      transition: transform 0.1s;
     }
-    .dk-section-btn:hover {
-      background: #3a3a3e;
-      color: #ddd;
+    .dk-el-btn:hover {
+      transform: scale(1.1);
     }
-    .dk-section-btn.dk-drag-handle {
+    .dk-el-drag {
+      background: #2a2a2e;
+      color: #ccc;
       cursor: grab;
     }
-    .dk-section-btn.dk-drag-handle:active {
+    .dk-el-drag:active {
       cursor: grabbing;
     }
-    [data-section].dk-section-dragging {
-      opacity: 0.5;
-      outline: 2px dashed #6366f1;
+    .dk-el-remove {
+      background: #dc2626;
+      color: #fff;
     }
-    [data-section].dk-drag-over {
+    .dk-el-remove:hover {
+      background: #ef4444;
+    }
+    [data-section].dk-section-dragging,
+    [data-block].dk-section-dragging {
+      opacity: 0.5;
+      outline: 2px dashed #6366f1 !important;
+    }
+    .dk-drag-over {
       border-top: 3px solid #6366f1;
     }
 

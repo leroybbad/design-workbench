@@ -153,117 +153,165 @@ window.DKWorkbench = (function () {
     });
   }
 
-  // ===== SECTION CONTROLS =====
+  // ===== ELEMENT CONTROLS (Alt-hold overlay) =====
 
-  function injectSectionControls() {
+  let controlsVisible = false;
+
+  function showElementControls() {
+    if (controlsVisible) return;
+    controlsVisible = true;
+    document.body.classList.add('dk-controls-visible');
+
     const canvas = document.getElementById('claude-content');
     if (!canvas) return;
 
-    canvas.querySelectorAll('.dk-section-controls').forEach(el => el.remove());
+    // Add controls to sections and blocks
+    const targets = canvas.querySelectorAll('[data-section], [data-block]');
+    targets.forEach(el => {
+      if (el.querySelector('.dk-el-controls')) return;
 
-    canvas.querySelectorAll('[data-section]').forEach(section => {
       const controls = document.createElement('div');
-      controls.className = 'dk-section-controls';
+      controls.className = 'dk-el-controls';
 
-      // Drag handle
+      // Drag handle (center)
       const dragBtn = document.createElement('button');
-      dragBtn.className = 'dk-section-btn dk-drag-handle';
-      dragBtn.innerHTML = '\u2807';
+      dragBtn.className = 'dk-el-btn dk-el-drag';
+      dragBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="5" cy="4" r="1.2" fill="currentColor"/><circle cx="11" cy="4" r="1.2" fill="currentColor"/><circle cx="5" cy="8" r="1.2" fill="currentColor"/><circle cx="11" cy="8" r="1.2" fill="currentColor"/><circle cx="5" cy="12" r="1.2" fill="currentColor"/><circle cx="11" cy="12" r="1.2" fill="currentColor"/></svg>';
       dragBtn.title = 'Drag to reorder';
       dragBtn.setAttribute('draggable', 'true');
-      setupSectionDrag(dragBtn, section);
+      setupElementDrag(dragBtn, el);
       controls.appendChild(dragBtn);
 
-      // Delete button
+      // Remove button
       const delBtn = document.createElement('button');
-      delBtn.className = 'dk-section-btn';
-      delBtn.innerHTML = '\u2715';
-      delBtn.title = 'Remove section';
+      delBtn.className = 'dk-el-btn dk-el-remove';
+      delBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M4 5h8l-.5 8H4.5L4 5z" stroke="currentColor" stroke-width="1.2" fill="none"/><path d="M6 5V3.5a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 .5.5V5" stroke="currentColor" stroke-width="1.2" fill="none"/><line x1="3" y1="5" x2="13" y2="5" stroke="currentColor" stroke-width="1.2"/></svg>';
+      delBtn.title = 'Remove';
       delBtn.addEventListener('click', (e) => {
         e.stopPropagation();
-        removeSection(section);
+        removeElement(el);
       });
       controls.appendChild(delBtn);
 
-      section.appendChild(controls);
+      el.style.position = 'relative';
+      el.appendChild(controls);
     });
   }
 
-  function removeSection(section) {
-    const parent = section.parentElement;
-    const nextSibling = section.nextElementSibling;
-    section.remove();
+  function hideElementControls() {
+    if (!controlsVisible) return;
+    controlsVisible = false;
+    document.body.classList.remove('dk-controls-visible');
+    document.querySelectorAll('.dk-el-controls').forEach(el => el.remove());
+  }
+
+  function removeElement(el) {
+    const parent = el.parentElement;
+    const nextSibling = el.nextElementSibling;
+    const isSection = el.hasAttribute('data-section');
+    el.remove();
+    hideElementControls();
 
     window.DKUndo.push({
-      type: 'remove-section',
+      type: isSection ? 'remove-section' : 'remove-block',
       undo: () => {
         if (nextSibling && nextSibling.parentElement) {
-          parent.insertBefore(section, nextSibling);
+          parent.insertBefore(el, nextSibling);
         } else {
-          parent.appendChild(section);
+          parent.appendChild(el);
         }
-        injectSectionControls();
       },
       redo: () => {
-        section.remove();
+        el.remove();
       },
-      description: 'Remove section'
+      description: isSection ? 'Remove section' : 'Remove block'
     });
   }
 
-  function setupSectionDrag(handle, section) {
+  function setupElementDrag(handle, el) {
     handle.addEventListener('dragstart', (e) => {
+      e.stopPropagation();
       e.dataTransfer.effectAllowed = 'move';
-      section.classList.add('dk-section-dragging');
-      window._dragSection = section;
+      el.classList.add('dk-section-dragging');
+      window._dragElement = el;
     });
 
     handle.addEventListener('dragend', () => {
-      section.classList.remove('dk-section-dragging');
-      document.querySelectorAll('.dk-drag-over').forEach(el => el.classList.remove('dk-drag-over'));
-      window._dragSection = null;
+      el.classList.remove('dk-section-dragging');
+      document.querySelectorAll('.dk-drag-over').forEach(d => d.classList.remove('dk-drag-over'));
+      window._dragElement = null;
     });
 
-    section.addEventListener('dragover', (e) => {
-      if (!window._dragSection || window._dragSection === section) return;
-      e.preventDefault();
-      e.dataTransfer.dropEffect = 'move';
-      section.classList.add('dk-drag-over');
-    });
-
-    section.addEventListener('dragleave', () => {
-      section.classList.remove('dk-drag-over');
-    });
-
-    section.addEventListener('drop', (e) => {
-      e.preventDefault();
-      section.classList.remove('dk-drag-over');
-      const dragged = window._dragSection;
-      if (!dragged || dragged === section) return;
-
-      const parent = section.parentElement;
-      const oldNext = dragged.nextElementSibling;
-
-      parent.insertBefore(dragged, section);
-      injectSectionControls();
-
-      window.DKUndo.push({
-        type: 'reorder-section',
-        undo: () => {
-          if (oldNext && oldNext.parentElement) {
-            parent.insertBefore(dragged, oldNext);
-          } else {
-            parent.appendChild(dragged);
-          }
-          injectSectionControls();
-        },
-        redo: () => {
-          parent.insertBefore(dragged, section);
-          injectSectionControls();
-        },
-        description: 'Reorder section'
+    // Drop targets: siblings of the same parent
+    const parent = el.parentElement;
+    if (!parent._dkDropSetup) {
+      parent._dkDropSetup = true;
+      parent.addEventListener('dragover', (e) => {
+        if (!window._dragElement) return;
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        // Find which child we're over
+        const target = e.target.closest('[data-section], [data-block]');
+        if (target && target !== window._dragElement && target.parentElement === parent) {
+          document.querySelectorAll('.dk-drag-over').forEach(d => d.classList.remove('dk-drag-over'));
+          target.classList.add('dk-drag-over');
+        }
       });
-    });
+      parent.addEventListener('dragleave', (e) => {
+        const target = e.target.closest('[data-section], [data-block]');
+        if (target) target.classList.remove('dk-drag-over');
+      });
+      parent.addEventListener('drop', (e) => {
+        e.preventDefault();
+        const dragged = window._dragElement;
+        if (!dragged) return;
+        const target = e.target.closest('[data-section], [data-block]');
+        if (!target || target === dragged || target.parentElement !== parent) return;
+        target.classList.remove('dk-drag-over');
+
+        const oldNext = dragged.nextElementSibling;
+        parent.insertBefore(dragged, target);
+        hideElementControls();
+
+        window.DKUndo.push({
+          type: 'reorder',
+          undo: () => {
+            if (oldNext && oldNext.parentElement === parent) {
+              parent.insertBefore(dragged, oldNext);
+            } else {
+              parent.appendChild(dragged);
+            }
+          },
+          redo: () => {
+            parent.insertBefore(dragged, target);
+          },
+          description: 'Reorder element'
+        });
+      });
+    }
+  }
+
+  // Alt key listeners
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Alt' && !e.repeat) {
+      e.preventDefault();
+      showElementControls();
+    }
+  });
+  document.addEventListener('keyup', (e) => {
+    if (e.key === 'Alt') {
+      // Delay hide slightly so click on button can register
+      setTimeout(() => {
+        if (!document.querySelector('.dk-el-btn:hover')) {
+          hideElementControls();
+        }
+      }, 150);
+    }
+  });
+
+  // Legacy compat
+  function injectSectionControls() {
+    // No-op — controls are now shown via Alt key
   }
 
   // ===== TEMPLATE PICKER =====

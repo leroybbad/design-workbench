@@ -1323,6 +1323,83 @@
       animation: dk-flash-in 0.5s ease-out;
     }
 
+    /* ===== INLINE TEXT EDITING ===== */
+    .dk-editing {
+      outline: 2px solid var(--color-primary, #6366f1) !important;
+      outline-offset: 2px;
+      border-radius: 3px;
+      min-width: 2em;
+      cursor: text;
+    }
+
+    /* ===== FOCUS MODE ===== */
+    body.dk-focus-mode #claude-content > *:not(.dk-focused) {
+      opacity: 0.2;
+      pointer-events: none;
+      filter: blur(1px);
+      transition: opacity 0.2s, filter 0.2s;
+    }
+    body.dk-focus-mode .dk-focused {
+      position: relative;
+      z-index: 50;
+      outline: 2px solid rgba(99,102,241,0.4);
+      outline-offset: 4px;
+      border-radius: 4px;
+    }
+    .dk-focus-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 10px;
+      background: #1a1a1e;
+      border-radius: 8px 8px 0 0;
+      margin: -2px -2px 8px;
+      position: sticky;
+      top: 0;
+      z-index: 60;
+    }
+    .dk-focus-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: #aaa;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      flex: 1;
+    }
+    .dk-focus-btn {
+      font-size: 11px;
+      font-weight: 600;
+      color: #ccc;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 5px;
+      padding: 4px 10px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: background 0.15s;
+    }
+    .dk-focus-btn:hover {
+      background: rgba(255,255,255,0.15);
+      color: #fff;
+    }
+    .dk-focus-add {
+      color: #6366f1;
+      border-color: rgba(99,102,241,0.3);
+    }
+    .dk-focus-add:hover {
+      background: rgba(99,102,241,0.15);
+      color: #818cf8;
+    }
+    .dk-focus-child {
+      position: relative;
+    }
+    body.dk-focus-mode .dk-focus-child:hover {
+      outline: 1px dashed rgba(99,102,241,0.35);
+      outline-offset: 2px;
+    }
+
     /* ===== PLACEMENT MODE ===== */
     .dk-placement-line {
       position: absolute;

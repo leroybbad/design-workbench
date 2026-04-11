@@ -375,11 +375,219 @@ window.DKWorkbench = (function () {
     });
   }
 
+  // ===== INLINE TEXT EDITING =====
+
+  const TEXT_TAGS = new Set(['H1','H2','H3','H4','H5','H6','P','SPAN','A','BUTTON','LABEL','LI','TD','TH']);
+  let activeEditor = null;
+
+  function setupInlineEditing() {
+    const canvas = document.getElementById('claude-content');
+    if (!canvas) return;
+
+    canvas.addEventListener('dblclick', (e) => {
+      // If we're in a mode that uses clicks (placement, comment, tune), skip
+      if (document.body.classList.contains('placement-mode')) return;
+      if (document.body.classList.contains('dk-focus-mode')) {
+        handleFocusDblClick(e);
+        return;
+      }
+
+      const el = e.target;
+
+      // Check if this is a text element
+      if (TEXT_TAGS.has(el.tagName)) {
+        startInlineEdit(el);
+        e.preventDefault();
+        e.stopPropagation();
+        return;
+      }
+
+      // Check if this is a container — enter focus mode
+      const block = el.closest('[data-block]') || el.closest('[data-section]');
+      if (block && block.children.length > 1) {
+        enterFocusMode(block);
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    });
+  }
+
+  function startInlineEdit(el) {
+    if (activeEditor) commitInlineEdit(activeEditor);
+
+    const oldText = el.textContent;
+    el.setAttribute('contenteditable', 'true');
+    el.classList.add('dk-editing');
+    el.focus();
+    activeEditor = el;
+
+    // Select all text
+    const range = document.createRange();
+    range.selectNodeContents(el);
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(range);
+
+    function onBlur() {
+      commitInlineEdit(el, oldText);
+      el.removeEventListener('blur', onBlur);
+      el.removeEventListener('keydown', onKey);
+    }
+
+    function onKey(e) {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        el.blur();
+      }
+      if (e.key === 'Escape') {
+        el.textContent = oldText;
+        el.blur();
+      }
+    }
+
+    el.addEventListener('blur', onBlur);
+    el.addEventListener('keydown', onKey);
+  }
+
+  function commitInlineEdit(el, oldText) {
+    el.removeAttribute('contenteditable');
+    el.classList.remove('dk-editing');
+    activeEditor = null;
+
+    const newText = el.textContent;
+    if (oldText !== undefined && newText !== oldText) {
+      window.DKUndo.push({
+        type: 'text-edit',
+        undo: () => { el.textContent = oldText; },
+        redo: () => { el.textContent = newText; },
+        description: 'Edit text'
+      });
+    }
+  }
+
+  // ===== FOCUS MODE =====
+
+  let focusTarget = null;
+
+  function enterFocusMode(block) {
+    if (focusTarget) exitFocusMode();
+    focusTarget = block;
+    document.body.classList.add('dk-focus-mode');
+    block.classList.add('dk-focused');
+
+    // Show child controls inside the focused block
+    const children = Array.from(block.children).filter(c =>
+      c.nodeType === 1 && !c.classList.contains('dk-el-controls') && !c.classList.contains('dk-focus-toolbar')
+    );
+
+    if (children.length > 0) {
+      // Add a small toolbar at the top of the focused block
+      const toolbar = document.createElement('div');
+      toolbar.className = 'dk-focus-toolbar';
+
+      const label = document.createElement('span');
+      label.className = 'dk-focus-label';
+      const blockName = block.getAttribute('data-block') || block.tagName.toLowerCase();
+      label.textContent = 'Editing: ' + blockName;
+      toolbar.appendChild(label);
+
+      const addBtn = document.createElement('button');
+      addBtn.className = 'dk-focus-btn dk-focus-add';
+      addBtn.innerHTML = '<i class="lucide-plus" style="width:12px;height:12px;"></i> Add item';
+      addBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        duplicateLastChild(block);
+      });
+      toolbar.appendChild(addBtn);
+
+      const doneBtn = document.createElement('button');
+      doneBtn.className = 'dk-focus-btn';
+      doneBtn.textContent = 'Done';
+      doneBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        exitFocusMode();
+      });
+      toolbar.appendChild(doneBtn);
+
+      block.insertAdjacentElement('afterbegin', toolbar);
+
+      // Mark each child for individual controls
+      children.forEach(child => {
+        child.classList.add('dk-focus-child');
+      });
+    }
+  }
+
+  function exitFocusMode() {
+    if (!focusTarget) return;
+    document.body.classList.remove('dk-focus-mode');
+    focusTarget.classList.remove('dk-focused');
+    focusTarget.querySelectorAll('.dk-focus-toolbar').forEach(t => t.remove());
+    focusTarget.querySelectorAll('.dk-focus-child').forEach(c => c.classList.remove('dk-focus-child'));
+    focusTarget = null;
+  }
+
+  function handleFocusDblClick(e) {
+    const el = e.target;
+
+    // Text editing inside focus mode
+    if (TEXT_TAGS.has(el.tagName)) {
+      startInlineEdit(el);
+      e.preventDefault();
+      e.stopPropagation();
+      return;
+    }
+
+    // Clicking outside the focused block exits focus mode
+    if (focusTarget && !focusTarget.contains(el)) {
+      exitFocusMode();
+    }
+  }
+
+  function duplicateLastChild(container) {
+    const children = Array.from(container.children).filter(c =>
+      c.nodeType === 1 && !c.classList.contains('dk-focus-toolbar')
+    );
+    if (children.length === 0) return;
+
+    const lastChild = children[children.length - 1];
+    const clone = lastChild.cloneNode(true);
+    clone.classList.add('dk-focus-child');
+    container.appendChild(clone);
+    flashElement(clone);
+
+    window.DKUndo.push({
+      type: 'duplicate-child',
+      undo: () => clone.remove(),
+      redo: () => container.appendChild(clone),
+      description: 'Add item'
+    });
+  }
+
+  // Escape exits focus mode
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && focusTarget) {
+      exitFocusMode();
+    }
+  });
+
+  // Click outside focused block exits focus mode
+  document.addEventListener('click', (e) => {
+    if (!focusTarget) return;
+    if (e.target.closest('.dk-focus-toolbar')) return;
+    if (e.target.closest('#dk-toolbar')) return;
+    if (e.target.closest('.dk-panel')) return;
+    if (!focusTarget.contains(e.target)) {
+      exitFocusMode();
+    }
+  });
+
   // ===== INIT =====
 
   function init() {
     injectSectionControls();
     updateSlotHints();
+    setupInlineEditing();
 
     // Watch for DOM changes to update slot hints
     const canvas = document.getElementById('claude-content');

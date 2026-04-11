@@ -222,11 +222,22 @@
 
     if (window.DKCatalog) {
       window.DKCatalog.load().then(() => {
-        window.DKCatalog.renderPanel(body, (block) => {
-          enterPlacementMode(block);
-        }, () => {
-          exitPlacementMode();
-        });
+        const manifest = window.DKCatalog.getManifest ? window.DKCatalog.getManifest() : null;
+        if (!manifest || !manifest.blocks || manifest.blocks.length === 0) {
+          body.innerHTML = '<div class="dk-panel-empty">'
+            + '<strong>No catalog loaded</strong><br>'
+            + '<span style="color:#888;font-size:11px;line-height:1.5;">'
+            + 'This page was generated as a concept. Use Comment and Tune to refine it, '
+            + 'then Send to Claude for the next iteration.<br><br>'
+            + 'To enable block composition, run the prep script to build a catalog from your component library.'
+            + '</span></div>';
+        } else {
+          window.DKCatalog.renderPanel(body, (block) => {
+            enterPlacementMode(block);
+          }, () => {
+            exitPlacementMode();
+          });
+        }
       });
     }
   }
@@ -358,6 +369,22 @@
       nav.appendChild(nextBtn);
       body.appendChild(nav);
     }
+
+    // New canvas button
+    const newBtn = document.createElement('button');
+    newBtn.className = 'dk-snap-btn';
+    newBtn.style.marginTop = '12px';
+    newBtn.style.width = '100%';
+    newBtn.style.borderColor = 'rgba(255,255,255,0.15)';
+    newBtn.textContent = 'Start fresh canvas';
+    newBtn.addEventListener('click', () => {
+      document.getElementById('claude-content').innerHTML = '<main data-canvas></main>';
+      if (window.DKUndo) window.DKUndo.clear();
+      if (window.DKWorkbench) window.DKWorkbench.showTemplatePicker();
+      const snapPanel = document.getElementById('dk-snapshots-panel');
+      if (snapPanel) { snapPanel.style.display = 'none'; snapPanel.classList.remove('open'); }
+    });
+    body.appendChild(newBtn);
   }
 
   function setTuneMode(active) {

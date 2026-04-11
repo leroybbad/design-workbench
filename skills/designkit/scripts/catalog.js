@@ -121,6 +121,7 @@ window.DKCatalog = (function () {
 
   function getSelected() { return selectedBlock; }
   function clearSelection() { selectedBlock = null; }
+  function getManifest() { return manifest; }
 
-  return { load, fetchBlockContent, renderPanel, getSelected, clearSelection };
+  return { load, fetchBlockContent, renderPanel, getSelected, clearSelection, getManifest };
 })();

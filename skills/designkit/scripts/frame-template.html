@@ -1307,6 +1307,21 @@
       font-size: 10px;
       color: #777;
     }
+    .dk-panel-empty {
+      padding: 16px 4px;
+      line-height: 1.5;
+      color: #ccc;
+      font-size: 13px;
+    }
+
+    /* ===== PLACEMENT FLASH ===== */
+    @keyframes dk-flash-in {
+      0% { outline: 3px solid rgba(99,102,241,0.7); outline-offset: 0; }
+      100% { outline: 3px solid rgba(99,102,241,0); outline-offset: 4px; }
+    }
+    .dk-just-placed {
+      animation: dk-flash-in 0.5s ease-out;
+    }
 
     /* ===== PLACEMENT MODE ===== */
     .dk-placement-line {

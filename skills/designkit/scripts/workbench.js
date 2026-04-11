@@ -4,6 +4,11 @@ window.DKWorkbench = (function () {
   let placementLine = null;
   let placementTarget = null;
 
+  function flashElement(el) {
+    el.classList.add('dk-just-placed');
+    el.addEventListener('animationend', () => el.classList.remove('dk-just-placed'), { once: true });
+  }
+
   // ===== PLACEMENT MODE =====
 
   function enterPlacementMode(block) {
@@ -123,6 +128,7 @@ window.DKWorkbench = (function () {
     } else {
       canvas.insertAdjacentElement('afterbegin', wrapper);
     }
+    flashElement(wrapper);
 
     window.DKUndo.push({
       type: 'insert-section',
@@ -147,6 +153,7 @@ window.DKWorkbench = (function () {
     const inserted = temp.firstElementChild || temp;
 
     slotContainer.appendChild(inserted);
+    flashElement(inserted);
 
     window.DKUndo.push({
       type: 'insert-block',

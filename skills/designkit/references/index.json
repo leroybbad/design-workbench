@@ -1,0 +1,42 @@
+[
+  {
+    "id": "hero-asymmetric",
+    "category": "hero",
+    "audience": ["consumer", "creative"],
+    "mood": ["bold", "editorial", "high-energy"],
+    "techniques": ["scale-contrast", "asymmetric-grid", "negative-space"],
+    "summary": "Full-bleed hero with dramatic type scale and off-grid image placement. Hierarchy through size, not weight."
+  },
+  {
+    "id": "hero-metric-led",
+    "category": "hero",
+    "audience": ["enterprise", "saas"],
+    "mood": ["confident", "data-driven", "clean"],
+    "techniques": ["metric-prominence", "restrained-palette", "clear-hierarchy"],
+    "summary": "Product hero led by a key metric or value proposition number. Clean layout with clear CTA hierarchy."
+  },
+  {
+    "id": "cards-bento",
+    "category": "cards",
+    "audience": ["consumer", "creative", "saas"],
+    "mood": ["modern", "dynamic", "editorial"],
+    "techniques": ["mixed-grid-sizes", "varied-hierarchy", "surface-depth"],
+    "summary": "Bento-style card grid with mixed sizes — featured item spans 2 columns, supporting items fill remaining space."
+  },
+  {
+    "id": "dashboard-kpi-strip",
+    "category": "dashboard",
+    "audience": ["enterprise", "saas"],
+    "mood": ["data-driven", "clean", "professional"],
+    "techniques": ["metric-prominence", "compact-density", "visual-separators"],
+    "summary": "Horizontal KPI strip with primary metric given 2x visual weight. Compact with clear visual boundaries."
+  },
+  {
+    "id": "features-alternating",
+    "category": "features",
+    "audience": ["consumer", "saas", "enterprise"],
+    "mood": ["balanced", "professional", "clear"],
+    "techniques": ["asymmetric-grid", "image-text-pairing", "rhythm-variation"],
+    "summary": "Alternating left-right feature sections with image/content asymmetric split. Each section flips for rhythm."
+  }
+]

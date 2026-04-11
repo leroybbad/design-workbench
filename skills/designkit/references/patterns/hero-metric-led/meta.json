@@ -1,0 +1,9 @@
+{
+  "id": "hero-metric-led",
+  "name": "Metric-Led Hero",
+  "category": "hero",
+  "principles": ["visual-hierarchy", "typography", "color-strategy"],
+  "why_it_works": "Opening with a specific number creates instant credibility — the brain processes data as proof, not claim. The eyebrow label contextualizes the number before you read it (you know what '99.99%' means before your eyes get there). The centered stack and restrained palette keep the metric as the undisputed anchor. The social proof strip below the CTA uses the same pattern at a smaller scale, compounding credibility without competing with the main message.",
+  "when_to_use": "SaaS product pages, B2B marketing sites, analytics tools, fintech, any product where a key metric (uptime, users, savings, ROI) is genuinely impressive and central to the value proposition.",
+  "watch_out": "A mediocre number backfires badly — '4,000 users' reads as small, not large, depending on context. The number must be chosen deliberately. Also avoid this pattern if the product's value is qualitative rather than quantitative."
+}

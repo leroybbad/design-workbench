@@ -1,0 +1,238 @@
+<!--
+  PATTERN: Asymmetric Hero
+  CATEGORY: hero
+  TECHNIQUES: scale-contrast, asymmetric-grid, negative-space
+
+  DESIGN RATIONALE:
+  Hierarchy through scale, not weight. The oversized headline on the left
+  column does all the heavy lifting. The 7/5 grid split gives text more
+  presence than a 50/50 would. The image's upward offset creates visual
+  tension that prevents the layout from feeling static.
+-->
+
+<style>
+  /* Token block — all values should be overridden by the host design system */
+  .hero-asymmetric {
+    --color-bg: #ffffff;
+    --color-text: #111827;
+    --color-text-muted: #6b7280;
+    --color-primary: #2563eb;
+    --color-primary-hover: #1d4ed8;
+    --color-surface: #f3f4f6;
+    --color-border: #e5e7eb;
+    --radius-md: 0.5rem;
+    --radius-lg: 0.75rem;
+    --font-sans: system-ui, -apple-system, sans-serif;
+  }
+</style>
+
+<section class="hero-asymmetric">
+  <style>
+    /* ── Layout ─────────────────────────────────────────────────────────
+       7fr/5fr split gives the text column 58% of space.
+       This is intentionally unequal — equal columns flatten hierarchy.
+       min-height 80vh ensures the hero fills most of the viewport without
+       requiring a fixed height that breaks at different screen sizes.
+    ─────────────────────────────────────────────────────────────────── */
+    .hero-asymmetric {
+      display: grid;
+      grid-template-columns: 7fr 5fr;
+      gap: 4rem;
+      align-items: center;
+      min-height: 80vh;
+      padding: 6rem 4rem;
+      background-color: var(--color-bg);
+      font-family: var(--font-sans);
+      box-sizing: border-box;
+    }
+
+    /* ── Left column: content ────────────────────────────────────────── */
+    .hero-asymmetric__content {
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+    }
+
+    /* ── Eyebrow label ───────────────────────────────────────────────────
+       Small, uppercase, tracked — creates a label-like signal before the
+       big headline so readers know the context instantly.
+    ─────────────────────────────────────────────────────────────────── */
+    .hero-asymmetric__eyebrow {
+      font-size: 0.8125rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--color-primary);
+      margin: 0;
+    }
+
+    /* ── Headline ────────────────────────────────────────────────────────
+       clamp() creates fluid scaling: 2.5rem floor, 5vw preferred, 4.5rem
+       ceiling. The tight line-height (1.1) and negative letter-spacing
+       (-0.03em) are editorial choices — they make large type feel
+       intentional rather than accidentally big.
+    ─────────────────────────────────────────────────────────────────── */
+    .hero-asymmetric__heading {
+      font-size: clamp(2.5rem, 5vw, 4.5rem);
+      font-weight: 800;
+      line-height: 1.1;
+      letter-spacing: -0.03em;
+      color: var(--color-text);
+      margin: 0;
+    }
+
+    /* ── Body copy ───────────────────────────────────────────────────────
+       1.125rem is 18px — large enough to feel intentional, not a caption.
+       max-width 36ch limits line length; shorter than body copy norms
+       because at this scale brevity is a virtue.
+    ─────────────────────────────────────────────────────────────────── */
+    .hero-asymmetric__body {
+      font-size: 1.125rem;
+      line-height: 1.65;
+      color: var(--color-text-muted);
+      max-width: 36ch;
+      margin: 0;
+    }
+
+    /* ── CTA group ───────────────────────────────────────────────────────
+       Left-aligned, horizontal. Primary + secondary side by side.
+       gap: 1rem prevents the buttons from merging visually without
+       needing a separator.
+    ─────────────────────────────────────────────────────────────────── */
+    .hero-asymmetric__cta-group {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    /* ── Primary button: filled ──────────────────────────────────────── */
+    .hero-asymmetric__cta-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.875rem 1.75rem;
+      background-color: var(--color-primary);
+      color: #ffffff;
+      font-size: 1rem;
+      font-weight: 600;
+      text-decoration: none;
+      border-radius: var(--radius-md);
+      border: 2px solid var(--color-primary);
+      cursor: pointer;
+      transition: background-color 0.15s ease;
+    }
+
+    .hero-asymmetric__cta-primary:hover {
+      background-color: var(--color-primary-hover);
+      border-color: var(--color-primary-hover);
+    }
+
+    /* ── Secondary button: outlined ──────────────────────────────────────
+       Same dimensions as primary — same weight, different emphasis.
+       The outline treatment signals "alternative path", not "less important
+       than primary" in the way a ghost button might.
+    ─────────────────────────────────────────────────────────────────── */
+    .hero-asymmetric__cta-secondary {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.875rem 1.75rem;
+      background-color: transparent;
+      color: var(--color-text);
+      font-size: 1rem;
+      font-weight: 600;
+      text-decoration: none;
+      border-radius: var(--radius-md);
+      border: 2px solid var(--color-border);
+      cursor: pointer;
+      transition: border-color 0.15s ease;
+    }
+
+    .hero-asymmetric__cta-secondary:hover {
+      border-color: var(--color-text-muted);
+    }
+
+    /* ── Right column: visual ────────────────────────────────────────────
+       The -2rem margin-top offset breaks the grid's vertical alignment.
+       This is intentional — it creates visual tension that makes the layout
+       feel dynamic rather than rigidly structured. The 4/3 aspect ratio
+       works for most product and lifestyle imagery.
+    ─────────────────────────────────────────────────────────────────── */
+    .hero-asymmetric__visual {
+      position: relative;
+      margin-top: -2rem;
+    }
+
+    .hero-asymmetric__image-placeholder {
+      aspect-ratio: 4 / 3;
+      background-color: var(--color-surface);
+      border-radius: var(--radius-lg);
+      /* Subtle inner pattern to suggest an image without using one */
+      background-image:
+        linear-gradient(
+          135deg,
+          color-mix(in srgb, var(--color-primary) 8%, transparent) 0%,
+          transparent 60%
+        );
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--color-text-muted);
+      font-size: 0.875rem;
+      overflow: hidden;
+    }
+
+    /* ── Decorative accent ───────────────────────────────────────────────
+       A small color block behind the image creates depth without a shadow.
+       Positioned absolutely relative to the visual container.
+    ─────────────────────────────────────────────────────────────────── */
+    .hero-asymmetric__image-accent {
+      position: absolute;
+      bottom: -1rem;
+      right: -1rem;
+      width: 60%;
+      height: 60%;
+      background-color: color-mix(in srgb, var(--color-primary) 10%, transparent);
+      border-radius: var(--radius-lg);
+      z-index: -1;
+    }
+  </style>
+
+  <!-- Left: content column -->
+  <div class="hero-asymmetric__content">
+    <!-- Eyebrow sets context before the big type hits -->
+    <p class="hero-asymmetric__eyebrow">Now in public beta</p>
+
+    <!-- Headline: scale does the hierarchy work, not weight alone -->
+    <h1 class="hero-asymmetric__heading">
+      Design that<br>speaks before<br>you do
+    </h1>
+
+    <!-- Body: kept short — 36ch max enforces this in CSS -->
+    <p class="hero-asymmetric__body">
+      Professional design tools built for teams who ship fast and care about every pixel.
+    </p>
+
+    <!-- CTA group: primary + secondary left-aligned, not centered -->
+    <div class="hero-asymmetric__cta-group">
+      <a href="#" class="hero-asymmetric__cta-primary">
+        <i class="lucide-arrow-right"></i>
+        Get started free
+      </a>
+      <a href="#" class="hero-asymmetric__cta-secondary">
+        See how it works
+      </a>
+    </div>
+  </div>
+
+  <!-- Right: visual column, offset upward to break grid baseline -->
+  <div class="hero-asymmetric__visual">
+    <div class="hero-asymmetric__image-placeholder">
+      <!-- Replace with product screenshot or hero image -->
+      <i class="lucide-image" style="width: 3rem; height: 3rem; opacity: 0.3;"></i>
+    </div>
+    <!-- Accent block behind image for depth -->
+    <div class="hero-asymmetric__image-accent" aria-hidden="true"></div>
+  </div>
+</section>

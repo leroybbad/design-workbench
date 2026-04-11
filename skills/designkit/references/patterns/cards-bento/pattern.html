@@ -1,0 +1,213 @@
+<!--
+  PATTERN: Bento Card Grid
+  CATEGORY: cards
+  TECHNIQUES: mixed-grid-sizes, varied-hierarchy, surface-depth
+
+  DESIGN RATIONALE:
+  Mixed sizes create natural hierarchy without different font sizes or colors.
+  The featured card anchors the layout. Supporting cards share the remaining
+  space. Inverted colors on the featured card signal importance through
+  contrast. Consistent padding and icon treatment create rhythm despite
+  size variation.
+-->
+
+<style>
+  /* Token block */
+  .cards-bento {
+    --color-bg: #ffffff;
+    --color-text: #111827;
+    --color-text-muted: #6b7280;
+    --color-primary: #2563eb;
+    --color-primary-text: #ffffff;
+    --color-surface: #f9fafb;
+    --color-border: #e5e7eb;
+    --radius-lg: 0.75rem;
+    --font-sans: system-ui, -apple-system, sans-serif;
+  }
+</style>
+
+<section class="cards-bento">
+  <style>
+    /* ── Section wrapper ─────────────────────────────────────────────── */
+    .cards-bento {
+      padding: 4rem;
+      background-color: var(--color-bg);
+      font-family: var(--font-sans);
+      box-sizing: border-box;
+    }
+
+    /* ── Grid ────────────────────────────────────────────────────────────
+       3-column grid. The featured card spans 2 columns and 2 rows.
+       All other cards occupy 1×1 cells. This asymmetry is the entire
+       design — without it, this is just a regular card grid.
+    ─────────────────────────────────────────────────────────────────── */
+    .cards-bento__grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+    }
+
+    /* ── Base card styles ────────────────────────────────────────────────
+       All cards share the same padding and border-radius so the grid
+       feels like a cohesive system, not a collage.
+    ─────────────────────────────────────────────────────────────────── */
+    .cards-bento__card {
+      padding: 1.5rem;
+      border-radius: var(--radius-lg);
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      background-color: var(--color-surface);
+      border: 1px solid var(--color-border);
+    }
+
+    /* ── Featured card: inverted, spanning ───────────────────────────────
+       grid-column: span 2 + grid-row: span 2 gives it 4x the area of
+       a regular card. The primary background + white text signal
+       importance through contrast. Inverted means no border needed —
+       the fill IS the boundary.
+    ─────────────────────────────────────────────────────────────────── */
+    .cards-bento__card--featured {
+      grid-column: span 2;
+      grid-row: span 2;
+      background-color: var(--color-primary);
+      border-color: transparent;
+      color: var(--color-primary-text);
+      justify-content: flex-end; /* content anchors to bottom of large card */
+      min-height: 18rem;
+    }
+
+    /* ── Icon container ──────────────────────────────────────────────────
+       Fixed 2.5rem size for all cards ensures visual rhythm across
+       different icon designs. The container also provides a consistent
+       anchor point for the card content below it.
+    ─────────────────────────────────────────────────────────────────── */
+    .cards-bento__icon {
+      width: 2.5rem;
+      height: 2.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    /* Featured icon: white on primary bg */
+    .cards-bento__card--featured .cards-bento__icon {
+      color: rgba(255, 255, 255, 0.9);
+    }
+
+    /* Regular icon: primary color on surface bg */
+    .cards-bento__card:not(.cards-bento__card--featured) .cards-bento__icon {
+      color: var(--color-primary);
+    }
+
+    /* ── Card body container ─────────────────────────────────────────── */
+    .cards-bento__card-body {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    /* ── Card title ──────────────────────────────────────────────────────
+       1.125rem is slightly larger than body copy — enough to signal
+       "this is the label" without dominating the card.
+       font-weight 600 (semibold) keeps it readable at smaller sizes.
+    ─────────────────────────────────────────────────────────────────── */
+    .cards-bento__title {
+      font-size: 1.125rem;
+      font-weight: 600;
+      line-height: 1.3;
+      margin: 0;
+      color: var(--color-text);
+    }
+
+    .cards-bento__card--featured .cards-bento__title {
+      color: var(--color-primary-text);
+      font-size: 1.375rem; /* slightly larger on featured — it has more room */
+    }
+
+    /* ── Card body text ──────────────────────────────────────────────────
+       0.9375rem (15px) keeps regular cards compact.
+       Muted color creates a two-level hierarchy with the title.
+    ─────────────────────────────────────────────────────────────────── */
+    .cards-bento__body {
+      font-size: 0.9375rem;
+      line-height: 1.55;
+      margin: 0;
+      color: var(--color-text-muted);
+    }
+
+    .cards-bento__card--featured .cards-bento__body {
+      color: rgba(255, 255, 255, 0.75); /* slightly transparent white on primary bg */
+      font-size: 1rem;
+      max-width: 36ch;
+    }
+  </style>
+
+  <div class="cards-bento__grid">
+
+    <!-- Featured card: spans 2 columns × 2 rows, inverted colors -->
+    <!-- WHY: This is the anchoring element. Everything else orbits it. -->
+    <article class="cards-bento__card cards-bento__card--featured">
+      <div class="cards-bento__icon">
+        <!-- Zap: energy, speed — works for a flagship capability -->
+        <i class="lucide-zap"></i>
+      </div>
+      <div class="cards-bento__card-body">
+        <h3 class="cards-bento__title">Instant deployment</h3>
+        <p class="cards-bento__body">
+          Push once and ship everywhere. Zero config, zero downtime. From commit to live in under 30 seconds.
+        </p>
+      </div>
+    </article>
+
+    <!-- Regular card 1 -->
+    <article class="cards-bento__card">
+      <div class="cards-bento__icon">
+        <!-- Shield-check: trust, security -->
+        <i class="lucide-shield-check"></i>
+      </div>
+      <div class="cards-bento__card-body">
+        <h3 class="cards-bento__title">Enterprise security</h3>
+        <p class="cards-bento__body">SOC 2 Type II certified. SSO, audit logs, and role-based access built in.</p>
+      </div>
+    </article>
+
+    <!-- Regular card 2 -->
+    <article class="cards-bento__card">
+      <div class="cards-bento__icon">
+        <!-- Git-branch: version control, branching workflows -->
+        <i class="lucide-git-branch"></i>
+      </div>
+      <div class="cards-bento__card-body">
+        <h3 class="cards-bento__title">Branch previews</h3>
+        <p class="cards-bento__body">Every PR gets its own live environment. Review before merge.</p>
+      </div>
+    </article>
+
+    <!-- Regular card 3 -->
+    <article class="cards-bento__card">
+      <div class="cards-bento__icon">
+        <!-- Puzzle: integrations, extensibility -->
+        <i class="lucide-puzzle"></i>
+      </div>
+      <div class="cards-bento__card-body">
+        <h3 class="cards-bento__title">Native integrations</h3>
+        <p class="cards-bento__body">GitHub, GitLab, Slack, Datadog, and 40+ more out of the box.</p>
+      </div>
+    </article>
+
+    <!-- Regular card 4 -->
+    <article class="cards-bento__card">
+      <div class="cards-bento__icon">
+        <!-- Bar-chart-3: analytics, observability -->
+        <i class="lucide-bar-chart-3"></i>
+      </div>
+      <div class="cards-bento__card-body">
+        <h3 class="cards-bento__title">Built-in analytics</h3>
+        <p class="cards-bento__body">Real-time metrics, traces, and logs without a separate tool.</p>
+      </div>
+    </article>
+
+  </div>
+</section>

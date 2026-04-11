@@ -1,0 +1,186 @@
+<!--
+  PATTERN: Dashboard KPI Strip
+  CATEGORY: dashboard
+  TECHNIQUES: metric-prominence, compact-density, visual-separators
+
+  DESIGN RATIONALE:
+  The primary KPI gets flex: 1.8 — 80% more space than peers — enabling
+  a dramatically larger type size without restructuring the layout.
+  Border-right separators create visual cells without full table-grid weight.
+  The tinted primary background on the primary item uses color sparingly:
+  just enough to draw the eye, not enough to overwhelm the data.
+  Change indicators use semantic green/red so status reads instantly.
+-->
+
+<style>
+  /* Token block */
+  .dashboard-kpi-strip {
+    --color-bg: #ffffff;
+    --color-text: #111827;
+    --color-text-muted: #6b7280;
+    --color-primary: #2563eb;
+    --color-border: #e5e7eb;
+    --color-surface: #f9fafb;
+    --color-positive: #16a34a;
+    --color-negative: #dc2626;
+    --radius-lg: 0.75rem;
+    --font-sans: system-ui, -apple-system, sans-serif;
+    --font-mono: ui-monospace, "SF Mono", monospace;
+  }
+</style>
+
+<div class="dashboard-kpi-strip">
+  <style>
+    /* ── Strip container ─────────────────────────────────────────────────
+       The border creates the "card" boundary for the entire strip.
+       border-radius and overflow: hidden clip the inner tinted background.
+    ─────────────────────────────────────────────────────────────────── */
+    .dashboard-kpi-strip {
+      display: flex;
+      align-items: stretch;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      background-color: var(--color-bg);
+      font-family: var(--font-sans);
+      overflow: hidden;
+      box-sizing: border-box;
+    }
+
+    /* ── KPI item: base ──────────────────────────────────────────────────
+       flex: 1 means equal distribution for secondary items.
+       border-right creates visual separation without structural elements.
+       padding: 1.5rem 1.75rem gives enough breathing room at compact scale.
+    ─────────────────────────────────────────────────────────────────── */
+    .dashboard-kpi-strip__item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 0.375rem;
+      padding: 1.5rem 1.75rem;
+      border-right: 1px solid var(--color-border);
+    }
+
+    /* Remove border on last item — no border against the container edge */
+    .dashboard-kpi-strip__item:last-child {
+      border-right: none;
+    }
+
+    /* ── Primary KPI: dominant ───────────────────────────────────────────
+       flex: 1.8 gives 80% more space than secondary items.
+       color-mix at 6% opacity is barely visible but enough to distinguish.
+       This is the minimum effective dose of color — just enough signal.
+    ─────────────────────────────────────────────────────────────────── */
+    .dashboard-kpi-strip__item--primary {
+      flex: 1.8;
+      background-color: color-mix(in srgb, var(--color-primary) 6%, transparent);
+    }
+
+    /* ── Label ───────────────────────────────────────────────────────────
+       0.75rem uppercase with tracking: this is a data label, not prose.
+       Uppercase + spacing combo signals "category" not "content".
+    ─────────────────────────────────────────────────────────────────── */
+    .dashboard-kpi-strip__label {
+      font-size: 0.75rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--color-text-muted);
+      margin: 0;
+    }
+
+    /* ── Primary metric value ────────────────────────────────────────────
+       2.25rem at primary — large enough to dominate but not so large it
+       breaks layout at small container widths. Tight letter-spacing and
+       line-height for tabular display character.
+    ─────────────────────────────────────────────────────────────────── */
+    .dashboard-kpi-strip__value--primary {
+      font-size: 2.25rem;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      line-height: 1;
+      color: var(--color-text);
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* ── Secondary metric value ──────────────────────────────────────────
+       1.5rem for secondary items — clearly subordinate to primary
+       but still large enough to scan at a glance.
+    ─────────────────────────────────────────────────────────────────── */
+    .dashboard-kpi-strip__value--secondary {
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      line-height: 1;
+      color: var(--color-text);
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* ── Change indicator row ────────────────────────────────────────────
+       Flex row for value + icon. Semantic color encodes direction
+       without additional labels — green means up/good, red means down/bad.
+       This is a convention the user brings — don't override it.
+    ─────────────────────────────────────────────────────────────────── */
+    .dashboard-kpi-strip__change {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .dashboard-kpi-strip__change--positive {
+      color: var(--color-positive);
+    }
+
+    .dashboard-kpi-strip__change--negative {
+      color: var(--color-negative);
+    }
+  </style>
+
+  <!-- Primary KPI: MRR — the headline metric, gets most space -->
+  <!-- WHY: The product's north star metric always gets primary treatment -->
+  <div class="dashboard-kpi-strip__item dashboard-kpi-strip__item--primary">
+    <p class="dashboard-kpi-strip__label">Monthly Recurring Revenue</p>
+    <span class="dashboard-kpi-strip__value--primary">$2.4M</span>
+    <!-- Green + arrow: positive change, reads instantly -->
+    <span class="dashboard-kpi-strip__change dashboard-kpi-strip__change--positive">
+      <i class="lucide-trending-up"></i>
+      +12.3% vs last month
+    </span>
+  </div>
+
+  <!-- Secondary KPI: Active Users -->
+  <div class="dashboard-kpi-strip__item">
+    <p class="dashboard-kpi-strip__label">Active Users</p>
+    <span class="dashboard-kpi-strip__value--secondary">18,420</span>
+    <span class="dashboard-kpi-strip__change dashboard-kpi-strip__change--positive">
+      <i class="lucide-trending-up"></i>
+      +8.1%
+    </span>
+  </div>
+
+  <!-- Secondary KPI: Churn — red because decrease is the desired direction -->
+  <!-- WHY: For churn, a decrease is good — color semantics must match the metric's polarity -->
+  <div class="dashboard-kpi-strip__item">
+    <p class="dashboard-kpi-strip__label">Churn Rate</p>
+    <span class="dashboard-kpi-strip__value--secondary">1.2%</span>
+    <!-- Green for churn going DOWN — polarity-aware coloring -->
+    <span class="dashboard-kpi-strip__change dashboard-kpi-strip__change--positive">
+      <i class="lucide-trending-down"></i>
+      -0.3pp
+    </span>
+  </div>
+
+  <!-- Secondary KPI: Response time — lower is better, same polarity consideration -->
+  <div class="dashboard-kpi-strip__item">
+    <p class="dashboard-kpi-strip__label">Avg Response</p>
+    <span class="dashboard-kpi-strip__value--secondary">142ms</span>
+    <!-- Green for response time going DOWN — good improvement -->
+    <span class="dashboard-kpi-strip__change dashboard-kpi-strip__change--positive">
+      <i class="lucide-trending-down"></i>
+      -18ms
+    </span>
+  </div>
+
+</div>

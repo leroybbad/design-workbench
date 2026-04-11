@@ -1,0 +1,9 @@
+{
+  "id": "dashboard-kpi-strip",
+  "name": "Dashboard KPI Strip",
+  "category": "dashboard",
+  "principles": ["visual-hierarchy", "spacing-rhythm", "typography"],
+  "why_it_works": "The primary KPI's flex: 1.8 gives it 80% more horizontal space than peers — enough to set the headline metric at a dramatically larger type size without restructuring the layout. Border-right separators create visual cells without the visual weight of a full table grid. The tinted background on the primary item (color-mix at 6% opacity) uses color sparingly to draw the eye without overwhelming the data density. Change indicators use green/red semantics so status reads instantly without labels.",
+  "when_to_use": "Dashboard page headers, executive report summaries, analytics overview panels, any context where 3-6 KPIs need to be scanned quickly and one metric is the primary success indicator.",
+  "watch_out": "Beyond 6 KPIs this becomes a wall of numbers — the hierarchy collapses and nothing stands out. The pattern also requires real data; placeholder text like 'Metric Name' destroys the credibility the design is built to convey."
+}

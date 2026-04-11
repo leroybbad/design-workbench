@@ -1,0 +1,237 @@
+<!--
+  PATTERN: Alternating Features
+  CATEGORY: features
+  TECHNIQUES: asymmetric-grid, image-text-pairing, rhythm-variation
+
+  DESIGN RATIONALE:
+  The zig-zag reading pattern (left visual → right text, right visual → left
+  text) creates natural rhythm on long-scroll pages. The 5/7 asymmetric
+  split gives the content column more space than the visual, reinforcing
+  that visuals are supporting evidence, not the headline. Alternating
+  backgrounds provide section breaks without explicit dividers.
+-->
+
+<style>
+  /* Token block */
+  .features-alternating {
+    --color-bg: #ffffff;
+    --color-bg-alt: #f9fafb;
+    --color-text: #111827;
+    --color-text-muted: #6b7280;
+    --color-primary: #2563eb;
+    --color-primary-hover: #1d4ed8;
+    --color-surface: #f3f4f6;
+    --color-border: #e5e7eb;
+    --radius-lg: 0.75rem;
+    --font-sans: system-ui, -apple-system, sans-serif;
+  }
+</style>
+
+<div class="features-alternating">
+  <style>
+    /* ── Section list wrapper ────────────────────────────────────────── */
+    .features-alternating {
+      font-family: var(--font-sans);
+      box-sizing: border-box;
+    }
+
+    /* ── Individual feature section ──────────────────────────────────────
+       5fr/7fr split: visual gets 5 columns, content gets 7.
+       Content slightly wider than visual — the message is the point.
+       align-items: center vertically centers content within the section.
+       4rem padding top/bottom gives each section breathing room.
+    ─────────────────────────────────────────────────────────────────── */
+    .features-alternating__section {
+      display: grid;
+      grid-template-columns: 5fr 7fr;
+      gap: 5rem;
+      align-items: center;
+      padding: 4rem;
+      background-color: var(--color-bg);
+      box-sizing: border-box;
+    }
+
+    /* ── Alternate background ────────────────────────────────────────────
+       Even sections get a slightly off-white background.
+       This creates visual section breaks without dividers or borders.
+       The color difference is subtle — just enough to register.
+    ─────────────────────────────────────────────────────────────────── */
+    .features-alternating__section:nth-child(even) {
+      background-color: var(--color-bg-alt);
+    }
+
+    /* ── Grid flip on even sections ──────────────────────────────────────
+       Instead of duplicating markup, we use CSS `order` to flip the
+       columns on even sections. Visual goes right, content goes left.
+       This creates the zig-zag reading path.
+    ─────────────────────────────────────────────────────────────────── */
+    .features-alternating__section:nth-child(even) .features-alternating__visual {
+      order: 2; /* moves visual to the right */
+    }
+
+    .features-alternating__section:nth-child(even) .features-alternating__content {
+      order: 1; /* moves content to the left */
+    }
+
+    /* ── Visual placeholder ──────────────────────────────────────────────
+       16/10 aspect ratio is wider than 4/3 but narrower than 16/9 —
+       a comfortable "landscape product screenshot" proportion.
+    ─────────────────────────────────────────────────────────────────── */
+    .features-alternating__visual {
+      position: relative;
+    }
+
+    .features-alternating__image-placeholder {
+      aspect-ratio: 16 / 10;
+      background-color: var(--color-surface);
+      border-radius: var(--radius-lg);
+      background-image: linear-gradient(
+        135deg,
+        color-mix(in srgb, var(--color-primary) 8%, transparent) 0%,
+        transparent 60%
+      );
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--color-text-muted);
+    }
+
+    /* ── Content column ────────────────────────────────────────────────── */
+    .features-alternating__content {
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    /* ── Eyebrow label ───────────────────────────────────────────────────
+       Same as hero-asymmetric treatment: small, uppercase, tracked, primary.
+       Creates a "category label" effect so readers can scan sections fast.
+    ─────────────────────────────────────────────────────────────────── */
+    .features-alternating__eyebrow {
+      font-size: 0.8125rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--color-primary);
+      margin: 0;
+    }
+
+    /* ── Section heading ─────────────────────────────────────────────────
+       clamp(1.5rem, 3vw, 2.25rem) — scales between 24px and 36px.
+       This is feature-section scale, not hero scale — more modest.
+       -0.02em tracking and weight 700 give editorial crispness.
+    ─────────────────────────────────────────────────────────────────── */
+    .features-alternating__heading {
+      font-size: clamp(1.5rem, 3vw, 2.25rem);
+      font-weight: 700;
+      line-height: 1.2;
+      letter-spacing: -0.02em;
+      color: var(--color-text);
+      margin: 0;
+    }
+
+    /* ── Body copy ───────────────────────────────────────────────────────
+       1.0625rem (17px) — slightly smaller than hero body but still
+       comfortable for a multi-line paragraph. max-width 48ch is wider
+       than hero (36ch) because this is explanatory content, not a tagline.
+    ─────────────────────────────────────────────────────────────────── */
+    .features-alternating__body {
+      font-size: 1.0625rem;
+      line-height: 1.65;
+      color: var(--color-text-muted);
+      max-width: 48ch;
+      margin: 0;
+    }
+
+    /* ── Learn more link ─────────────────────────────────────────────────
+       Inline text link, not a button — secondary action appropriate
+       for feature sections where the primary goal is comprehension,
+       not conversion.
+    ─────────────────────────────────────────────────────────────────── */
+    .features-alternating__link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.375rem;
+      font-size: 0.9375rem;
+      font-weight: 600;
+      color: var(--color-primary);
+      text-decoration: none;
+    }
+
+    .features-alternating__link:hover {
+      color: var(--color-primary-hover);
+    }
+  </style>
+
+  <!-- Feature 1: default layout (visual left, content right) -->
+  <div class="features-alternating__section">
+    <div class="features-alternating__visual">
+      <!-- Replace with screenshot or illustration -->
+      <div class="features-alternating__image-placeholder">
+        <i class="lucide-layout-dashboard" style="width: 3rem; height: 3rem; opacity: 0.3;"></i>
+      </div>
+    </div>
+    <div class="features-alternating__content">
+      <!-- Eyebrow: scannable category label -->
+      <p class="features-alternating__eyebrow">Workflow</p>
+      <!-- Heading: feature name + benefit -->
+      <h2 class="features-alternating__heading">
+        Build faster with visual pipelines
+      </h2>
+      <!-- Body: 1-2 sentences, max 48ch -->
+      <p class="features-alternating__body">
+        Map your entire deployment pipeline visually. Drag to reorder, click to configure, and ship with confidence when every step is transparent.
+      </p>
+      <a href="#" class="features-alternating__link">
+        See the workflow
+        <i class="lucide-arrow-right"></i>
+      </a>
+    </div>
+  </div>
+
+  <!-- Feature 2: even — CSS flips to visual right, content left -->
+  <!-- WHY: The :nth-child(even) rule handles the flip; no markup change needed -->
+  <div class="features-alternating__section">
+    <div class="features-alternating__visual">
+      <div class="features-alternating__image-placeholder">
+        <i class="lucide-users" style="width: 3rem; height: 3rem; opacity: 0.3;"></i>
+      </div>
+    </div>
+    <div class="features-alternating__content">
+      <p class="features-alternating__eyebrow">Collaboration</p>
+      <h2 class="features-alternating__heading">
+        Review together, ship together
+      </h2>
+      <p class="features-alternating__body">
+        Real-time presence, inline comments, and one-click approvals. Your whole team stays in the loop without leaving the deployment view.
+      </p>
+      <a href="#" class="features-alternating__link">
+        Explore collaboration
+        <i class="lucide-arrow-right"></i>
+      </a>
+    </div>
+  </div>
+
+  <!-- Feature 3: odd — back to visual left, content right -->
+  <div class="features-alternating__section">
+    <div class="features-alternating__visual">
+      <div class="features-alternating__image-placeholder">
+        <i class="lucide-plug" style="width: 3rem; height: 3rem; opacity: 0.3;"></i>
+      </div>
+    </div>
+    <div class="features-alternating__content">
+      <p class="features-alternating__eyebrow">Integration</p>
+      <h2 class="features-alternating__heading">
+        Connects with every tool you already use
+      </h2>
+      <p class="features-alternating__body">
+        Native integrations with GitHub, Slack, Datadog, PagerDuty, and 40+ more. No webhooks to configure, no YAML to maintain.
+      </p>
+      <a href="#" class="features-alternating__link">
+        Browse integrations
+        <i class="lucide-arrow-right"></i>
+      </a>
+    </div>
+  </div>
+
+</div>

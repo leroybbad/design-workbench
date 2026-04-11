@@ -1,0 +1,9 @@
+{
+  "id": "cards-bento",
+  "name": "Bento Card Grid",
+  "category": "cards",
+  "principles": ["layout-composition", "visual-hierarchy", "spacing-rhythm"],
+  "why_it_works": "Mixed grid sizes create natural hierarchy without requiring different font sizes or colors. The featured card (spanning 2 columns and 2 rows) anchors the layout visually — your eye lands there first. Supporting cards use the remaining space to fill in context. The inverted colors on the featured card (primary background, white text) signal importance through contrast, not just scale. Consistent padding and icon treatment across all cards maintains rhythm despite size variation.",
+  "when_to_use": "Feature overviews, product capability showcases, app store-style listings, dashboard widget galleries. Works best when one feature/item genuinely deserves more emphasis than the others.",
+  "watch_out": "Requires at least 4 items to fill the grid without awkward gaps. Avoid using this pattern when all items are equally important — the featured card will imply a hierarchy that doesn't exist. Also needs distinct icons; similar icons flatten the visual rhythm."
+}

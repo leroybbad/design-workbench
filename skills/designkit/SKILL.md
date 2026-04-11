@@ -337,3 +337,52 @@ The canvas uses standard HTML with data attributes:
 - `data-section` + `data-section-id` — top-level reorderable units
 - `data-slot` — containers that accept child blocks (layout grids, stacks, etc.)
 - `data-block` — identifies which catalog block was inserted
+
+---
+
+## Quality Pipeline
+
+When generating a prototype from a **new request or a significant design direction change**, use the quality pipeline to improve visual output. Do NOT use it for incremental refinements from Comment, Inspect, or Tune feedback — those should be applied directly.
+
+### Step 1: Art Director
+
+Spawn a sub-agent (model: sonnet) with the contents of `skills/designkit/agents/art-director.md` as the system prompt. Pass it:
+
+- The user's request (what they asked for)
+- Repo context summary (frameworks, tokens, component directories — from the explore skill or your own inspection)
+- The contents of `skills/designkit/references/index.json`
+- The contents of all files in `skills/designkit/references/principles/`
+
+The art director returns a creative brief and names 2-3 reference pattern IDs. After receiving the brief, read the `meta.json` and `pattern.html` files for each selected pattern from `skills/designkit/references/patterns/<pattern-id>/`.
+
+### Step 2: Build
+
+Generate the prototype HTML as usual (following the Authoring Standards above), but now your input includes:
+- The art director's creative brief
+- The selected reference pattern HTML files (2-3 annotated examples)
+- The user's original request (for content and functional requirements)
+
+Use the creative brief as your primary visual direction. Draw specific techniques from the reference patterns. Apply the user's content and functional requirements on top.
+
+### Step 3: Critique
+
+After writing the prototype HTML to `screen_dir`, spawn a sub-agent (model: sonnet) with the contents of `skills/designkit/agents/critic.md` as the system prompt. Pass it:
+
+- The creative brief from Step 1
+- The generated HTML (read the file you just wrote)
+- The contents of `skills/designkit/references/principles/anti-patterns.md`
+- The contents of the principles files referenced in the brief's "Linked to principle" annotations (typically 2-3 files)
+
+The critic returns a JSON verdict:
+
+- If `"pass": true` — the prototype is ready. Proceed to tell the user the URL.
+- If `"pass": false` — read the `revision_prompt`. Apply the specific fixes to the HTML. Write the updated file. Do NOT run the critic again — one revision pass maximum.
+
+### Pipeline Context Detection
+
+To determine greenfield vs established codebase mode:
+
+- **Greenfield:** The repo context shows fewer than 5 CSS custom properties, no component directories, or the user explicitly asks for a fresh/new direction.
+- **Established codebase:** The repo context shows 10+ CSS custom properties, component directories, an identifiable design language.
+
+Pass this determination to both the art director (affects creative freedom) and the critic (affects which checks apply — e.g., foreign-tokens check only applies in established codebase mode).

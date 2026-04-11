@@ -1,0 +1,9 @@
+{
+  "id": "features-alternating",
+  "name": "Alternating Features",
+  "category": "features",
+  "principles": ["layout-composition", "spacing-rhythm", "visual-hierarchy"],
+  "why_it_works": "The zig-zag reading pattern (left image → right text, right image → left text) creates natural rhythm that keeps long-scroll pages engaging. The 5/7 asymmetric split gives the content column more space than the image, reinforcing that the visuals are supporting evidence, not the message. Alternating background colors (white → off-white) provide section breaks without explicit dividers, and the generous 4rem vertical padding gives each feature room to breathe at its own pace.",
+  "when_to_use": "Product feature overviews with 3–5 distinct capabilities, SaaS marketing pages, product detail sections. Works best when each feature has a genuinely different visual and can be shown in isolation.",
+  "watch_out": "Requires strong visuals for each section — placeholder boxes or generic screenshots flatten the effect. Also avoid more than 5 items; the pattern becomes repetitive and the rhythm turns monotonous."
+}

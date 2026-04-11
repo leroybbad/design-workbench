@@ -1,0 +1,9 @@
+{
+  "id": "hero-asymmetric",
+  "name": "Asymmetric Hero",
+  "category": "hero",
+  "principles": ["layout-composition", "visual-hierarchy", "typography"],
+  "why_it_works": "The oversized headline dominates the left column, creating immediate hierarchy through scale alone — no heavy weight needed. The 7/5 asymmetric split gives the text more breathing room than a 50/50 split while the image's slight upward offset (-2rem) breaks the grid baseline, creating visual tension that keeps the eye moving. Negative space around the body copy forces the reader to slow down before reaching the CTA.",
+  "when_to_use": "Landing pages for consumer products, creative agency sites, campaign launches, or any hero where the product has strong visual appeal and the copy is confident enough to carry the layout.",
+  "watch_out": "This pattern lives or dies on the headline. Weak copy at small type size collapses the hierarchy. Also fails with low-contrast or detailed images where the image fights the text rather than supporting it."
+}

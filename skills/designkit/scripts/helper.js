@@ -2739,6 +2739,39 @@
         }
       },
       {
+        id: 'edit-toggle',
+        title: 'Edit content (double-click text or containers)',
+        icon: '<path d="M12.5 3.5l-1-1-7 7-.5 2.5 2.5-.5 7-7-1-1z" stroke="currentColor" stroke-width="1.1" stroke-linejoin="round" fill="none"/><line x1="3" y1="14" x2="13" y2="14" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/>',
+        panel: false,
+        action: () => {
+          const isActive = document.body.classList.contains('dk-edit-mode');
+          document.body.classList.toggle('dk-edit-mode', !isActive);
+          const btn = document.getElementById('edit-toggle');
+          if (btn) btn.classList.toggle('active', !isActive);
+          if (!isActive) {
+            showToast('Edit mode — double-click text to edit, double-click a container to focus.');
+          }
+        }
+      },
+      {
+        id: 'arrange-toggle',
+        title: 'Arrange (move / remove elements)',
+        icon: '<path d="M8 2v12M2 8h12" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/><path d="M5 5L8 2l3 3M5 11l3 3 3-3M2 5l-0 3M14 5l0 3" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round" fill="none"/>',
+        panel: false,
+        action: () => {
+          if (window.DKWorkbench) {
+            const ctrl = document.body.classList.contains('dk-controls-visible');
+            if (ctrl) {
+              window.DKWorkbench.hideElementControls ? window.DKWorkbench.hideElementControls() : null;
+            } else {
+              window.DKWorkbench.showElementControls ? window.DKWorkbench.showElementControls() : null;
+            }
+            const btn = document.getElementById('arrange-toggle');
+            if (btn) btn.classList.toggle('active', !ctrl);
+          }
+        }
+      },
+      {
         id: 'comment-toggle',
         title: 'Comment (\u2303C)',
         icon: '<path d="M3.5 1.5h9c.55 0 1 .45 1 1v7c0 .55-.45 1-1 1H5.5L2.5 13.5V2.5c0-.55.45-1 1-1z" stroke="currentColor" stroke-width="1.25" fill="none"/>',

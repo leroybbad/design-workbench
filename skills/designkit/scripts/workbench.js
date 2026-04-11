@@ -606,7 +606,7 @@ window.DKWorkbench = (function () {
     setTimeout(init, 50);
   }
 
-  return { enterPlacementMode, exitPlacementMode, injectSectionControls, showTemplatePicker };
+  return { enterPlacementMode, exitPlacementMode, injectSectionControls, showTemplatePicker, showElementControls, hideElementControls };
 })();
 
 // Global aliases for helper.js to call

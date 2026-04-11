@@ -1324,6 +1324,22 @@
     }
 
     /* ===== INLINE TEXT EDITING ===== */
+    body.dk-edit-mode #claude-content h1,
+    body.dk-edit-mode #claude-content h2,
+    body.dk-edit-mode #claude-content h3,
+    body.dk-edit-mode #claude-content h4,
+    body.dk-edit-mode #claude-content p,
+    body.dk-edit-mode #claude-content span,
+    body.dk-edit-mode #claude-content a,
+    body.dk-edit-mode #claude-content button,
+    body.dk-edit-mode #claude-content label,
+    body.dk-edit-mode #claude-content li {
+      cursor: text;
+    }
+    body.dk-edit-mode #claude-content [data-block],
+    body.dk-edit-mode #claude-content [data-section] > *:not([data-block]) {
+      cursor: pointer;
+    }
     .dk-editing {
       outline: 2px solid var(--color-primary, #6366f1) !important;
       outline-offset: 2px;

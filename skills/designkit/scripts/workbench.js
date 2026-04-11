@@ -387,11 +387,8 @@ window.DKWorkbench = (function () {
       new MutationObserver(updateSlotHints).observe(canvas, { childList: true, subtree: true });
     }
 
-    // Check if this is a fresh session (no content on canvas)
-    const hasContent = canvas && canvas.querySelector('[data-section]');
-    if (!hasContent) {
-      showTemplatePicker();
-    }
+    // Template picker removed from auto-show — will be re-added
+    // when we have more starting points to offer.
   }
 
   if (document.readyState === 'loading') {

@@ -64,26 +64,35 @@ window.DKWorkbench = (function () {
       return;
     }
 
-    // Find nearest section gap
+    // Only show section-gap line if the mouse is NOT inside any section's bounding box
     placementTarget = null;
+    const insideSection = sections.some(s => {
+      const r = s.getBoundingClientRect();
+      return e.clientY >= r.top + 8 && e.clientY <= r.bottom - 8;
+    });
+
+    if (insideSection) {
+      if (placementLine) placementLine.style.display = 'none';
+      return;
+    }
+
+    // Find the gap the mouse is closest to
     let bestGap = null;
     let bestDist = Infinity;
 
-    // Gap before first section
     if (sections.length > 0) {
       const rect = sections[0].getBoundingClientRect();
       const dist = Math.abs(e.clientY - rect.top);
       if (dist < bestDist) { bestDist = dist; bestGap = { after: null, y: rect.top }; }
     }
 
-    // Gaps between and after sections
     sections.forEach(section => {
       const rect = section.getBoundingClientRect();
       const dist = Math.abs(e.clientY - rect.bottom);
       if (dist < bestDist) { bestDist = dist; bestGap = { after: section, y: rect.bottom }; }
     });
 
-    if (bestGap && bestDist < 60) {
+    if (bestGap && bestDist < 30) {
       const canvasRect = canvas.getBoundingClientRect();
       placementLine.style.display = 'block';
       placementLine.style.top = (bestGap.y - canvasRect.top + canvas.scrollTop) + 'px';

@@ -59,6 +59,14 @@ Write HTML files to `screen_dir`. The server serves the newest file by modificat
 
 3. **Semantic class names.** Classes describe what the element IS (`.metric-card`) not what it looks like (`.p-4.bg-white`). This makes annotation selectors meaningful.
 
+4. **Workbench data attributes on every prototype.** Every page must use these so the workbench controls (move, remove, block placement) work immediately:
+   - Wrap the page content in `<main data-canvas>`
+   - Every top-level section gets `<section data-section data-section-id="s1">` (increment the ID)
+   - Major components within sections get `data-block="component-name"` (e.g. `data-block="hero"`, `data-block="nav-bar"`, `data-block="bento-grid"`)
+   - Grid/flex containers that could accept more blocks get `data-slot="slot-name"` (e.g. `data-slot="features"`, `data-slot="cards"`)
+   
+   This adds zero visual impact — the attributes are invisible. But they make every generated page immediately editable with the workbench tools.
+
 ### Anti-Slop Rules
 
 These are the most common tells of AI-generated UI. Avoid all of them:

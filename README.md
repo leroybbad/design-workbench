@@ -1,73 +1,75 @@
-# Designkit 
+# Design Workbench
 
-This plugin was built to help step designers (and non-designers) through a hands-on method of designing with claude code.  With the right amount of specificity, you can move through divergent exercises into concepts, and finally into building out a prototype.
-
-Ultimately, we want to get things into our user's hands as fast as possible.  Design, prototype, test, iterate.  We've essentially condensed a lot of the "Design" aspect directly into prototyping, allowing you to move immediately into learning from users.
+A Claude Code plugin for designing in code. Explore concepts, compose pages from blocks, tune every detail in the browser — then hand off production-ready HTML.
 
 ## What It Does
 
-Two skills work together — **Explore** for divergent concept work, and **Designkit** for hands-on refinement.
+- **Explore** — Claude generates concept pages from your brief, guided by an art director agent and a quality critic
+- **Compose** — Browse and place blocks from the page palette, arrange sections, fill slots
+- **Refine** — Edit text inline, tune spacing/colors/typography live, comment for Claude
+- **Save** — Snapshots persist to disk. Claude reads the latest snapshot for surgical edits.
 
-### Explore (`/explore`)
+## Quick Start
 
-A guided brainstorming flow that prevents AI slop by anchoring every design decision to your actual intent:
+1. Install the plugin in Claude Code
+2. Describe what you want to design — Claude runs the quality pipeline and generates a prototype
+3. Open the URL — the workbench toolbar appears on every generated page
+4. Use the toolbar to refine, rearrange, and edit
+5. Save (Cmd+S), then ask Claude for changes — it patches your layout, not rebuild from scratch
 
-1. **Discover** — Claude asks targeted questions about your problem, audience, and interaction model
-2. **Crazy 8s** — 6-8 abstract structural thumbnails in a grid, showing fundamentally different layout patterns
-3. **Pressure-test** — Select concepts to explore at higher fidelity with real chrome and abbreviated content
-4. **Converge** — Pick a direction, then choose a visual identity (design system + colors)
-5. **Prototype** — Claude generates the first high-fidelity prototype with your chosen palette applied
+## Toolbar
 
-### Designkit Viewer (`/designkit`)
+| Button | What it does |
+|--------|-------------|
+| **Blocks** | Browse components on the current page. Click one, click the canvas to stamp copies. |
+| **Edit** | Double-click text to edit inline. Double-click a container to focus into it (add/remove children). |
+| **Arrange** | Show move up/down and remove controls on every section and block. |
+| **Comment** | Click elements to attach feedback notes for Claude. |
+| **Inspect** | Hover to see computed properties — spacing, fonts, colors, borders. |
+| **Tune** | Click any element, adjust properties with sliders. Changes cascade via CSS tokens. |
+| **Theme** | Swap palettes, adjust global typography/spacing/radius. |
+| **Changes** | Review all staged comments and tune adjustments. |
+| **Snapshots** | Browse save points. Claude builds from the latest one. |
+| **Save** | Write the current canvas to disk as a snapshot. |
+| **Send** | Send comments and tune changes to Claude for the next iteration. |
 
-A browser-based companion for hands-on design refinement. Claude generates a prototype, you open it in the Designkit Viewer and use visual tools directly on the design:
+**Keyboard shortcuts:** Ctrl+B (blocks), Ctrl+C (comment), Ctrl+I (inspect), Ctrl+T (tune), Ctrl+D (theme), Cmd+S (save), Cmd+Z (undo), Escape (close/cancel), Alt (toggle arrange).
 
-- **Comment** (Ctrl+C) — Click any element, attach a note. Pins mark your feedback visually.
-- **Inspect** (Ctrl+I) — Hover to see computed design properties: spacing, typography, colors, borders.
-- **Tune** (Ctrl+T) — Click an element, drag sliders to adjust font size, spacing, colors, shadows, radius — live in the browser. Changes cascade through CSS tokens.
-- **Theme** (Ctrl+D) — Swap entire design systems, color palettes, and fine-tune typography/spacing/radius globally. 10 built-in palettes with dark/warm/cool variants and custom accent color picker.
+## Quality Pipeline
 
-When you're done tweaking, hit **Send** (Shift+Cmd+Enter). Claude reads your structured feedback and updates the design. Repeat until it's right.
+New concept pages run through a 3-step pipeline:
 
-## Install
+1. **Art Director** — reads your request + design principles + reference patterns, writes a creative brief
+2. **Build** — Claude generates the prototype following the brief
+3. **Critic** — reviews against anti-patterns and principles, requests fixes if needed
 
-In the Claude Code /plugins marketplace, add `leroybbad/designkit` as a marketplace plugin. In the CLI, use `/plugin marketplace add leroybbad/designkit`.  
+The pipeline adapts to context:
+- **Greenfield** (no existing design system) — full creative freedom, art-directed compositions
+- **Established codebase** (detected tokens, components, frameworks) — respects existing patterns, enforces token compliance
 
-Be sure to enable auto-updates in the cli Claude Code (that setting isnt evidently available via VS code extension).
+## Design System Integration
 
-The skills, server, and all tools ship with the plugin — nothing to build.
+The workbench works at two levels:
 
-## How It Works
+- **Without a design system** — Claude generates original designs. The Blocks panel shows components from the current page. Full creative latitude.
+- **With a design system** — Load a component library into `catalog/systems/<name>/`. The prep script scans it into blocks with a matching token set. Claude composes within your system's constraints.
 
-1. The plugin includes a zero-dependency Node.js server that watches a directory for HTML files and serves them in the Designkit Viewer with the companion toolbar
-2. The Explore skill teaches Claude how to guide you through structured concept exploration before generating anything
-3. The Designkit skill teaches Claude how to generate prototypes using CSS tokens and semantic classes (so the visual tools work properly)
-4. Your feedback (comments, tune adjustments, theme changes) is captured as structured data and sent back to Claude
-5. Claude reads the feedback and generates the next iteration
+Both modes use the same tools. The difference is the input library and how much creative freedom the art director takes.
+
+## Architecture
+
+- Zero-dependency Node.js server (HTTP + WebSocket, no npm packages)
+- Vanilla JS client (no framework, no build step)
+- HTML with `data-section`, `data-block`, `data-slot` attributes for structure
+- CSS custom properties for the design system layer
+- Snapshots on disk, undo/redo in browser memory
+- Agents (art director, critic) run as Claude sub-agents with Sonnet
 
 ## Requirements
 
-- Claude Code (CLI, VS Code extension, or desktop app)
-- Node.js (for the local server)
-- A browser (for the Designkit Viewer)
-
-## Keyboard Shortcuts
-
-| Shortcut | Action |
-|----------|--------|
-| Ctrl+C | Toggle Comment mode |
-| Ctrl+I | Toggle Inspect mode |
-| Ctrl+T | Toggle Tune mode (per-element) |
-| Ctrl+D | Toggle Theme Selector (global) |
-| Ctrl+A | Show staged changes |
-| Shift+Cmd+Enter | Send changes to Claude |
-| Cmd+Z | Undo adjustment |
-| Cmd+Shift+Z | Redo adjustment |
-| Esc | Deselect tool / close panels |
-
-## Philosophy
-
-AI-generated design is 50% right and 50% slop. When finally narrowing down on a concept, the last 10% — the spacing, the weight, the shadow depth, the color temperature — is what separates craft from generic output. This tool keeps the designer's hands on the wheel during ideation and concept refinement.
+- Claude Code (CLI, VS Code, or desktop app)
+- Node.js 18+
+- A browser
 
 ## License
 

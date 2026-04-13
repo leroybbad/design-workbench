@@ -3,6 +3,12 @@
   let ws = null;
   let eventQueue = [];
 
+  // Token root: tokens are scoped to #claude-content by the server,
+  // so we must set/get them there, not on document.documentElement
+  function getTokenRoot() {
+    return document.getElementById('claude-content') || document.documentElement;
+  }
+
   // ===== ANNOTATION STATE =====
   const SESSION_KEY = 'annotations-' + window.location.port;
   let commentMode = false;
@@ -997,7 +1003,7 @@
         if (key.startsWith('token:')) {
           const tokenName = key.slice(6);
           if (tuneOriginalStyles[key]) {
-            document.documentElement.style.setProperty(tokenName, tuneOriginalStyles[key]);
+            getTokenRoot().style.setProperty(tokenName, tuneOriginalStyles[key]);
           } else {
             document.documentElement.style.removeProperty(tokenName);
           }
@@ -1595,7 +1601,7 @@
       Object.keys(tuneOriginalStyles).forEach(key => {
         if (key.startsWith('token:')) {
           const tokenName = key.slice(6);
-          tokenChanges[tokenName] = document.documentElement.style.getPropertyValue(tokenName).trim();
+          tokenChanges[tokenName] = getTokenRoot().style.getPropertyValue(tokenName).trim();
         } else {
           changes[key] = tuneTarget.style[key] || window.getComputedStyle(tuneTarget)[key];
         }
@@ -1729,7 +1735,7 @@
 
     input.addEventListener('focus', () => {
       if (tokenInfo) {
-        beforeEdit = document.documentElement.style.getPropertyValue(tokenInfo.token) || '';
+        beforeEdit = getTokenRoot().style.getPropertyValue(tokenInfo.token) || '';
       } else {
         beforeEdit = tuneTarget.style[prop] || '';
       }
@@ -1750,7 +1756,7 @@
       applyValue(parseFloat(input.value) || 0);
       // Push to undo
       if (tokenInfo) {
-        pushTuneUndo({ element: document.documentElement, prop: tokenInfo.token, oldValue: beforeEdit, isToken: true });
+        pushTuneUndo({ element: getTokenRoot(), prop: tokenInfo.token, oldValue: beforeEdit, isToken: true });
       } else {
         pushTuneUndo({ element: tuneTarget, prop: prop, oldValue: beforeEdit });
       }
@@ -1760,9 +1766,9 @@
     function applyValue(newVal) {
       if (tokenInfo) {
         if (!tuneOriginalStyles.hasOwnProperty('token:' + tokenInfo.token)) {
-          tuneOriginalStyles['token:' + tokenInfo.token] = document.documentElement.style.getPropertyValue(tokenInfo.token) || '';
+          tuneOriginalStyles['token:' + tokenInfo.token] = getTokenRoot().style.getPropertyValue(tokenInfo.token) || '';
         }
-        document.documentElement.style.setProperty(tokenInfo.token, newVal + unit);
+        getTokenRoot().style.setProperty(tokenInfo.token, newVal + unit);
       } else {
         if (!tuneOriginalStyles.hasOwnProperty(prop)) {
           tuneOriginalStyles[prop] = tuneTarget.style[prop] || '';
@@ -1949,7 +1955,7 @@
     let beforeDrag = '';
     slider.addEventListener('mousedown', () => {
       if (tokenInfo) {
-        beforeDrag = document.documentElement.style.getPropertyValue(tokenInfo.token) || '';
+        beforeDrag = getTokenRoot().style.getPropertyValue(tokenInfo.token) || '';
       } else {
         beforeDrag = tuneTarget.style[prop] || '';
       }
@@ -1960,9 +1966,9 @@
       if (tokenInfo) {
         // Adjust the token on :root — cascades to all elements using it
         if (!tuneOriginalStyles.hasOwnProperty('token:' + tokenInfo.token)) {
-          tuneOriginalStyles['token:' + tokenInfo.token] = document.documentElement.style.getPropertyValue(tokenInfo.token) || '';
+          tuneOriginalStyles['token:' + tokenInfo.token] = getTokenRoot().style.getPropertyValue(tokenInfo.token) || '';
         }
-        document.documentElement.style.setProperty(tokenInfo.token, newVal + unit);
+        getTokenRoot().style.setProperty(tokenInfo.token, newVal + unit);
       } else {
         if (!tuneOriginalStyles.hasOwnProperty(prop)) {
           tuneOriginalStyles[prop] = tuneTarget.style[prop] || '';
@@ -1972,7 +1978,7 @@
     });
     slider.addEventListener('change', () => {
       if (tokenInfo) {
-        pushTuneUndo({ element: document.documentElement, prop: tokenInfo.token, oldValue: beforeDrag, isToken: true });
+        pushTuneUndo({ element: getTokenRoot(), prop: tokenInfo.token, oldValue: beforeDrag, isToken: true });
       } else {
         pushTuneUndo({ element: tuneTarget, prop: prop, oldValue: beforeDrag });
       }
@@ -2060,13 +2066,11 @@
       }
       updateLabel();
 
-      // For tokens: only set rgba if alpha < 1, otherwise keep hex
-      // to avoid polluting tokens with rgba when full opacity
       if (tokenInfo) {
         if (!tuneOriginalStyles.hasOwnProperty('token:' + tokenInfo.token)) {
-          tuneOriginalStyles['token:' + tokenInfo.token] = document.documentElement.style.getPropertyValue(tokenInfo.token) || '';
+          tuneOriginalStyles['token:' + tokenInfo.token] = getTokenRoot().style.getPropertyValue(tokenInfo.token) || '';
         }
-        document.documentElement.style.setProperty(tokenInfo.token, colorVal);
+        getTokenRoot().style.setProperty(tokenInfo.token, colorVal);
       } else {
         if (!tuneOriginalStyles.hasOwnProperty(prop)) {
           tuneOriginalStyles[prop] = tuneTarget.style[prop] || '';
@@ -2078,14 +2082,14 @@
     let beforeColor = '';
     function captureBeforeColor() {
       if (tokenInfo) {
-        beforeColor = document.documentElement.style.getPropertyValue(tokenInfo.token) || '';
+        beforeColor = getTokenRoot().style.getPropertyValue(tokenInfo.token) || '';
       } else {
         beforeColor = tuneTarget.style[prop] || '';
       }
     }
     function pushColorUndo() {
       if (tokenInfo) {
-        pushTuneUndo({ element: document.documentElement, prop: tokenInfo.token, oldValue: beforeColor, isToken: true });
+        pushTuneUndo({ element: getTokenRoot(), prop: tokenInfo.token, oldValue: beforeColor, isToken: true });
       } else {
         pushTuneUndo({ element: tuneTarget, prop: prop, oldValue: beforeColor });
       }

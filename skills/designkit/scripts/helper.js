@@ -883,6 +883,18 @@
     return '#' + [match[1], match[2], match[3]].map(x => parseInt(x).toString(16).padStart(2, '0')).join('');
   }
 
+  function parseAlpha(rgba) {
+    const match = rgba.match(/rgba\(\d+,\s*\d+,\s*\d+,\s*([\d.]+)\)/);
+    return match ? parseFloat(match[1]) : 1;
+  }
+
+  function hexToRgba(hex, alpha) {
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    return alpha < 1 ? 'rgba(' + r + ',' + g + ',' + b + ',' + alpha + ')' : 'rgb(' + r + ',' + g + ',' + b + ')';
+  }
+
   function formatSpacing(top, right, bottom, left) {
     if (top === right && right === bottom && bottom === left) return top;
     if (top === bottom && left === right) return top + ' ' + right;
@@ -1296,41 +1308,14 @@
       const colorsPanel = document.createElement('div');
       colorsPanel.className = 'tune-controls';
       const color = rgbToHex(cs.color);
+      const colorAlpha = parseAlpha(cs.color);
       const colorToken = resolveToken(el, 'color');
-      colorsPanel.appendChild(createColorPicker('Color', 'color', color, colorToken));
-      const bgColor = cs.backgroundColor === 'rgba(0, 0, 0, 0)' || cs.backgroundColor === 'transparent' ? '#ffffff' : rgbToHex(cs.backgroundColor);
+      colorsPanel.appendChild(createColorPicker('Color', 'color', color, colorToken, colorAlpha));
+      const bgRaw = cs.backgroundColor;
+      const bgColor = bgRaw === 'rgba(0, 0, 0, 0)' || bgRaw === 'transparent' ? '#ffffff' : rgbToHex(bgRaw);
+      const bgAlpha = bgRaw === 'rgba(0, 0, 0, 0)' || bgRaw === 'transparent' ? 0 : parseAlpha(bgRaw);
       const bgColorToken = resolveToken(el, 'background-color');
-      colorsPanel.appendChild(createColorPicker('Background', 'backgroundColor', bgColor, bgColorToken));
-
-      // Opacity control
-      const opacityRow = document.createElement('div');
-      opacityRow.className = 'tune-row';
-      const opacityLabel = document.createElement('label');
-      opacityLabel.className = 'tune-label';
-      opacityLabel.textContent = 'Opacity';
-      const opacitySlider = document.createElement('input');
-      opacitySlider.type = 'range';
-      opacitySlider.className = 'tune-slider';
-      opacitySlider.min = '0';
-      opacitySlider.max = '100';
-      opacitySlider.value = Math.round((parseFloat(cs.opacity) || 1) * 100);
-      const opacityValue = document.createElement('span');
-      opacityValue.className = 'tune-value';
-      opacityValue.textContent = opacitySlider.value + '%';
-      let beforeOpacity = '';
-      opacitySlider.addEventListener('mousedown', () => { beforeOpacity = tuneTarget.style.opacity || ''; });
-      opacitySlider.addEventListener('input', () => {
-        const val = parseInt(opacitySlider.value);
-        opacityValue.textContent = val + '%';
-        tuneTarget.style.opacity = val / 100;
-      });
-      opacitySlider.addEventListener('change', () => {
-        pushTuneUndo({ element: tuneTarget, prop: 'opacity', oldValue: beforeOpacity });
-      });
-      opacityRow.appendChild(opacityLabel);
-      opacityRow.appendChild(opacitySlider);
-      opacityRow.appendChild(opacityValue);
-      colorsPanel.appendChild(opacityRow);
+      colorsPanel.appendChild(createColorPicker('Background', 'backgroundColor', bgColor, bgColorToken, bgAlpha));
 
       tabPanels['Colors'] = colorsPanel;
       panel.appendChild(colorsPanel);
@@ -2000,7 +1985,12 @@
     return row;
   }
 
-  function createColorPicker(label, prop, value, tokenInfo) {
+  function createColorPicker(label, prop, value, tokenInfo, alpha) {
+    if (alpha === undefined) alpha = 1;
+    const container = document.createElement('div');
+    container.className = 'tune-color-group';
+
+    // Color row
     const row = document.createElement('div');
     row.className = 'tune-row';
 
@@ -2021,6 +2011,51 @@
     val.className = 'tune-value';
     val.textContent = value;
 
+    row.appendChild(lbl);
+    row.appendChild(picker);
+    row.appendChild(val);
+    container.appendChild(row);
+
+    // Alpha row
+    const alphaRow = document.createElement('div');
+    alphaRow.className = 'tune-row tune-alpha-row';
+    const alphaLabel = document.createElement('label');
+    alphaLabel.className = 'tune-label';
+    alphaLabel.textContent = 'Alpha';
+    const alphaSlider = document.createElement('input');
+    alphaSlider.type = 'range';
+    alphaSlider.className = 'tune-slider';
+    alphaSlider.min = '0';
+    alphaSlider.max = '100';
+    alphaSlider.value = Math.round(alpha * 100);
+    const alphaVal = document.createElement('span');
+    alphaVal.className = 'tune-value';
+    alphaVal.textContent = Math.round(alpha * 100) + '%';
+
+    alphaRow.appendChild(alphaLabel);
+    alphaRow.appendChild(alphaSlider);
+    alphaRow.appendChild(alphaVal);
+    container.appendChild(alphaRow);
+
+    // Current alpha state
+    let currentAlpha = alpha;
+
+    function applyColor() {
+      const colorVal = currentAlpha < 1 ? hexToRgba(picker.value, currentAlpha) : picker.value;
+      val.textContent = currentAlpha < 1 ? picker.value + ' ' + Math.round(currentAlpha * 100) + '%' : picker.value;
+      if (tokenInfo) {
+        if (!tuneOriginalStyles.hasOwnProperty('token:' + tokenInfo.token)) {
+          tuneOriginalStyles['token:' + tokenInfo.token] = document.documentElement.style.getPropertyValue(tokenInfo.token) || '';
+        }
+        document.documentElement.style.setProperty(tokenInfo.token, colorVal);
+      } else {
+        if (!tuneOriginalStyles.hasOwnProperty(prop)) {
+          tuneOriginalStyles[prop] = tuneTarget.style[prop] || '';
+        }
+        tuneTarget.style[prop] = colorVal;
+      }
+    }
+
     let beforeColor = '';
     picker.addEventListener('focus', () => {
       if (tokenInfo) {
@@ -2029,33 +2064,36 @@
         beforeColor = tuneTarget.style[prop] || '';
       }
     });
-    picker.addEventListener('input', () => {
-      val.textContent = picker.value;
-      if (tokenInfo) {
-        if (!tuneOriginalStyles.hasOwnProperty('token:' + tokenInfo.token)) {
-          tuneOriginalStyles['token:' + tokenInfo.token] = document.documentElement.style.getPropertyValue(tokenInfo.token) || '';
-        }
-        document.documentElement.style.setProperty(tokenInfo.token, picker.value);
-      } else {
-        if (!tuneOriginalStyles.hasOwnProperty(prop)) {
-          tuneOriginalStyles[prop] = tuneTarget.style[prop] || '';
-        }
-        tuneTarget.style[prop] = picker.value;
-      }
-    });
+    picker.addEventListener('input', () => { applyColor(); });
     picker.addEventListener('change', () => {
       if (tokenInfo) {
         pushTuneUndo({ element: document.documentElement, prop: tokenInfo.token, oldValue: beforeColor, isToken: true });
       } else {
         pushTuneUndo({ element: tuneTarget, prop: prop, oldValue: beforeColor });
       }
-      redoStack = [];
     });
 
-    row.appendChild(lbl);
-    row.appendChild(picker);
-    row.appendChild(val);
-    return row;
+    alphaSlider.addEventListener('mousedown', () => {
+      if (tokenInfo) {
+        beforeColor = document.documentElement.style.getPropertyValue(tokenInfo.token) || '';
+      } else {
+        beforeColor = tuneTarget.style[prop] || '';
+      }
+    });
+    alphaSlider.addEventListener('input', () => {
+      currentAlpha = parseInt(alphaSlider.value) / 100;
+      alphaVal.textContent = Math.round(currentAlpha * 100) + '%';
+      applyColor();
+    });
+    alphaSlider.addEventListener('change', () => {
+      if (tokenInfo) {
+        pushTuneUndo({ element: document.documentElement, prop: tokenInfo.token, oldValue: beforeColor, isToken: true });
+      } else {
+        pushTuneUndo({ element: tuneTarget, prop: prop, oldValue: beforeColor });
+      }
+    });
+
+    return container;
   }
 
   // Tune click handler — click element to open tune panel

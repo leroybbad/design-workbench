@@ -2847,7 +2847,26 @@
 
     dkToolbar.appendChild(mkDivider());
 
-    // Tool definitions — mode-only tools do not open a panel
+    // Deactivate all modes — called before activating any tool
+    function deactivateAllModes() {
+      if (blocksMode) setBlocksMode(false);
+      if (commentMode) setCommentMode(false);
+      if (inspectMode) setInspectMode(false);
+      if (tuneMode) setTuneMode(false);
+      if (themeMode) setThemeMode(false);
+      // Edit mode
+      document.body.classList.remove('dk-edit-mode');
+      const editBtn = document.getElementById('edit-toggle');
+      if (editBtn) editBtn.classList.remove('active');
+      // Arrange mode
+      if (window.DKWorkbench && window.DKWorkbench.hideElementControls) {
+        window.DKWorkbench.hideElementControls();
+      }
+      const arrangeBtn = document.getElementById('arrange-toggle');
+      if (arrangeBtn) arrangeBtn.classList.remove('active');
+    }
+
+    // Tool definitions — only one active at a time
     const toolDefs = [
       {
         id: 'blocks-toggle',
@@ -2855,7 +2874,9 @@
         icon: '<rect x="2" y="2" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.1" fill="none"/><rect x="9" y="2" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.1" fill="none"/><rect x="2" y="9" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.1" fill="none"/><rect x="9" y="9" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.1" fill="none"/>',
         panel: true,
         action: () => {
-          setBlocksMode(!blocksMode);
+          const wasActive = blocksMode;
+          deactivateAllModes();
+          if (!wasActive) setBlocksMode(true);
         }
       },
       {
@@ -2864,11 +2885,11 @@
         icon: '<path d="M12.5 3.5l-1-1-7 7-.5 2.5 2.5-.5 7-7-1-1z" stroke="currentColor" stroke-width="1.1" stroke-linejoin="round" fill="none"/><line x1="3" y1="14" x2="13" y2="14" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/>',
         panel: false,
         action: () => {
-          const isActive = document.body.classList.contains('dk-edit-mode');
-          document.body.classList.toggle('dk-edit-mode', !isActive);
-          const btn = document.getElementById('edit-toggle');
-          if (btn) btn.classList.toggle('active', !isActive);
-          if (!isActive) {
+          const wasActive = document.body.classList.contains('dk-edit-mode');
+          deactivateAllModes();
+          if (!wasActive) {
+            document.body.classList.add('dk-edit-mode');
+            document.getElementById('edit-toggle').classList.add('active');
             showToast('Edit mode — double-click text to edit, double-click a container to focus.');
           }
         }
@@ -2879,15 +2900,11 @@
         icon: '<path d="M8 2v12M2 8h12" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/><path d="M5 5L8 2l3 3M5 11l3 3 3-3M2 5l-0 3M14 5l0 3" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round" fill="none"/>',
         panel: false,
         action: () => {
-          if (window.DKWorkbench) {
-            const ctrl = document.body.classList.contains('dk-controls-visible');
-            if (ctrl) {
-              window.DKWorkbench.hideElementControls ? window.DKWorkbench.hideElementControls() : null;
-            } else {
-              window.DKWorkbench.showElementControls ? window.DKWorkbench.showElementControls() : null;
-            }
-            const btn = document.getElementById('arrange-toggle');
-            if (btn) btn.classList.toggle('active', !ctrl);
+          const wasActive = document.body.classList.contains('dk-controls-visible');
+          deactivateAllModes();
+          if (!wasActive && window.DKWorkbench && window.DKWorkbench.showElementControls) {
+            window.DKWorkbench.showElementControls();
+            document.getElementById('arrange-toggle').classList.add('active');
           }
         }
       },
@@ -2897,10 +2914,9 @@
         icon: '<path d="M3.5 1.5h9c.55 0 1 .45 1 1v7c0 .55-.45 1-1 1H5.5L2.5 13.5V2.5c0-.55.45-1 1-1z" stroke="currentColor" stroke-width="1.25" fill="none"/>',
         panel: false,
         action: () => {
-          if (inspectMode) setInspectMode(false);
-          if (tuneMode) setTuneMode(false);
-          if (themeMode) setThemeMode(false);
-          setCommentMode(!commentMode);
+          const wasActive = commentMode;
+          deactivateAllModes();
+          if (!wasActive) setCommentMode(true);
         }
       },
       {
@@ -2909,10 +2925,9 @@
         icon: '<path d="M13.5 2.5l-1-1-2 2-1-1-5 5 2 2 5-5-1-1z" stroke="currentColor" stroke-width="1.1" stroke-linejoin="round" fill="none"/><path d="M4.5 9.5l-2 4 4-2" stroke="currentColor" stroke-width="1.1" stroke-linejoin="round" fill="none"/>',
         panel: false,
         action: () => {
-          if (commentMode) setCommentMode(false);
-          if (tuneMode) setTuneMode(false);
-          if (themeMode) setThemeMode(false);
-          setInspectMode(!inspectMode);
+          const wasActive = inspectMode;
+          deactivateAllModes();
+          if (!wasActive) setInspectMode(true);
         }
       },
       {
@@ -2921,9 +2936,9 @@
         icon: '<line x1="3" y1="4" x2="13" y2="4" stroke="currentColor" stroke-width="1.25" stroke-linecap="round"/><circle cx="9" cy="4" r="1.5" fill="currentColor"/><line x1="3" y1="8" x2="13" y2="8" stroke="currentColor" stroke-width="1.25" stroke-linecap="round"/><circle cx="5" cy="8" r="1.5" fill="currentColor"/><line x1="3" y1="12" x2="13" y2="12" stroke="currentColor" stroke-width="1.25" stroke-linecap="round"/><circle cx="10" cy="12" r="1.5" fill="currentColor"/>',
         panel: true,
         action: () => {
-          if (commentMode) setCommentMode(false);
-          if (inspectMode) setInspectMode(false);
-          setTuneMode(!tuneMode);
+          const wasActive = tuneMode;
+          deactivateAllModes();
+          if (!wasActive) setTuneMode(true);
         }
       },
       {
@@ -2932,10 +2947,9 @@
         icon: '<circle cx="8" cy="8" r="5.5" stroke="currentColor" stroke-width="1.25" fill="none"/><path d="M8 2.5a5.5 5.5 0 0 0 0 11V2.5z" fill="currentColor"/>',
         panel: true,
         action: () => {
-          if (commentMode) setCommentMode(false);
-          if (inspectMode) setInspectMode(false);
-          if (tuneMode) setTuneMode(false);
-          setThemeMode(!themeMode);
+          const wasActive = themeMode;
+          deactivateAllModes();
+          if (!wasActive) setThemeMode(true);
         }
       }
     ];

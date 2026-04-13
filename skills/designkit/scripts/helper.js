@@ -1308,14 +1308,14 @@
       const colorsPanel = document.createElement('div');
       colorsPanel.className = 'tune-controls';
       const color = rgbToHex(cs.color);
-      const colorAlpha = parseAlpha(cs.color);
       const colorToken = resolveToken(el, 'color');
-      colorsPanel.appendChild(createColorPicker('Color', 'color', color, colorToken, colorAlpha));
+      colorsPanel.appendChild(createColorPicker('Color', 'color', color, colorToken, false));
       const bgRaw = cs.backgroundColor;
-      const bgColor = bgRaw === 'rgba(0, 0, 0, 0)' || bgRaw === 'transparent' ? '#ffffff' : rgbToHex(bgRaw);
-      const bgAlpha = bgRaw === 'rgba(0, 0, 0, 0)' || bgRaw === 'transparent' ? 0 : parseAlpha(bgRaw);
+      const isTransparent = bgRaw === 'rgba(0, 0, 0, 0)' || bgRaw === 'transparent';
+      const bgColor = isTransparent ? '#000000' : rgbToHex(bgRaw);
+      const bgAlpha = isTransparent ? 0 : parseAlpha(bgRaw);
       const bgColorToken = resolveToken(el, 'background-color');
-      colorsPanel.appendChild(createColorPicker('Background', 'backgroundColor', bgColor, bgColorToken, bgAlpha));
+      colorsPanel.appendChild(createColorPicker('Background', 'backgroundColor', bgColor, bgColorToken, true, bgAlpha));
 
       tabPanels['Colors'] = colorsPanel;
       panel.appendChild(colorsPanel);
@@ -1985,7 +1985,7 @@
     return row;
   }
 
-  function createColorPicker(label, prop, value, tokenInfo, alpha) {
+  function createColorPicker(label, prop, value, tokenInfo, showAlpha, alpha) {
     if (alpha === undefined) alpha = 1;
     const container = document.createElement('div');
     container.className = 'tune-color-group';
@@ -2009,40 +2009,59 @@
 
     const val = document.createElement('span');
     val.className = 'tune-value';
-    val.textContent = value;
 
     row.appendChild(lbl);
     row.appendChild(picker);
     row.appendChild(val);
     container.appendChild(row);
 
-    // Alpha row
-    const alphaRow = document.createElement('div');
-    alphaRow.className = 'tune-row tune-alpha-row';
-    const alphaLabel = document.createElement('label');
-    alphaLabel.className = 'tune-label';
-    alphaLabel.textContent = 'Alpha';
-    const alphaSlider = document.createElement('input');
-    alphaSlider.type = 'range';
-    alphaSlider.className = 'tune-slider';
-    alphaSlider.min = '0';
-    alphaSlider.max = '100';
-    alphaSlider.value = Math.round(alpha * 100);
-    const alphaVal = document.createElement('span');
-    alphaVal.className = 'tune-value';
-    alphaVal.textContent = Math.round(alpha * 100) + '%';
-
-    alphaRow.appendChild(alphaLabel);
-    alphaRow.appendChild(alphaSlider);
-    alphaRow.appendChild(alphaVal);
-    container.appendChild(alphaRow);
-
-    // Current alpha state
     let currentAlpha = alpha;
+    let alphaSlider = null;
+    let alphaVal = null;
+
+    function updateLabel() {
+      if (showAlpha && currentAlpha < 1) {
+        val.textContent = picker.value + ' ' + Math.round(currentAlpha * 100) + '%';
+      } else {
+        val.textContent = picker.value;
+      }
+    }
+    updateLabel();
+
+    // Alpha row (only for background-type properties)
+    if (showAlpha) {
+      const alphaRow = document.createElement('div');
+      alphaRow.className = 'tune-row tune-alpha-row';
+      const alphaLabel = document.createElement('label');
+      alphaLabel.className = 'tune-label';
+      alphaLabel.textContent = 'Alpha';
+      alphaSlider = document.createElement('input');
+      alphaSlider.type = 'range';
+      alphaSlider.className = 'tune-slider';
+      alphaSlider.min = '0';
+      alphaSlider.max = '100';
+      alphaSlider.value = Math.round(currentAlpha * 100);
+      alphaVal = document.createElement('span');
+      alphaVal.className = 'tune-value';
+      alphaVal.textContent = Math.round(currentAlpha * 100) + '%';
+
+      alphaRow.appendChild(alphaLabel);
+      alphaRow.appendChild(alphaSlider);
+      alphaRow.appendChild(alphaVal);
+      container.appendChild(alphaRow);
+    }
 
     function applyColor() {
-      const colorVal = currentAlpha < 1 ? hexToRgba(picker.value, currentAlpha) : picker.value;
-      val.textContent = currentAlpha < 1 ? picker.value + ' ' + Math.round(currentAlpha * 100) + '%' : picker.value;
+      let colorVal;
+      if (showAlpha && currentAlpha < 1) {
+        colorVal = hexToRgba(picker.value, currentAlpha);
+      } else {
+        colorVal = picker.value;
+      }
+      updateLabel();
+
+      // For tokens: only set rgba if alpha < 1, otherwise keep hex
+      // to avoid polluting tokens with rgba when full opacity
       if (tokenInfo) {
         if (!tuneOriginalStyles.hasOwnProperty('token:' + tokenInfo.token)) {
           tuneOriginalStyles['token:' + tokenInfo.token] = document.documentElement.style.getPropertyValue(tokenInfo.token) || '';
@@ -2057,41 +2076,34 @@
     }
 
     let beforeColor = '';
-    picker.addEventListener('focus', () => {
+    function captureBeforeColor() {
       if (tokenInfo) {
         beforeColor = document.documentElement.style.getPropertyValue(tokenInfo.token) || '';
       } else {
         beforeColor = tuneTarget.style[prop] || '';
       }
-    });
-    picker.addEventListener('input', () => { applyColor(); });
-    picker.addEventListener('change', () => {
+    }
+    function pushColorUndo() {
       if (tokenInfo) {
         pushTuneUndo({ element: document.documentElement, prop: tokenInfo.token, oldValue: beforeColor, isToken: true });
       } else {
         pushTuneUndo({ element: tuneTarget, prop: prop, oldValue: beforeColor });
       }
-    });
+    }
 
-    alphaSlider.addEventListener('mousedown', () => {
-      if (tokenInfo) {
-        beforeColor = document.documentElement.style.getPropertyValue(tokenInfo.token) || '';
-      } else {
-        beforeColor = tuneTarget.style[prop] || '';
-      }
-    });
-    alphaSlider.addEventListener('input', () => {
-      currentAlpha = parseInt(alphaSlider.value) / 100;
-      alphaVal.textContent = Math.round(currentAlpha * 100) + '%';
-      applyColor();
-    });
-    alphaSlider.addEventListener('change', () => {
-      if (tokenInfo) {
-        pushTuneUndo({ element: document.documentElement, prop: tokenInfo.token, oldValue: beforeColor, isToken: true });
-      } else {
-        pushTuneUndo({ element: tuneTarget, prop: prop, oldValue: beforeColor });
-      }
-    });
+    picker.addEventListener('focus', captureBeforeColor);
+    picker.addEventListener('input', () => { applyColor(); });
+    picker.addEventListener('change', pushColorUndo);
+
+    if (alphaSlider) {
+      alphaSlider.addEventListener('mousedown', captureBeforeColor);
+      alphaSlider.addEventListener('input', () => {
+        currentAlpha = parseInt(alphaSlider.value) / 100;
+        alphaVal.textContent = Math.round(currentAlpha * 100) + '%';
+        applyColor();
+      });
+      alphaSlider.addEventListener('change', pushColorUndo);
+    }
 
     return container;
   }

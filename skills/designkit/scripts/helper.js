@@ -1236,6 +1236,57 @@
       spacingPanel.className = 'tune-controls';
       spacingPanel.appendChild(createSpacingGroup('Padding', 'padding', cs));
       spacingPanel.appendChild(createSpacingGroup('Margin', 'margin', cs));
+
+      // Height control
+      const heightRow = document.createElement('div');
+      heightRow.className = 'tune-row';
+      const heightLabel = document.createElement('label');
+      heightLabel.className = 'tune-label';
+      heightLabel.textContent = 'Height';
+      const heightInput = document.createElement('input');
+      heightInput.type = 'number';
+      heightInput.className = 'tune-number-input';
+      const currentHeight = parseFloat(cs.height);
+      heightInput.value = isNaN(currentHeight) ? '' : Math.round(currentHeight);
+      heightInput.placeholder = 'auto';
+      heightInput.step = 4;
+      let beforeHeight = '';
+      heightInput.addEventListener('focus', () => { beforeHeight = tuneTarget.style.height || ''; });
+      heightInput.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+          e.preventDefault();
+          const inc = e.shiftKey ? 20 : 4;
+          const cur = parseFloat(heightInput.value) || parseFloat(cs.height) || 100;
+          const nv = Math.max(0, e.key === 'ArrowUp' ? cur + inc : cur - inc);
+          heightInput.value = Math.round(nv);
+          tuneTarget.style.height = nv + 'px';
+        }
+      });
+      heightInput.addEventListener('change', () => {
+        const val = heightInput.value.trim();
+        if (val === '' || val === '0') {
+          tuneTarget.style.height = '';
+        } else {
+          tuneTarget.style.height = parseFloat(val) + 'px';
+        }
+        pushTuneUndo({ element: tuneTarget, prop: 'height', oldValue: beforeHeight });
+      });
+      // Auto button to clear height
+      const autoBtn = document.createElement('button');
+      autoBtn.className = 'tune-spacing-expand';
+      autoBtn.title = 'Reset to auto';
+      autoBtn.textContent = '↺';
+      autoBtn.addEventListener('click', () => {
+        beforeHeight = tuneTarget.style.height || '';
+        tuneTarget.style.height = '';
+        heightInput.value = '';
+        pushTuneUndo({ element: tuneTarget, prop: 'height', oldValue: beforeHeight });
+      });
+      heightRow.appendChild(heightLabel);
+      heightRow.appendChild(heightInput);
+      heightRow.appendChild(autoBtn);
+      spacingPanel.appendChild(heightRow);
+
       tabPanels['Spacing'] = spacingPanel;
       panel.appendChild(spacingPanel);
     }
@@ -1250,6 +1301,37 @@
       const bgColor = cs.backgroundColor === 'rgba(0, 0, 0, 0)' || cs.backgroundColor === 'transparent' ? '#ffffff' : rgbToHex(cs.backgroundColor);
       const bgColorToken = resolveToken(el, 'background-color');
       colorsPanel.appendChild(createColorPicker('Background', 'backgroundColor', bgColor, bgColorToken));
+
+      // Opacity control
+      const opacityRow = document.createElement('div');
+      opacityRow.className = 'tune-row';
+      const opacityLabel = document.createElement('label');
+      opacityLabel.className = 'tune-label';
+      opacityLabel.textContent = 'Opacity';
+      const opacitySlider = document.createElement('input');
+      opacitySlider.type = 'range';
+      opacitySlider.className = 'tune-slider';
+      opacitySlider.min = '0';
+      opacitySlider.max = '100';
+      opacitySlider.value = Math.round((parseFloat(cs.opacity) || 1) * 100);
+      const opacityValue = document.createElement('span');
+      opacityValue.className = 'tune-value';
+      opacityValue.textContent = opacitySlider.value + '%';
+      let beforeOpacity = '';
+      opacitySlider.addEventListener('mousedown', () => { beforeOpacity = tuneTarget.style.opacity || ''; });
+      opacitySlider.addEventListener('input', () => {
+        const val = parseInt(opacitySlider.value);
+        opacityValue.textContent = val + '%';
+        tuneTarget.style.opacity = val / 100;
+      });
+      opacitySlider.addEventListener('change', () => {
+        pushTuneUndo({ element: tuneTarget, prop: 'opacity', oldValue: beforeOpacity });
+      });
+      opacityRow.appendChild(opacityLabel);
+      opacityRow.appendChild(opacitySlider);
+      opacityRow.appendChild(opacityValue);
+      colorsPanel.appendChild(opacityRow);
+
       tabPanels['Colors'] = colorsPanel;
       panel.appendChild(colorsPanel);
     }

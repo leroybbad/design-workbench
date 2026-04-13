@@ -1,4 +1,6 @@
 .superpowers/
 .worktrees/
 .playwright-mcp/
+.designkit/
+.DS_Store
 node_modules/
